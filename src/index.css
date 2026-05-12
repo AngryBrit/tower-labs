@@ -7,6 +7,9 @@
 html {
   /* Dense UI was tuned for ~browser 200% zoom; lift default scale so 100% zoom is comfortable */
   font-size: 200%;
+  /* Keep author rem scale; avoid mobile browsers shrinking/growing text and breaking layout */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html,

@@ -1297,7 +1297,7 @@ export function swampRendAdditionalEnemiesDisplay(
 }
 
 /**
- * Golden Tower Bonus — Tower Lab calculator **Value**: **0.15 × lab level** (two decimals; Lv.0→0.00 … Lv.25→3.75).
+ * Golden Tower Bonus — Tower Lab calculator **Value**: **0.15 × lab level** (two decimals with **+** prefix; Lv.0→+0.00 … Lv.25→+3.75).
  */
 export function goldenTowerBonusValueDisplay(
   effectiveLevel: number,
@@ -1308,7 +1308,7 @@ export function goldenTowerBonusValueDisplay(
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
   const v = 0.15 * capped
-  return v.toFixed(2)
+  return `+${v.toFixed(2)}`
 }
 
 /**

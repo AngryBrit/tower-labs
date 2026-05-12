@@ -1738,13 +1738,13 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Golden Tower Bonus')
       expect(lab).toBeDefined()
       const max = lab!.maxLevel ?? 25
-      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00')
-      expect(benefitDisplayForCard(lab!, 1, max)).toBe('0.15')
-      expect(benefitDisplayForCard(lab!, 10, max)).toBe('1.50')
-      expect(benefitDisplayForCard(lab!, 25, max)).toBe('3.75')
-      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00 » 0.15')
-      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('3.60 » 3.75')
-      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('3.75')
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.15')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+1.50')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('+3.75')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00 » +0.15')
+      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('+3.60 » +3.75')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+3.75')
     })
 
     it('Golden Tower Duration uses +1.0s/level display (one decimal)', () => {
