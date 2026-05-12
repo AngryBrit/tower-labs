@@ -12,10 +12,10 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Phones: modest scale-down so two-column cards and toolbar fit without feeling cramped */
+/* Phones: browser-default root size so two-column layout fits; desktop stays at 200% */
 @media (max-width: 36rem) {
   html {
-    font-size: 168.75%;
+    font-size: 100%;
   }
 }
 
