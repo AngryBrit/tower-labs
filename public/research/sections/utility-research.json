@@ -1,0 +1,148 @@
+{
+  "title": "UTILITY RESEARCH",
+  "items": [
+    {
+      "name": "Cash Bonus",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111696469,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Cash / Wave",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111696469,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Coins / Kill Bonus",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111696469,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Coins / Wave",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111696469,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Interest",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "50",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 472468836,
+      "costPlusOne": "93"
+    },
+    {
+      "name": "Max Interest",
+      "level": "Lv.0",
+      "benefit": "$50",
+      "time": "0d 0h 41m",
+      "cost": "250",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 15,
+      "coinsToMaxRaw": 2304140,
+      "costPlusOne": "910"
+    },
+    {
+      "name": "Package After Boss",
+      "level": "Lv.0",
+      "benefit": "Unlock Package After Boss",
+      "time": "8d 2h 26m",
+      "cost": "1 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 1000000000
+    },
+    {
+      "name": "Recovery Package Amount",
+      "level": "Lv.0",
+      "benefit": "T6 150",
+      "time": "2d 7h 33m",
+      "cost": "20 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 2968190000000,
+      "costPlusOne": "25.01 B"
+    },
+    {
+      "name": "Recovery Package Max",
+      "level": "Lv.0",
+      "benefit": "T6 150",
+      "time": "2d 7h 33m",
+      "cost": "20 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 2962930000000,
+      "costPlusOne": "25.01 B"
+    },
+    {
+      "name": "Recovery Package Chance",
+      "level": "Lv.0",
+      "benefit": "T6 150",
+      "time": "2d 7h 33m",
+      "cost": "20 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 2968190000000,
+      "costPlusOne": "25.01 B"
+    },
+    {
+      "name": "Enemy Attack Level Skip",
+      "level": "Lv.0",
+      "benefit": "T11 200",
+      "time": "0d 16h 39m",
+      "cost": "900 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 745230000000,
+      "costPlusOne": "1.01 B"
+    },
+    {
+      "name": "Enemy Health Level Skip",
+      "level": "Lv.0",
+      "benefit": "T11 200",
+      "time": "0d 16h 39m",
+      "cost": "900 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 745230000000,
+      "costPlusOne": "1.01 B"
+    }
+  ]
+}

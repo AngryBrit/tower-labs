@@ -1,0 +1,112 @@
+{
+  "title": "CARDS RESEARCH",
+  "items": [
+    {
+      "name": "Second Wind Blast",
+      "level": "Lv.0",
+      "benefit": "T3 150",
+      "time": "1d 3h 46m",
+      "cost": "1.8 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 4,
+      "coinsToMaxRaw": 84300000,
+      "costPlusOne": "3 M"
+    },
+    {
+      "name": "Double Death Ray",
+      "level": "Lv.0",
+      "benefit": "T3 300",
+      "time": "0d 0h 59m",
+      "cost": "2.5 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 30,
+      "coinsToMaxRaw": 1097076750000,
+      "costPlusOne": "2.81 M"
+    },
+    {
+      "name": "Extra Orb Adjuster",
+      "level": "Lv.0",
+      "benefit": "T6 50",
+      "time": "2d 1h 59m",
+      "cost": "1.5 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 1500000
+    },
+    {
+      "name": "Extra Extra Orbs",
+      "level": "Lv.0",
+      "benefit": "T6 80",
+      "time": "1d 14h 53m",
+      "cost": "25 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 2,
+      "coinsToMaxRaw": 925000000,
+      "costPlusOne": "900 M"
+    },
+    {
+      "name": "Energy Shield Extra Hit",
+      "level": "Lv.0",
+      "benefit": "T4 300",
+      "time": "11d 13h 46m",
+      "cost": "40 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 2,
+      "coinsToMaxRaw": 890000000000,
+      "costPlusOne": "850 B"
+    },
+    {
+      "name": "Super Tower Bonus",
+      "level": "Lv.0",
+      "benefit": "T8 300",
+      "time": "0d 4h 59m",
+      "cost": "2 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 30,
+      "coinsToMaxRaw": 11989310000000,
+      "costPlusOne": "3.01 B"
+    },
+    {
+      "name": "Recharge Second Wind",
+      "level": "Lv.0",
+      "benefit": "T14 60",
+      "time": "5d 4h 59m",
+      "cost": "550 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 7,
+      "coinsToMaxRaw": 14430000000000,
+      "costPlusOne": "1.05 T"
+    },
+    {
+      "name": "Recharge Demon Mode",
+      "level": "Lv.0",
+      "benefit": "T14 60",
+      "time": "5d 4h 59m",
+      "cost": "550 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 7,
+      "coinsToMaxRaw": 14430000000000,
+      "costPlusOne": "1.05 T"
+    },
+    {
+      "name": "Recharge Nuke",
+      "level": "Lv.0",
+      "benefit": "T14 60",
+      "time": "5d 5h 0m",
+      "cost": "550 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 7,
+      "coinsToMaxRaw": 14430000000000,
+      "costPlusOne": "1.05 T"
+    }
+  ]
+}

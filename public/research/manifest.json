@@ -1,0 +1,16 @@
+{
+  "sectionFiles": [
+    "research/sections/main-research.json",
+    "research/sections/attack-research.json",
+    "research/sections/defense-research.json",
+    "research/sections/utility-research.json",
+    "research/sections/ultimate-weapon-research.json",
+    "research/sections/cards-research.json",
+    "research/sections/perks-research.json",
+    "research/sections/bots.json",
+    "research/sections/enemies.json",
+    "research/sections/modules.json",
+    "research/sections/card-mastery.json",
+    "research/sections/battle-condition.json"
+  ]
+}

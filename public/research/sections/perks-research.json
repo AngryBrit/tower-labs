@@ -1,0 +1,110 @@
+{
+  "title": "PERKS RESEARCH",
+  "items": [
+    {
+      "name": "Unlock Perks",
+      "level": "Lv.0",
+      "benefit": "T2 150",
+      "time": "3d 11h 19m",
+      "cost": "1.5 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 1500000
+    },
+    {
+      "name": "Waves Required",
+      "level": "Lv.0",
+      "benefit": "T2 150",
+      "time": "0d 1h 39m",
+      "cost": "100 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 100,
+      "coinsToMaxRaw": 3234160000000000,
+      "costPlusOne": "220 K"
+    },
+    {
+      "name": "Auto Pick Perks",
+      "level": "Lv.0",
+      "benefit": "T4 50",
+      "time": "4d 23h 26m",
+      "cost": "100 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 100000000
+    },
+    {
+      "name": "Standard Perks Bonus",
+      "level": "Lv.0",
+      "benefit": "T2 150",
+      "time": "0d 1h 39m",
+      "cost": "100 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1079139580000,
+      "costPlusOne": "280 K"
+    },
+    {
+      "name": "Perk Option Quantity",
+      "level": "Lv.0",
+      "benefit": "T4 80",
+      "time": "4d 23h 26m",
+      "cost": "200 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 2,
+      "coinsToMaxRaw": 2200000000,
+      "costPlusOne": "2 B"
+    },
+    {
+      "name": "First Perk Choice",
+      "level": "Lv.0",
+      "benefit": "T2 250",
+      "time": "4d 15h 6m",
+      "cost": "1 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 1000000000
+    },
+    {
+      "name": "Ban Perks",
+      "level": "Lv.0",
+      "benefit": "T5 40",
+      "time": "2d 7h 33m",
+      "cost": "10 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 8,
+      "coinsToMaxRaw": 1101120000000000,
+      "costPlusOne": "100 M"
+    },
+    {
+      "name": "Improve Trade-off Perks",
+      "level": "Lv.0",
+      "benefit": "T2 400",
+      "time": "1d 0h 59m",
+      "cost": "600 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 10,
+      "coinsToMaxRaw": 17261350000,
+      "costPlusOne": "700.03 M"
+    },
+    {
+      "name": "Auto Pick Ranking",
+      "level": "Lv.0",
+      "benefit": "T6 10",
+      "time": "1d 23h 46m",
+      "cost": "100 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 32,
+      "coinsToMaxRaw": 948488598820,
+      "costPlusOne": "180 K"
+    }
+  ]
+}

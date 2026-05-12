@@ -1,0 +1,125 @@
+{
+  "title": "BOTS",
+  "items": [
+    {
+      "name": "Flame Bot - Cooldown",
+      "level": "Lv.0",
+      "benefit": "T5 60",
+      "time": "1d 14h 53m",
+      "cost": "30 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1808240050000,
+      "costPlusOne": "60.05 M"
+    },
+    {
+      "name": "Thunder Bot - Cooldown",
+      "level": "Lv.0",
+      "benefit": "T5 70",
+      "time": "1d 14h 53m",
+      "cost": "30 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1808240050000,
+      "costPlusOne": "60.05 M"
+    },
+    {
+      "name": "Gold Bot - Cooldown",
+      "level": "Lv.0",
+      "benefit": "T5 80",
+      "time": "1d 14h 53m",
+      "cost": "30 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1808240050000,
+      "costPlusOne": "60.05 M"
+    },
+    {
+      "name": "Amp Bot - Cooldown",
+      "level": "Lv.0",
+      "benefit": "T5 90",
+      "time": "1d 14h 53m",
+      "cost": "30 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1808240050000,
+      "costPlusOne": "60.05 M"
+    },
+    {
+      "name": "Bot Bot - Cooldown",
+      "level": "Lv.0",
+      "benefit": "T6 60",
+      "time": "1d 14h 53m",
+      "cost": "30 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 1808240050000,
+      "costPlusOne": "60.05 M"
+    },
+    {
+      "name": "Flame Bot - Burn Stack",
+      "level": "Lv.0",
+      "benefit": "T10 60",
+      "time": "45d 15h 0m",
+      "cost": "43 T",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 5,
+      "coinsToMaxRaw": 567070000000000,
+      "costPlusOne": "64.5 T"
+    },
+    {
+      "name": "Thunder Bot - Linger Time",
+      "level": "Lv.0",
+      "benefit": "T10 60",
+      "time": "8d 8h 0m",
+      "cost": "100 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 664838130000000,
+      "costPlusOne": "150 B"
+    },
+    {
+      "name": "Gold Bot - Duration",
+      "level": "Lv.0",
+      "benefit": "T10 60",
+      "time": "8d 8h 0m",
+      "cost": "100 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 664838130000000,
+      "costPlusOne": "150 B"
+    },
+    {
+      "name": "Amp Bot - Duration",
+      "level": "Lv.0",
+      "benefit": "T10 60",
+      "time": "8d 8h 0m",
+      "cost": "100 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 664838130000000,
+      "costPlusOne": "150 B"
+    },
+    {
+      "name": "Bot Bot - Duration",
+      "level": "Lv.0",
+      "benefit": "T10 60",
+      "time": "8d 8h 0m",
+      "cost": "100 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 664838130000000,
+      "costPlusOne": "150 B"
+    }
+  ]
+}

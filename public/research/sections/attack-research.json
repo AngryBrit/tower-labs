@@ -1,0 +1,112 @@
+{
+  "title": "ATTACK RESEARCH",
+  "items": [
+    {
+      "name": "Damage",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 100,
+      "coinsToMaxRaw": 116005939,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Attack Speed",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111695939,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Critical Factor",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111695939,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Range",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 80,
+      "coinsToMaxRaw": 50035939,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Damage / Meter",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "0d 0h 0m",
+      "cost": "30",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 99,
+      "coinsToMaxRaw": 111696469,
+      "costPlusOne": "71"
+    },
+    {
+      "name": "Super Crit Chance",
+      "level": "Lv.0",
+      "benefit": "+0.00%",
+      "time": "1d 3h 46m",
+      "cost": "200 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 50,
+      "coinsToMaxRaw": 800359361760,
+      "costPlusOne": "401 K"
+    },
+    {
+      "name": "Super Crit Multi",
+      "level": "Lv.0",
+      "benefit": "x1.00",
+      "time": "1d 3h 46m",
+      "cost": "200 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 40,
+      "coinsToMaxRaw": 221179361760,
+      "costPlusOne": "401 K"
+    },
+    {
+      "name": "Max Rend Armor Multiplier",
+      "level": "Lv.0",
+      "benefit": "x8.000",
+      "time": "3d 11h 19m",
+      "cost": "200 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 30,
+      "coinsToMaxRaw": 24571810000000,
+      "costPlusOne": "240 B"
+    },
+    {
+      "name": "Light Speed Shots",
+      "level": "Lv.0",
+      "benefit": "Unlock Light Speed Shots",
+      "time": "0d 19h 59m",
+      "cost": "3 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 3000000
+    }
+  ]
+}
