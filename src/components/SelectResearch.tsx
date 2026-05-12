@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { APP_VERSION } from '../appVersion'
 import type { ResearchData } from '../types/research'
 import {
   getLevelBounds,
@@ -47,6 +54,14 @@ export function SelectResearch({ data }: SelectResearchProps) {
     Record<string, number>
   >({})
   const [hydrated, setHydrated] = useState(false)
+  const [importNotice, setImportNotice] = useState<string | null>(null)
+  const importFileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!importNotice) return
+    const t = window.setTimeout(() => setImportNotice(null), 5000)
+    return () => window.clearTimeout(t)
+  }, [importNotice])
 
   useEffect(() => {
     try {
@@ -139,6 +154,72 @@ export function SelectResearch({ data }: SelectResearchProps) {
     setLevelOverrides({})
   }, [])
 
+  const handleExportLevels = useCallback(() => {
+    const payload = { v: 1 as const, levelOverrides }
+    const json = JSON.stringify(payload, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    a.href = url
+    a.download = `tower-lab-levels-${date}.json`
+    a.rel = 'noopener'
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [levelOverrides])
+
+  const handleImportLevelsClick = useCallback(() => {
+    importFileInputRef.current?.click()
+  }, [])
+
+  const handleImportFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target
+      const file = input.files?.[0]
+      input.value = ''
+      if (!file) return
+      try {
+        const text = await file.text()
+        const parsed: unknown = JSON.parse(text)
+        if (
+          !parsed ||
+          typeof parsed !== 'object' ||
+          !('levelOverrides' in parsed)
+        ) {
+          setImportNotice(
+            'Invalid file: expected JSON with a levelOverrides object.',
+          )
+          return
+        }
+        const lo = (parsed as { levelOverrides?: unknown }).levelOverrides
+        if (
+          !lo ||
+          typeof lo !== 'object' ||
+          Array.isArray(lo)
+        ) {
+          setImportNotice(
+            'Invalid file: levelOverrides must be a JSON object (not an array).',
+          )
+          return
+        }
+        const sanitized = sanitizeLevelOverrides(
+          data,
+          lo as Record<string, unknown>,
+        )
+        setLevelOverrides(sanitized)
+        const n = Object.keys(sanitized).length
+        setImportNotice(
+          n === 0
+            ? 'Imported file: all custom levels cleared.'
+            : `Imported ${n} lab level${n === 1 ? '' : 's'}.`,
+        )
+      } catch {
+        setImportNotice('Could not read file. Use a valid JSON export.')
+      }
+    },
+    [data],
+  )
+
   const searchFieldId = 'select-research-search'
 
   return (
@@ -190,6 +271,38 @@ export function SelectResearch({ data }: SelectResearchProps) {
         >
           Reset lab levels
         </button>
+        <div className="select-research__filter-actions">
+          <input
+            ref={importFileInputRef}
+            className="visually-hidden"
+            type="file"
+            accept=".json,application/json"
+            aria-hidden
+            tabIndex={-1}
+            onChange={handleImportFileChange}
+          />
+          <button
+            type="button"
+            className="glow-btn glow-btn--block"
+            onClick={handleImportLevelsClick}
+            disabled={!hydrated}
+          >
+            Import lab levels from file
+          </button>
+          <button
+            type="button"
+            className="glow-btn glow-btn--block"
+            onClick={handleExportLevels}
+            disabled={!hydrated}
+          >
+            Export lab levels to file
+          </button>
+        </div>
+        {importNotice ? (
+          <p className="select-research__import-notice" role="status">
+            {importNotice}
+          </p>
+        ) : null}
       </div>
 
       <div className="select-research__sections">
@@ -215,14 +328,12 @@ export function SelectResearch({ data }: SelectResearchProps) {
       <footer className="select-research__footer">
         <p className="app-hint">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--coin"
-              src="/coin.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--coin"
+                src="/coin.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Coin costs and research times use the bundled lab table in{' '}
           <code>src/data/tower-labs.json</code>. Card Mastery cards show wiki power-stone unlock on
@@ -232,71 +343,67 @@ export function SelectResearch({ data }: SelectResearchProps) {
         </p>
         <p className="app-hint app-hint--resource">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--gem"
-              src="/gem.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--gem"
+                src="/gem.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Shop gems and other non-coin prices are not included in these numbers.
         </p>
         <p className="app-hint app-hint--resource">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--stone"
-              src="/power-stone.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--stone"
+                src="/power-stone.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Other power-stone sinks besides the Card Mastery wiki unlock line are not included in these
           numbers.
         </p>
         <p className="app-hint app-hint--resource">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--medal"
-              src="/medal.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--medal"
+                src="/medal.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Medals and medal-based unlocks are not included in these numbers.
         </p>
         <p className="app-hint app-hint--resource">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--eliteCell"
-              src="/elite-cell.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--eliteCell"
+                src="/elite-cell.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Elite cells and cell-based economy are not included in these numbers.
         </p>
         <p className="app-hint app-hint--resource">
           <span className="resource-legend" aria-hidden>
-            <img
-              className="resource-legend__icon resource-legend__icon--cash"
-              src="/cash.png"
-              alt=""
-              width={14}
-              height={14}
-              decoding="async"
-            />
+              <img
+                className="resource-legend__icon resource-legend__icon--cash"
+                src="/cash.png"
+                alt=""
+                decoding="async"
+              />
           </span>{' '}
           Run cash (in-wave $) is separate from lab coins; wave cash is not modeled here.
         </p>
       </footer>
+      <p
+        className="select-research__version"
+        aria-label={`Tower Labs version ${APP_VERSION}`}
+      >
+        v{APP_VERSION}
+      </p>
     </div>
   )
 }

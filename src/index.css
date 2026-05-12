@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Dense UI was tuned for ~browser 200% zoom; lift default scale so 100% zoom is comfortable */
+  font-size: 200%;
+}
+
 html,
 body,
 #root {

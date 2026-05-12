@@ -172,8 +172,6 @@ export function ResearchCard({
                 className="research-card__costIcon"
                 src={stoneCost ? '/power-stone.png' : '/coin.png'}
                 alt=""
-                width={16}
-                height={16}
                 decoding="async"
                 aria-hidden
               />
