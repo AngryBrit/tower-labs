@@ -23,3 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local lab import scratch (not for the repo)
+tmp-labs-upstream.json
+tmp-labs.tsv
