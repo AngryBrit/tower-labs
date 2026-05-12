@@ -4,6 +4,7 @@ import {
   toolkitMarginalCoinCost,
   toolkitUpgradeDurationSeconds,
 } from '../labCosts'
+import cardMasteryTierLabels from '../data/card-mastery-tier-labels.json'
 
 export type ResearchState = 'default' | 'max' | 'researching'
 
@@ -21,6 +22,8 @@ export interface ResearchItem {
   coinsToMaxRaw?: number
   /** Lab Calculator “Next level +1” abbreviated coins (CSV col 14); optional */
   costPlusOne?: string
+  /** Wiki: power stones to unlock this card’s mastery on the cards screen (Card Mastery section only). */
+  stoneUnlockCost?: number
 }
 
 function applyLabsCoinDiscountToCoins(
@@ -46,11 +49,15 @@ function applyLabsCoinDiscountToCoinLabel(
 }
 
 /**
- * Marginal coin cost for the **next** upgrade at the simulated `effectiveLevel`.
+ * Marginal cost for the **next** upgrade at the simulated `effectiveLevel`.
  * Primary source: bundled `tower-labs.json` (per-lab per-level `COST`).
  * Fallback when the lab is not in that table: CSV snapshot `cost` / `costPlusOne` from import.
  *
- * `labsCoinDiscountPercent` is total Labs Coin Discount % from the simulated Labs Coin Discount lab level (list price × (1 − pct/100)).
+ * **Card Mastery** labs (`* Mastery`): the cost line shows **wiki stone unlock** (`stoneUnlockCost`
+ * on the row), not coin-style lab ladder totals. **Labs Coin Discount** does not apply.
+ *
+ * Other labs: `labsCoinDiscountPercent` is total Labs Coin Discount % from the simulated Labs Coin
+ * Discount lab level (list price × (1 − pct/100)).
  */
 export function marginalCostForNextUpgrade(
   item: ResearchItem,
@@ -59,6 +66,15 @@ export function marginalCostForNextUpgrade(
   labsCoinDiscountPercent = 0,
 ): string {
   if (maxLevelCap > 0 && effectiveLevel >= maxLevelCap) return 'Max'
+
+  const isCardMastery = item.name.endsWith(' Mastery')
+  if (isCardMastery) {
+    const s = item.stoneUnlockCost
+    if (typeof s === 'number' && Number.isFinite(s) && s >= 0) {
+      return String(Math.round(s))
+    }
+    return '—'
+  }
 
   const fromToolkit = toolkitMarginalCoinCost(item.name, effectiveLevel)
   if (fromToolkit != null) {
@@ -85,6 +101,11 @@ export function marginalCostForNextUpgrade(
   }
 
   return '—'
+}
+
+/** True for Card Mastery lab rows (`Damage Mastery`, …). */
+export function isCardMasteryResearchItem(item: { name: string }): boolean {
+  return item.name.endsWith(' Mastery')
 }
 
 /** Numeric bounds for +/- controls (falls back when optional fields missing). */
@@ -158,6 +179,15 @@ export function labsSpeedValueDisplay(
   return `x${v.toFixed(1)}`
 }
 
+function moduleLabCappedLevel(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
+  return maxLevelCap > 0
+    ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+    : Math.max(0, effectiveLevel)
+}
+
 /** Single-level unlock labs: Lv.0 shows prompt; purchased → **Unlocked**. */
 export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'More Round Stats': 'Unlock Round Stats',
@@ -179,6 +209,7 @@ export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'Unlock Perks': 'Unlock Perks',
   'Auto Pick Perks': 'Unlock Auto Pick Perks',
   'First Perk Choice': 'Unlock First Perk Choice',
+  'Unmerge Module': 'Unlock Module Unmerge',
 }
 
 function isUnlockLabItem(name: string): boolean {
@@ -234,7 +265,19 @@ export function buyMultiplierValueDisplay(
   return `x${v}`
 }
 
-/** Battle Condition Reduction Value column: 1.00 ... 10.00 by level (Lv.0 => x0.00). */
+/** BC Groups 1–4 resistance / BC reduction labs — wiki **Value**: **1% × lab level** (Lv.0→**0%**; cap by **maxLevel**). */
+export function battleConditionsGroup1ResistanceValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `${capped}%`
+}
+
+/** Battle Condition Reduction — wiki **Value**: **2% × lab level** (Lv.0→**0%** … Lv.10→**20%**). */
 export function battleConditionReductionValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
@@ -243,7 +286,7 @@ export function battleConditionReductionValueDisplay(
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  return `x${capped.toFixed(2)}`
+  return `${(capped * 2).toFixed(0)}%`
 }
 
 /**
@@ -642,6 +685,57 @@ function includePercentTimesLabLevelDisplay(
       : Math.max(0, effectiveLevel)
   const pct = pctPerLevel * capped
   return `+${pct.toFixed(2)}%`
+}
+
+/**
+ * **Common** / **Fast** / **Tank** / **Ranged** enemy Health & Attack, **Fast** Speed,
+ * **Ray Enemy Attack** / **Ray Enemy Health** / **Vampire Enemy Attack** / **Vampire Enemy Health** /
+ * **Scatter Enemy Attack** / **Scatter Enemy Health** — **-0.40% × lab level** (Lv.30→**-12.00%**).
+ */
+export function commonEnemyStatReductionPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '-0.00%'
+  const pct = -0.4 * capped
+  return `${pct.toFixed(2)}%`
+}
+
+/**
+ * **Boss** / **Protector Health** / **Protector Radius** / **Protector Damage Reduction** —
+ * **-0.30% × lab level** (Lv.30→**-9.00%** when `maxLevelCap` is 30; **Protector Damage Reduction** max 20→**-6.00%**).
+ */
+export function bossEnemyStatReductionPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '-0.00%'
+  const pct = -0.3 * capped
+  return `${pct.toFixed(2)}%`
+}
+
+/**
+ * **Ranged Enemy Range** — **-0.50% × lab level** (Lv.30→**-15.00%**).
+ */
+export function rangedEnemyRangeReductionPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '-0.00%'
+  const pct = -0.5 * capped
+  return `${pct.toFixed(2)}%`
 }
 
 /**
@@ -1365,6 +1459,27 @@ function tierStyleBenefitDisplay(item: ResearchItem): string | null {
 
 const KMH_BENEFIT_RE = /^([\d.]+)\s*K\/h$/i
 
+const CARD_MASTERY_TIER_LABELS = cardMasteryTierLabels as Record<
+  string,
+  readonly string[]
+>
+
+function cardMasteryBenefitDisplay(
+  itemName: string,
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string | null {
+  if (!itemName.endsWith(' Mastery')) return null
+  const tiers = CARD_MASTERY_TIER_LABELS[itemName]
+  if (!tiers?.length) return null
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const idx = Math.min(capped, tiers.length - 1)
+  return tiers[idx] ?? null
+}
+
 /** “Cph” style `12.34 K/h` — approximate next tiers by moving **1%/level** of the snapshot rate per simulated level step from the import row. */
 function kmhStyleBenefitDisplay(
   item: ResearchItem,
@@ -1410,8 +1525,40 @@ export function benefitDisplayForCard(
   if (item.name === 'Buy Multiplier') {
     return buyMultiplierValueDisplay(effectiveLevel, maxLevelCap)
   }
+  const cardMastery = cardMasteryBenefitDisplay(
+    item.name,
+    effectiveLevel,
+    maxLevelCap,
+  )
+  if (cardMastery !== null) return cardMastery
   if (item.name === 'Battle Condition Reduction') {
     return battleConditionReductionValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (
+    item.name === 'Knockback Resistance' ||
+    item.name === 'Thorns Resistance' ||
+    item.name === 'Orb Resistance' ||
+    item.name === 'Plasma Cannon Resistance' ||
+    item.name === 'Death Ray Resistance' ||
+    item.name === 'Armored Enemies' ||
+    item.name === 'Enemy Speed' ||
+    item.name === 'More Enemies' ||
+    item.name === 'Enemy Attack Speed' ||
+    item.name === "Fast's Ultimate" ||
+    item.name === 'Ranged Ultimate' ||
+    item.name === "Boss's Ultimate" ||
+    item.name === "Basic's Ultimate" ||
+    item.name === "Tank's Ultimate" ||
+    item.name === "Protector's Ultimate" ||
+    item.name === 'Ultimate Weapon Durations' ||
+    item.name === 'Death Defy Down' ||
+    item.name === 'Energy Shields Down' ||
+    item.name === 'Enemy Level Skip Reduction'
+  ) {
+    return battleConditionsGroup1ResistanceValueDisplay(
+      effectiveLevel,
+      maxLevelCap,
+    )
   }
   if (
     item.name === 'Damage' ||
@@ -1674,6 +1821,37 @@ export function benefitDisplayForCard(
       0.4,
     )
   }
+  if (item.name === 'Ranged Enemy Range') {
+    return rangedEnemyRangeReductionPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (
+    item.name === 'Common Enemy Health' ||
+    item.name === 'Common Enemy Attack' ||
+    item.name === 'Fast Enemy Health' ||
+    item.name === 'Fast Enemy Attack' ||
+    item.name === 'Fast Enemy Speed' ||
+    item.name === 'Tank Enemy Health' ||
+    item.name === 'Tank Enemy Attack' ||
+    item.name === 'Ranged Enemy Health' ||
+    item.name === 'Ranged Enemy Attack' ||
+    item.name === 'Ray Enemy Attack' ||
+    item.name === 'Ray Enemy Health' ||
+    item.name === 'Vampire Enemy Attack' ||
+    item.name === 'Vampire Enemy Health' ||
+    item.name === 'Scatter Enemy Attack' ||
+    item.name === 'Scatter Enemy Health'
+  ) {
+    return commonEnemyStatReductionPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (
+    item.name === 'Boss Health' ||
+    item.name === 'Boss Attack' ||
+    item.name === 'Protector Health' ||
+    item.name === 'Protector Radius' ||
+    item.name === 'Protector Damage Reduction'
+  ) {
+    return bossEnemyStatReductionPercentDisplay(effectiveLevel, maxLevelCap)
+  }
   if (
     item.name === 'Enemy Attack Level Skip' ||
     item.name === 'Enemy Health Level Skip'
@@ -1683,6 +1861,40 @@ export function benefitDisplayForCard(
       maxLevelCap,
       0.1,
     )
+  }
+  if (item.name === 'Common Drop Chance' || item.name === 'Rare Drop Chance') {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    return `+${(capped * 0.1).toFixed(2)}%`
+  }
+  if (item.name === 'Reroll Shards' || item.name === 'Daily Mission Shards') {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    return `+${capped}`
+  }
+  if (item.name === 'Module Shards Cost' || item.name === 'Module Coin Cost') {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    if (capped <= 0) return '0%'
+    return `-${capped}%`
+  }
+  if (item.name === 'Shatter Shards') {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    if (capped <= 0) return '0%'
+    return `+${capped * 20}%`
+  }
+  if (
+    item.name.startsWith('Assist Module Substats - ') ||
+    item.name.startsWith('Assist Module Bonus - ')
+  ) {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    return `${capped}%`
+  }
+  if (
+    item.name === 'Cannon Effect Bans' ||
+    item.name === 'Armor Effect Bans' ||
+    item.name === 'Generator Effect Bans' ||
+    item.name === 'Core Effect Bans'
+  ) {
+    const capped = moduleLabCappedLevel(effectiveLevel, maxLevelCap)
+    return String(capped)
   }
 
   const tier = tierStyleBenefitDisplay(item)
@@ -1846,6 +2058,14 @@ function isResearchItem(v: unknown): v is ResearchItem {
     return false
   }
   if (o.costPlusOne !== undefined && typeof o.costPlusOne !== 'string') {
+    return false
+  }
+  if (
+    o.stoneUnlockCost !== undefined &&
+    (typeof o.stoneUnlockCost !== 'number' ||
+      !Number.isFinite(o.stoneUnlockCost) ||
+      o.stoneUnlockCost < 0)
+  ) {
     return false
   }
   return true

@@ -214,10 +214,87 @@ export function SelectResearch({ data }: SelectResearchProps) {
 
       <footer className="select-research__footer">
         <p className="app-hint">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--coin"
+              src="/coin.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
           Coin costs and research times use the bundled lab table in{' '}
-          <code>src/data/tower-labs.json</code>. Section rows and benefits come from{' '}
-          <code>public/research/</code>. All of that data lives in this repo only—nothing is loaded from
-          external APIs.
+          <code>src/data/tower-labs.json</code>. Card Mastery cards show wiki power-stone unlock on
+          the cost line (from <code>public/research/sections/card-mastery.json</code>), not abbreviated
+          coin ladder totals. Section rows and benefits come from <code>public/research/</code>. All
+          of that data lives in this repo only—nothing is loaded from external APIs.
+        </p>
+        <p className="app-hint app-hint--resource">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--gem"
+              src="/gem.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
+          Shop gems and other non-coin prices are not included in these numbers.
+        </p>
+        <p className="app-hint app-hint--resource">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--stone"
+              src="/power-stone.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
+          Other power-stone sinks besides the Card Mastery wiki unlock line are not included in these
+          numbers.
+        </p>
+        <p className="app-hint app-hint--resource">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--medal"
+              src="/medal.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
+          Medals and medal-based unlocks are not included in these numbers.
+        </p>
+        <p className="app-hint app-hint--resource">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--eliteCell"
+              src="/elite-cell.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
+          Elite cells and cell-based economy are not included in these numbers.
+        </p>
+        <p className="app-hint app-hint--resource">
+          <span className="resource-legend" aria-hidden>
+            <img
+              className="resource-legend__icon resource-legend__icon--cash"
+              src="/cash.png"
+              alt=""
+              width={14}
+              height={14}
+              decoding="async"
+            />
+          </span>{' '}
+          Run cash (in-wave $) is separate from lab coins; wave cash is not modeled here.
         </p>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   benefitLineWithNextUpgrade,
+  isCardMasteryResearchItem,
   marginalCostForNextUpgrade,
   researchTimeForNextUpgrade,
   type ResearchItem,
@@ -73,6 +74,8 @@ export function ResearchCard({
     }
     onLevelSet(n)
   }
+
+  const stoneCost = isCardMasteryResearchItem(item)
 
   return (
     <article
@@ -160,11 +163,20 @@ export function ResearchCard({
               —
             </span>
           ) : (
-            <span className="research-card__cost">
+            <span
+              className="research-card__cost"
+              title={stoneCost ? 'Stones (wiki unlock cost)' : 'Coins (next upgrade)'}
+            >
               {nextCost}
-              <span className="research-card__coin" aria-hidden>
-                C
-              </span>
+              <img
+                className="research-card__costIcon"
+                src={stoneCost ? '/power-stone.png' : '/coin.png'}
+                alt=""
+                width={16}
+                height={16}
+                decoding="async"
+                aria-hidden
+              />
             </span>
           )}
         </div>

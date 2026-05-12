@@ -8,8 +8,10 @@ import {
   benefitDisplayForCard,
   benefitLineWithNextUpgrade,
   getLevelBounds,
+  marginalCostForNextUpgrade,
   parseResearchManifest,
   parseResearchSection,
+  researchTimeForNextUpgrade,
   type ResearchItem,
 } from './types/research'
 
@@ -233,6 +235,631 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
     })
   })
 
+  describe('CARD MASTERY — shared ladder (wiki), effect tiers', () => {
+    const mastery = loadAllSections().find((s) => s.title === 'CARD MASTERY')
+    if (!mastery) throw new Error('fixture missing CARD MASTERY')
+
+    it('wiki stone unlock cost per mastery row', () => {
+      const cash = mastery.items.find((i) => i.name === 'Cash Mastery')
+      const coins = mastery.items.find((i) => i.name === 'Coins Mastery')
+      const pkg = mastery.items.find(
+        (i) => i.name === 'Recovery Package Chance Mastery',
+      )
+      expect(cash?.stoneUnlockCost).toBe(500)
+      expect(coins?.stoneUnlockCost).toBe(1250)
+      expect(pkg?.stoneUnlockCost).toBe(1000)
+    })
+
+    it('marginal next cost for fixture Damage Mastery is wiki stones, not coin abbrev', () => {
+      const lab = mastery.items.find((i) => i.name === 'Damage Mastery')
+      expect(lab).toBeDefined()
+      const max = 9
+      expect(marginalCostForNextUpgrade(lab!, 0, max, 0)).toBe('750')
+      expect(marginalCostForNextUpgrade(lab!, 0, max, 50)).toBe('750')
+    })
+
+    it('marginal cost/duration resolve via Card Mastery for any * Mastery display name', () => {
+      expect(toolkitMarginalCoinCost('Damage Mastery', 0)).toBe(
+        1_100_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Critical Chance Mastery', 8)).toBe(
+        10_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Slow Aura Mastery', 2)).toBe(
+        3_600_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Area of Effect Mastery', 8)).toBe(
+        9_000_000,
+      )
+    })
+
+    it('research time uses Card Mastery DURATION (wiki L1 and L9)', () => {
+      const lab = mastery.items.find((i) => i.name === 'Damage Mastery')
+      expect(lab).toBeDefined()
+      const max = 9
+      expect(researchTimeForNextUpgrade(lab!, 0, max)).toBe('20d 20h 0m')
+      expect(researchTimeForNextUpgrade(lab!, 8, max)).toBe('104d 4h 0m')
+      expect(researchTimeForNextUpgrade(lab!, max, max)).toBe('Max')
+    })
+
+    it('Damage Mastery benefit follows wiki mastery columns 0–9', () => {
+      const lab = mastery.items.find((i) => i.name === 'Damage Mastery')
+      expect(lab).toBeDefined()
+      const max = 9
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.4')
+      expect(benefitDisplayForCard(lab!, 9, max)).toBe('x5')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.4 » x1.8')
+      expect(benefitLineWithNextUpgrade(lab!, 8, max)).toBe('x4.6 » x5')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x5')
+    })
+
+    it('marginal next cost uses wiki stone unlock; Labs Coin Discount does not apply', () => {
+      const item: ResearchItem = {
+        name: 'Damage Mastery',
+        level: 'Lv.0',
+        benefit: 'T16 100',
+        time: '20d 20h 0m',
+        cost: '1.1 q',
+        state: 'default',
+        currentLevel: 0,
+        maxLevel: 9,
+        costPlusOne: '1.3 q',
+        stoneUnlockCost: 750,
+      }
+      expect(marginalCostForNextUpgrade(item, 0, 9, 0)).toBe('750')
+      expect(marginalCostForNextUpgrade(item, 0, 9, 99)).toBe('750')
+    })
+
+    it('Free Upgrades Mastery and Wave Skip Mastery tier strings', () => {
+      const free = mastery.items.find((i) => i.name === 'Free Upgrades Mastery')
+      const skip = mastery.items.find((i) => i.name === 'Wave Skip Mastery')
+      expect(free).toBeDefined()
+      expect(skip).toBeDefined()
+      const max = 9
+      expect(benefitDisplayForCard(free!, 4, max)).toBe('5')
+      expect(benefitDisplayForCard(skip!, 3, max)).toBe('25%')
+    })
+  })
+
+  describe('MODULES — drop chance, shards, upgrade costs, unmerge, shatter', () => {
+    const modules = loadAllSections().find((s) => s.title === 'MODULES')
+    if (!modules) throw new Error('fixture missing MODULES')
+
+    it('Module Coin Cost unlocks at T4 70; shard cost stays T10 40', () => {
+      const coin = modules.items.find((i) => i.name === 'Module Coin Cost')
+      const shard = modules.items.find((i) => i.name === 'Module Shards Cost')
+      expect(coin?.benefit).toBe('T4 70')
+      expect(shard?.benefit).toBe('T10 40')
+    })
+
+    it('Common Drop Chance +0.10% per level to +1.00%', () => {
+      const lab = modules.items.find((i) => i.name === 'Common Drop Chance')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.10%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+1.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00% » +0.10%')
+      expect(benefitLineWithNextUpgrade(lab!, 9, max)).toBe('+0.90% » +1.00%')
+    })
+
+    it('Rare Drop Chance +0.10% per level to +1.00%', () => {
+      const lab = modules.items.find((i) => i.name === 'Rare Drop Chance')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 3, max)).toBe('+0.30%')
+    })
+
+    it('Reroll Shards +1 per level to +100', () => {
+      const lab = modules.items.find((i) => i.name === 'Reroll Shards')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 100
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1')
+      expect(benefitDisplayForCard(lab!, 100, max)).toBe('+100')
+    })
+
+    it('Daily Mission Shards +1 per level to +50', () => {
+      const lab = modules.items.find((i) => i.name === 'Daily Mission Shards')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 50
+      expect(benefitDisplayForCard(lab!, 50, max)).toBe('+50')
+    })
+
+    it('Module Shards Cost and Module Coin Cost −n% shard/coin upgrade cost', () => {
+      const shard = modules.items.find((i) => i.name === 'Module Shards Cost')
+      const coin = modules.items.find((i) => i.name === 'Module Coin Cost')
+      expect(shard).toBeDefined()
+      expect(coin).toBeDefined()
+      const max = 30
+      expect(benefitDisplayForCard(shard!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(shard!, 1, max)).toBe('-1%')
+      expect(benefitDisplayForCard(shard!, 30, max)).toBe('-30%')
+      expect(benefitDisplayForCard(coin!, 15, max)).toBe('-15%')
+    })
+
+    it('Unmerge Module is single-level unlock lab', () => {
+      const lab = modules.items.find((i) => i.name === 'Unmerge Module')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Module Unmerge')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Module Unmerge',
+      )
+    })
+
+    it('Shatter Shards +20% per level to +100%', () => {
+      const lab = modules.items.find((i) => i.name === 'Shatter Shards')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 5
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+20%')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('+100%')
+    })
+
+    it('tower-labs marginal COST/DURATION match wiki (spot rows)', () => {
+      expect(toolkitMarginalCoinCost('Common Drop Chance', 0)).toBe(5_000_000)
+      expect(toolkitUpgradeDurationSeconds('Common Drop Chance', 0)).toBe(
+        360_000,
+      )
+      expect(toolkitMarginalCoinCost('Common Drop Chance', 9)).toBe(
+        7_320_000_000,
+      )
+
+      expect(toolkitMarginalCoinCost('Reroll Shards', 0)).toBe(900_000)
+      expect(toolkitUpgradeDurationSeconds('Reroll Shards', 0)).toBe(120_000)
+      expect(toolkitMarginalCoinCost('Reroll Shards', 99)).toBe(
+        488_930_000_000,
+      )
+
+      expect(toolkitMarginalCoinCost('Daily Mission Shards', 0)).toBe(
+        1_200_000,
+      )
+      expect(toolkitMarginalCoinCost('Daily Mission Shards', 49)).toBe(
+        352_950_000_000,
+      )
+
+      expect(toolkitMarginalCoinCost('Module Shards Cost', 0)).toBe(
+        5_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Module Shards Cost', 1)).toBe(
+        5_120_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Module Coin Cost', 0)).toBe(
+        5_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Module Coin Cost', 1)).toBe(
+        5_130_000_000,
+      )
+
+      expect(toolkitMarginalCoinCost('Rare Drop Chance', 0)).toBe(
+        70_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Unmerge Module', 0)).toBe(10_000_000)
+      expect(toolkitUpgradeDurationSeconds('Unmerge Module', 0)).toBe(
+        172_800,
+      )
+
+      expect(toolkitMarginalCoinCost('Shatter Shards', 0)).toBe(
+        10_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Shatter Shards', 4)).toBe(
+        1_190_000_000_000_000,
+      )
+    })
+
+    it('Assist Module labs: Value n% per level; shared tower-labs (wiki 30 rows)', () => {
+      const cannon = modules.items.find(
+        (i) => i.name === 'Assist Module Substats - Cannon',
+      )
+      expect(cannon).toBeDefined()
+      const max = cannon!.maxLevel ?? 30
+      expect(benefitDisplayForCard(cannon!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(cannon!, 1, max)).toBe('1%')
+      expect(benefitDisplayForCard(cannon!, 30, max)).toBe('30%')
+      expect(benefitLineWithNextUpgrade(cannon!, 0, max)).toBe('0% » 1%')
+
+      const bonus = modules.items.find(
+        (i) => i.name === 'Assist Module Bonus - Armor',
+      )
+      expect(bonus).toBeDefined()
+      expect(toolkitMarginalCoinCost('Assist Module Bonus - Armor', 0)).toBe(
+        250_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Assist Module Bonus - Armor', 0)).toBe(
+        933_060,
+      )
+      expect(toolkitMarginalCoinCost('Assist Module Substats - Cannon', 29)).toBe(
+        7_500_000_000_000_000,
+      )
+      expect(
+        toolkitUpgradeDurationSeconds('Assist Module Substats - Cannon', 29),
+      ).toBe(27_992_340)
+    })
+
+    it('Cannon Effect Bans T10 40; Value 0–4 bans; tower-labs wiki rows 1 and 4', () => {
+      const lab = modules.items.find((i) => i.name === 'Cannon Effect Bans')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T10 40')
+      const max = lab!.maxLevel ?? 4
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('4')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0 » 1')
+      expect(toolkitMarginalCoinCost('Cannon Effect Bans', 0)).toBe(
+        500_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Cannon Effect Bans', 0)).toBe(
+        3_240_000,
+      )
+      expect(toolkitMarginalCoinCost('Cannon Effect Bans', 3)).toBe(
+        50_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Cannon Effect Bans', 3)).toBe(
+        17_640_000,
+      )
+    })
+
+    it('Armor Effect Bans T10 40; same ladder as Cannon (lab alias); Value 0–4 bans', () => {
+      const lab = modules.items.find((i) => i.name === 'Armor Effect Bans')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T10 40')
+      const max = lab!.maxLevel ?? 4
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('2')
+      expect(benefitLineWithNextUpgrade(lab!, 3, max)).toBe('3 » 4')
+      expect(toolkitMarginalCoinCost('Armor Effect Bans', 0)).toBe(
+        500_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Armor Effect Bans', 0)).toBe(
+        3_240_000,
+      )
+    })
+
+    it('Generator Effect Bans T10 40; 3 levels; Value 0–3 bans; wiki time/cost', () => {
+      const lab = modules.items.find((i) => i.name === 'Generator Effect Bans')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T10 40')
+      const max = lab!.maxLevel ?? 3
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 3, max)).toBe('3')
+      expect(benefitLineWithNextUpgrade(lab!, 2, max)).toBe('2 » 3')
+      expect(toolkitMarginalCoinCost('Generator Effect Bans', 0)).toBe(
+        5_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Generator Effect Bans', 0)).toBe(
+        5_400_000,
+      )
+      expect(toolkitMarginalCoinCost('Generator Effect Bans', 2)).toBe(
+        50_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Generator Effect Bans', 2)).toBe(
+        17_640_000,
+      )
+    })
+
+    it('Core Effect Bans T10 40; 7 levels; Value 0–7 bans; wiki time/cost', () => {
+      const lab = modules.items.find((i) => i.name === 'Core Effect Bans')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T10 40')
+      const max = lab!.maxLevel ?? 7
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('7')
+      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe('6 » 7')
+      expect(toolkitMarginalCoinCost('Core Effect Bans', 0)).toBe(50_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Core Effect Bans', 0)).toBe(
+        1_440_000,
+      )
+      expect(toolkitMarginalCoinCost('Core Effect Bans', 6)).toBe(
+        500_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Core Effect Bans', 6)).toBe(
+        21_600_000,
+      )
+    })
+  })
+
+  describe('ENEMIES — Common, Fast, Tank, Ranged, Boss, Protector, Ray, Vampire, Scatter & Ranged Enemy Range', () => {
+    const enemies = loadAllSections().find((s) => s.title === 'ENEMIES')
+    if (!enemies) throw new Error('fixture missing ENEMIES')
+
+    it('Common Enemy Health milestone T9 10; Value -0.40%/level', () => {
+      const lab = enemies.items.find((i) => i.name === 'Common Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 10')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('-0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('-0.40%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-4.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('-12.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('-0.00% » -0.40%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe(
+        '-11.60% » -12.00%',
+      )
+    })
+
+    it('Common Enemy Attack milestone T3 300; same curve as Health', () => {
+      const lab = enemies.items.find((i) => i.name === 'Common Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T3 300')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 3, max)).toBe('-1.20%')
+    })
+
+    it('Common Enemy Health tower-labs match wiki rows 1 and 30', () => {
+      expect(toolkitMarginalCoinCost('Common Enemy Health', 0)).toBe(
+        20_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Common Enemy Health', 0)).toBe(
+        199_980,
+      )
+      expect(toolkitMarginalCoinCost('Common Enemy Health', 29)).toBe(
+        2_400_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Common Enemy Health', 29)).toBe(
+        13_944_480,
+      )
+    })
+
+    it('Common Enemy Attack shares Health marginal cost/duration', () => {
+      expect(toolkitMarginalCoinCost('Common Enemy Attack', 0)).toBe(
+        20_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Common Enemy Attack', 14)).toBe(
+        1_555_740,
+      )
+    })
+
+    it('Fast Enemy Health milestone T9 20; Value -0.40%/level; 30B curve', () => {
+      const lab = enemies.items.find((i) => i.name === 'Fast Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('-0.00%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-4.00%')
+      expect(toolkitMarginalCoinCost('Fast Enemy Health', 0)).toBe(
+        30_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Fast Enemy Health', 0)).toBe(
+        199_980,
+      )
+      expect(toolkitMarginalCoinCost('Fast Enemy Health', 29)).toBe(
+        2_700_000_000_000,
+      )
+    })
+
+    it('Fast Enemy Attack matches Health marginal table', () => {
+      expect(toolkitMarginalCoinCost('Fast Enemy Attack', 0)).toBe(
+        30_000_000_000,
+      )
+    })
+
+    it('Fast Enemy Speed milestone T9 300; steeper time/cost; same Value %', () => {
+      const lab = enemies.items.find((i) => i.name === 'Fast Enemy Speed')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 300')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('-2.00%')
+      expect(toolkitMarginalCoinCost('Fast Enemy Speed', 0)).toBe(60_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Fast Enemy Speed', 0)).toBe(239_940)
+      expect(toolkitMarginalCoinCost('Fast Enemy Speed', 29)).toBe(
+        3_600_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Fast Enemy Speed', 29)).toBe(
+        13_984_500,
+      )
+    })
+
+    it('Tank Enemy Health milestone T9 20; same Value % and 30B curve as Fast', () => {
+      const lab = enemies.items.find((i) => i.name === 'Tank Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 15, max)).toBe('-6.00%')
+      expect(toolkitMarginalCoinCost('Tank Enemy Health', 0)).toBe(
+        30_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Tank Enemy Health', 9)).toBe(
+        660_660,
+      )
+    })
+
+    it('Tank Enemy Attack milestone T9 20; shares Health marginal table', () => {
+      const lab = enemies.items.find((i) => i.name === 'Tank Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      expect(toolkitMarginalCoinCost('Tank Enemy Attack', 29)).toBe(
+        2_700_000_000_000,
+      )
+    })
+
+    it('Ranged Enemy Health milestone T9 20; Value % and 30B toolkit', () => {
+      const lab = enemies.items.find((i) => i.name === 'Ranged Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('-8.00%')
+      expect(toolkitMarginalCoinCost('Ranged Enemy Health', 0)).toBe(
+        30_000_000_000,
+      )
+    })
+
+    it('Ranged Enemy Attack milestone T9 20; shares Health marginal table', () => {
+      const lab = enemies.items.find((i) => i.name === 'Ranged Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      expect(toolkitUpgradeDurationSeconds('Ranged Enemy Attack', 19)).toBe(
+        3_579_360,
+      )
+    })
+
+    it('Boss Health milestone T9 20; Value -0.30%/level (max -9.00%)', () => {
+      const lab = enemies.items.find((i) => i.name === 'Boss Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('-0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('-0.30%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-3.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('-9.00%')
+      expect(toolkitMarginalCoinCost('Boss Health', 0)).toBe(40_000_000_000)
+      expect(toolkitMarginalCoinCost('Boss Health', 29)).toBe(
+        3_000_000_000_000,
+      )
+    })
+
+    it('Boss Attack matches Boss Health Value curve and marginal table', () => {
+      const lab = enemies.items.find((i) => i.name === 'Boss Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('-6.00%')
+      expect(toolkitUpgradeDurationSeconds('Boss Attack', 0)).toBe(199_980)
+    })
+
+    it('Protector Health & Radius milestone T9 20; same -0.30% curve as Boss', () => {
+      const health = enemies.items.find((i) => i.name === 'Protector Health')
+      const radius = enemies.items.find((i) => i.name === 'Protector Radius')
+      expect(health).toBeDefined()
+      expect(radius).toBeDefined()
+      expect(health!.benefit).toBe('T9 20')
+      expect(radius!.benefit).toBe('T9 20')
+      const max30 = health!.maxLevel ?? 30
+      expect(benefitDisplayForCard(health!, 30, max30)).toBe('-9.00%')
+      expect(toolkitMarginalCoinCost('Protector Radius', 0)).toBe(
+        40_000_000_000,
+      )
+    })
+
+    it('Protector Damage Reduction T9 20; 20 levels max -6.00%; 80B / longer-time curve', () => {
+      const lab = enemies.items.find(
+        (i) => i.name === 'Protector Damage Reduction',
+      )
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T9 20')
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-3.00%')
+      expect(benefitDisplayForCard(lab!, max, max)).toBe('-6.00%')
+      expect(toolkitMarginalCoinCost('Protector Damage Reduction', 0)).toBe(
+        80_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Protector Damage Reduction', 0)).toBe(
+        239_940,
+      )
+      expect(toolkitMarginalCoinCost('Protector Damage Reduction', 19)).toBe(
+        1_770_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Protector Damage Reduction', 19)).toBe(
+        3_619_380,
+      )
+    })
+
+    it('Ray Enemy Attack T19 60; -0.40%/level; tower-labs Q costs + wiki durations', () => {
+      const lab = enemies.items.find((i) => i.name === 'Ray Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('-0.00%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-4.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('-12.00%')
+      expect(toolkitMarginalCoinCost('Ray Enemy Attack', 0)).toBe(
+        250_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Ray Enemy Attack', 0)).toBe(933_060)
+      expect(toolkitMarginalCoinCost('Ray Enemy Attack', 29)).toBe(
+        7_500_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Ray Enemy Attack', 29)).toBe(
+        27_992_340,
+      )
+    })
+
+    it('Ray Enemy Health shares Ray Attack marginal Q table + -0.40%/level', () => {
+      const lab = enemies.items.find((i) => i.name === 'Ray Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      expect(lab!.cost).toBe('0.25 q')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('-2.00%')
+      expect(toolkitMarginalCoinCost('Ray Enemy Health', 0)).toBe(
+        250_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Ray Enemy Health', 14)).toBe(
+        13_996_140,
+      )
+    })
+
+    it('Vampire Enemy Attack T19 60; -0.40%/level; shares Ray Attack Q tower-labs', () => {
+      const lab = enemies.items.find((i) => i.name === 'Vampire Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('-0.40%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('-12.00%')
+      expect(toolkitMarginalCoinCost('Vampire Enemy Attack', 0)).toBe(
+        250_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Vampire Enemy Attack', 9)).toBe(
+        9_330_780,
+      )
+    })
+
+    it('Vampire Enemy Health T19 60; shares Ray Q marginals + -0.40%/level', () => {
+      const lab = enemies.items.find((i) => i.name === 'Vampire Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      expect(lab!.cost).toBe('0.25 q')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 15, max)).toBe('-6.00%')
+      expect(toolkitMarginalCoinCost('Vampire Enemy Health', 29)).toBe(
+        7_500_000_000_000_000,
+      )
+    })
+
+    it('Scatter Enemy Attack T19 60; shares Ray Q marginals + -0.40%/level', () => {
+      const lab = enemies.items.find((i) => i.name === 'Scatter Enemy Attack')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('-10.00%')
+      expect(toolkitMarginalCoinCost('Scatter Enemy Attack', 0)).toBe(
+        250_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Scatter Enemy Attack', 24)).toBe(
+        23_326_920,
+      )
+    })
+
+    it('Scatter Enemy Health T19 60; shares Ray Q marginals + -0.40%/level', () => {
+      const lab = enemies.items.find((i) => i.name === 'Scatter Enemy Health')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T19 60')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('-2.80%')
+      expect(toolkitMarginalCoinCost('Scatter Enemy Health', 0)).toBe(
+        250_000_000_000_000,
+      )
+    })
+
+    it('Ranged Enemy Range T13 80; -0.50%/level; T marginal tower-labs', () => {
+      const lab = enemies.items.find((i) => i.name === 'Ranged Enemy Range')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T13 80')
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('-0.00%')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('-2.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('-15.00%')
+      expect(toolkitMarginalCoinCost('Ranged Enemy Range', 0)).toBe(
+        1_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Ranged Enemy Range', 0)).toBe(
+        233_220,
+      )
+      expect(toolkitMarginalCoinCost('Ranged Enemy Range', 29)).toBe(
+        17_286_700_000_000_000,
+      )
+    })
+  })
+
   describe('MAIN RESEARCH spot checks', () => {
     const main = loadAllSections().find((s) => s.title === 'MAIN RESEARCH')
     if (!main) throw new Error('fixture missing MAIN RESEARCH')
@@ -390,16 +1017,96 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
     const battle = loadAllSections().find((s) => s.title === 'BATTLE CONDITION')
     if (!battle) throw new Error('fixture missing BATTLE CONDITION')
 
-    it('Battle Condition Reduction uses calculator Value (x0.00..x10.00)', () => {
+    it('Battle Condition Reduction — wiki Value 0%..20% (+2%/level) + marginal ladder', () => {
       const bcr = battle.items.find((i) => i.name === 'Battle Condition Reduction')
       expect(bcr).toBeDefined()
       const max = bcr!.maxLevel ?? 10
-      expect(benefitDisplayForCard(bcr!, 0, max)).toBe('x0.00')
-      expect(benefitDisplayForCard(bcr!, 1, max)).toBe('x1.00')
-      expect(benefitDisplayForCard(bcr!, 10, max)).toBe('x10.00')
-      expect(benefitLineWithNextUpgrade(bcr!, 0, max)).toBe('x0.00 » x1.00')
-      expect(benefitLineWithNextUpgrade(bcr!, 9, max)).toBe('x9.00 » x10.00')
-      expect(benefitLineWithNextUpgrade(bcr!, max, max)).toBe('x10.00')
+      expect(benefitDisplayForCard(bcr!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(bcr!, 1, max)).toBe('2%')
+      expect(benefitDisplayForCard(bcr!, 10, max)).toBe('20%')
+      expect(benefitLineWithNextUpgrade(bcr!, 0, max)).toBe('0% » 2%')
+      expect(benefitLineWithNextUpgrade(bcr!, 9, max)).toBe('18% » 20%')
+      expect(benefitLineWithNextUpgrade(bcr!, max, max)).toBe('20%')
+      expect(toolkitMarginalCoinCost('Battle Condition Reduction', 0)).toBe(
+        1_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Battle Condition Reduction', 5)).toBe(
+        8_640_600,
+      )
+    })
+
+    it('BC Group 1 resistances share Knockback marginal ladder + 1%/level', () => {
+      const kb = battle.items.find((i) => i.name === 'Knockback Resistance')
+      const orb = battle.items.find((i) => i.name === 'Orb Resistance')
+      expect(kb).toBeDefined()
+      expect(orb).toBeDefined()
+      const max = 20
+      expect(benefitDisplayForCard(kb!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(kb!, 1, max)).toBe('1%')
+      expect(benefitDisplayForCard(orb!, 20, max)).toBe('20%')
+      expect(benefitLineWithNextUpgrade(kb!, 0, max)).toBe('0% » 1%')
+      expect(benefitLineWithNextUpgrade(kb!, 19, max)).toBe('19% » 20%')
+      expect(toolkitMarginalCoinCost('Death Ray Resistance', 0)).toBe(
+        200_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Knockback Resistance', 19)).toBe(
+        4_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Thorns Resistance', 0)).toBe(1_166_340)
+      expect(researchTimeForNextUpgrade(kb!, 0, max)).toBe('13d 11h 59m')
+    })
+
+    it('BC Group 2 enemy buffs share Armored Enemies marginal ladder + 1%/level', () => {
+      const arm = battle.items.find((i) => i.name === 'Armored Enemies')
+      const more = battle.items.find((i) => i.name === 'More Enemies')
+      expect(arm).toBeDefined()
+      expect(more).toBeDefined()
+      const max = 20
+      expect(benefitDisplayForCard(arm!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(more!, 5, max)).toBe('5%')
+      expect(toolkitMarginalCoinCost('Enemy Attack Speed', 0)).toBe(
+        500_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Armored Enemies', 19)).toBe(
+        10_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Enemy Speed', 0)).toBe(1_399_560)
+      expect(researchTimeForNextUpgrade(arm!, 0, max)).toBe('16d 4h 46m')
+    })
+
+    it('BC Group 3 enemy ultimates share Fast marginal ladder + 1%/level (max 10)', () => {
+      const fast = battle.items.find((i) => i.name === "Fast's Ultimate")
+      const boss = battle.items.find((i) => i.name === "Boss's Ultimate")
+      expect(fast).toBeDefined()
+      expect(boss).toBeDefined()
+      const max = 10
+      expect(benefitDisplayForCard(fast!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(boss!, 3, max)).toBe('3%')
+      expect(benefitDisplayForCard(fast!, 10, max)).toBe('10%')
+      expect(toolkitMarginalCoinCost('Protector\'s Ultimate', 0)).toBe(
+        1_000_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost("Fast's Ultimate", 9)).toBe(
+        38_440_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Ranged Ultimate', 3)).toBe(5_131_920)
+      expect(researchTimeForNextUpgrade(fast!, 0, max)).toBe('26d 23h 58m')
+    })
+
+    it('BC Group 4 durations/reductions share Ultimate Weapon Durations ladder + 1%/level', () => {
+      const uwd = battle.items.find((i) => i.name === 'Ultimate Weapon Durations')
+      const skip = battle.items.find((i) => i.name === 'Enemy Level Skip Reduction')
+      expect(uwd).toBeDefined()
+      expect(skip).toBeDefined()
+      const max = 10
+      expect(benefitDisplayForCard(uwd!, 4, max)).toBe('4%')
+      expect(toolkitMarginalCoinCost('Death Defy Down', 9)).toBe(
+        1_024_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Energy Shields Down', 3)).toBe(
+        6_951_420,
+      )
+      expect(researchTimeForNextUpgrade(skip!, 0, max)).toBe('26d 23h 58m')
     })
   })
 

@@ -1,7 +1,10 @@
 /**
- * Marginal lab coin costs and upgrade durations come from the bundled
- * `src/data/tower-labs.json` table (per lab, per target level: `COST`, `DURATION`). Labs
- * not in that map fall back to CSV snapshot fields in `marginalCostForNextUpgrade`.
+ * Marginal lab costs and upgrade durations come from the bundled
+ * `src/data/tower-labs.json` table (per lab, per target level: `COST`, `DURATION`). **Card Mastery**
+ * rows still resolve through that table for durations and toolkit coin lookups; the **cost line** on
+ * those cards uses `stoneUnlockCost` from `public/research/sections/card-mastery.json` instead of
+ * abbreviated coin ladder amounts. Labs not in that map fall back to CSV snapshot fields in
+ * `marginalCostForNextUpgrade`.
  */
 
 import towerLabsJson from './data/tower-labs.json'
@@ -37,6 +40,35 @@ const LAB_NAME_ALIASES: Record<string, string> = {
   'Gold Bot - Cooldown': 'Golden Bot - Cooldown',
   'Gold Bot - Duration': 'Golden Bot - Duration',
   'Thunder Bot Cooldown': 'Thunder Bot - Cooldown',
+  'Ray Enemy Health': 'Ray Enemy Attack',
+  'Vampire Enemy Attack': 'Ray Enemy Attack',
+  'Vampire Enemy Health': 'Ray Enemy Attack',
+  'Scatter Enemy Attack': 'Ray Enemy Attack',
+  'Scatter Enemy Health': 'Ray Enemy Attack',
+  // Assist Module labs (wiki): one shared marginal table for all eight variants
+  'Assist Module Substats - Armor': 'Assist Module Substats - Cannon',
+  'Assist Module Substats - Generator': 'Assist Module Substats - Cannon',
+  'Assist Module Substats - Core': 'Assist Module Substats - Cannon',
+  'Assist Module Bonus - Cannon': 'Assist Module Substats - Cannon',
+  'Assist Module Bonus - Armor': 'Assist Module Substats - Cannon',
+  'Assist Module Bonus - Generator': 'Assist Module Substats - Cannon',
+  'Assist Module Bonus - Core': 'Assist Module Substats - Cannon',
+  'Armor Effect Bans': 'Cannon Effect Bans',
+  'Thorns Resistance': 'Knockback Resistance',
+  'Orb Resistance': 'Knockback Resistance',
+  'Plasma Cannon Resistance': 'Knockback Resistance',
+  'Death Ray Resistance': 'Knockback Resistance',
+  'Enemy Speed': 'Armored Enemies',
+  'More Enemies': 'Armored Enemies',
+  'Enemy Attack Speed': 'Armored Enemies',
+  'Ranged Ultimate': 'Fast\'s Ultimate',
+  'Boss\'s Ultimate': 'Fast\'s Ultimate',
+  'Basic\'s Ultimate': 'Fast\'s Ultimate',
+  'Tank\'s Ultimate': 'Fast\'s Ultimate',
+  'Protector\'s Ultimate': 'Fast\'s Ultimate',
+  'Death Defy Down': 'Ultimate Weapon Durations',
+  'Energy Shields Down': 'Ultimate Weapon Durations',
+  'Enemy Level Skip Reduction': 'Ultimate Weapon Durations',
 }
 
 function resolveToolkitLabKey(displayName: string): string | undefined {
@@ -45,6 +77,10 @@ function resolveToolkitLabKey(displayName: string): string | undefined {
 
   const mapped = LAB_NAME_ALIASES[trimmed]
   if (mapped && towerLabs[mapped]) return mapped
+
+  if (trimmed.endsWith(' Mastery') && towerLabs['Card Mastery']) {
+    return 'Card Mastery'
+  }
 
   const lc = trimmed.toLowerCase()
   for (const k of Object.keys(towerLabs)) {

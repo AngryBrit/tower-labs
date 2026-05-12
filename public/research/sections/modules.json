@@ -52,7 +52,7 @@
     {
       "name": "Module Coin Cost",
       "level": "Lv.0",
-      "benefit": "T10 40",
+      "benefit": "T4 70",
       "time": "5d 4h 59m",
       "cost": "5 B",
       "state": "default",
@@ -99,7 +99,7 @@
     {
       "name": "Cannon Effect Bans",
       "level": "Lv.0",
-      "benefit": "T2 20",
+      "benefit": "T10 40",
       "time": "37d 12h 0m",
       "cost": "500 B",
       "state": "default",
@@ -111,7 +111,7 @@
     {
       "name": "Armor Effect Bans",
       "level": "Lv.0",
-      "benefit": "T2 20",
+      "benefit": "T10 40",
       "time": "37d 12h 0m",
       "cost": "500 B",
       "state": "default",
@@ -123,7 +123,7 @@
     {
       "name": "Generator Effect Bans",
       "level": "Lv.0",
-      "benefit": "T2 20",
+      "benefit": "T10 40",
       "time": "62d 12h 0m",
       "cost": "5 T",
       "state": "default",
@@ -135,13 +135,13 @@
     {
       "name": "Core Effect Bans",
       "level": "Lv.0",
-      "benefit": "T2 20",
+      "benefit": "T10 40",
       "time": "16d 16h 0m",
       "cost": "50 B",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 7,
-      "coinsToMaxRaw": 555555000000000000,
+      "coinsToMaxRaw": 555555050000000000,
       "costPlusOne": "5 T"
     },
     {
@@ -149,96 +149,96 @@
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Substats - Armor",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Substats - Generator",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Substats - Core",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Bonus - Cannon",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Bonus - Armor",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Bonus - Generator",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Assist Module Bonus - Core",
       "level": "Lv.0",
       "benefit": "T19 50",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
       "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "costPlusOne": "0.50 q"
     }
   ]
 }

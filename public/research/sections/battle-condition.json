@@ -4,7 +4,7 @@
     {
       "name": "Battle Condition Reduction",
       "level": "Lv.0",
-      "benefit": "x0.00",
+      "benefit": "T18 1000",
       "time": "16d 16h 0m",
       "cost": "1 q",
       "state": "default",
@@ -18,228 +18,228 @@
       "level": "Lv.0",
       "benefit": "T19 100",
       "time": "13d 11h 59m",
-      "cost": "200 q",
+      "cost": "0.2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 42000000000000000000,
-      "costPlusOne": "400 q"
+      "coinsToMaxRaw": 42000000000000000,
+      "costPlusOne": "0.4 q"
     },
     {
       "name": "Thorns Resistance",
       "level": "Lv.0",
       "benefit": "T19 100",
       "time": "13d 11h 59m",
-      "cost": "200 q",
+      "cost": "0.2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 42000000000000000000,
-      "costPlusOne": "400 q"
+      "coinsToMaxRaw": 42000000000000000,
+      "costPlusOne": "0.4 q"
     },
     {
       "name": "Orb Resistance",
       "level": "Lv.0",
       "benefit": "T19 100",
       "time": "13d 11h 59m",
-      "cost": "200 q",
+      "cost": "0.2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 42000000000000000000,
-      "costPlusOne": "400 q"
+      "coinsToMaxRaw": 42000000000000000,
+      "costPlusOne": "0.4 q"
     },
     {
       "name": "Plasma Cannon Resistance",
       "level": "Lv.0",
       "benefit": "T19 100",
       "time": "13d 11h 59m",
-      "cost": "200 q",
+      "cost": "0.2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 42000000000000000000,
-      "costPlusOne": "400 q"
+      "coinsToMaxRaw": 42000000000000000,
+      "costPlusOne": "0.4 q"
     },
     {
       "name": "Death Ray Resistance",
       "level": "Lv.0",
       "benefit": "T19 100",
       "time": "13d 11h 59m",
-      "cost": "200 q",
+      "cost": "0.2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 42000000000000000000,
-      "costPlusOne": "400 q"
+      "coinsToMaxRaw": 42000000000000000,
+      "costPlusOne": "0.4 q"
     },
     {
       "name": "Armored Enemies",
       "level": "Lv.0",
       "benefit": "T20 60",
       "time": "16d 4h 46m",
-      "cost": "500 q",
+      "cost": "0.5 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 105000000000000000000,
-      "costPlusOne": "1 Q"
+      "coinsToMaxRaw": 105000000000000000,
+      "costPlusOne": "1 q"
     },
     {
       "name": "Enemy Speed",
       "level": "Lv.0",
       "benefit": "T20 60",
       "time": "16d 4h 46m",
-      "cost": "500 q",
+      "cost": "0.5 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 105000000000000000000,
-      "costPlusOne": "1 Q"
+      "coinsToMaxRaw": 105000000000000000,
+      "costPlusOne": "1 q"
     },
     {
       "name": "More Enemies",
       "level": "Lv.0",
       "benefit": "T20 60",
       "time": "16d 4h 46m",
-      "cost": "500 q",
+      "cost": "0.5 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 105000000000000000000,
-      "costPlusOne": "1 Q"
+      "coinsToMaxRaw": 105000000000000000,
+      "costPlusOne": "1 q"
     },
     {
       "name": "Enemy Attack Speed",
       "level": "Lv.0",
       "benefit": "T20 60",
       "time": "16d 4h 46m",
-      "cost": "500 q",
+      "cost": "0.5 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 105000000000000000000,
-      "costPlusOne": "1 Q"
+      "coinsToMaxRaw": 105000000000000000,
+      "costPlusOne": "1 q"
     },
     {
       "name": "Fast's Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Ranged Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Boss's Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Basic's Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Tank's Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Protector's Ultimate",
       "level": "Lv.0",
       "benefit": "T19 500",
       "time": "26d 23h 58m",
-      "cost": "1 Q",
+      "cost": "1 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 113000000000000000000,
-      "costPlusOne": "1.5 Q"
+      "coinsToMaxRaw": 113330000000000000,
+      "costPlusOne": "1.5 q"
     },
     {
       "name": "Ultimate Weapon Durations",
       "level": "Lv.0",
       "benefit": "T21 1000",
       "time": "26d 23h 58m",
-      "cost": "2 Q",
+      "cost": "2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 2.05e+21,
-      "costPlusOne": "4 Q"
+      "coinsToMaxRaw": 2046000000000000000,
+      "costPlusOne": "4 q"
     },
     {
       "name": "Death Defy Down",
       "level": "Lv.0",
       "benefit": "T21 1000",
       "time": "26d 23h 58m",
-      "cost": "2 Q",
+      "cost": "2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 2.05e+21,
-      "costPlusOne": "4 Q"
+      "coinsToMaxRaw": 2046000000000000000,
+      "costPlusOne": "4 q"
     },
     {
       "name": "Energy Shields Down",
       "level": "Lv.0",
       "benefit": "T21 1000",
       "time": "26d 23h 58m",
-      "cost": "2 Q",
+      "cost": "2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 2.05e+21,
-      "costPlusOne": "4 Q"
+      "coinsToMaxRaw": 2046000000000000000,
+      "costPlusOne": "4 q"
     },
     {
       "name": "Enemy Level Skip Reduction",
       "level": "Lv.0",
       "benefit": "T21 1000",
       "time": "26d 23h 58m",
-      "cost": "2 Q",
+      "cost": "2 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 10,
-      "coinsToMaxRaw": 2.05e+21,
-      "costPlusOne": "4 Q"
+      "coinsToMaxRaw": 2046000000000000000,
+      "costPlusOne": "4 q"
     }
   ]
 }

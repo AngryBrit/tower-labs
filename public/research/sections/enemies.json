@@ -16,7 +16,7 @@
     {
       "name": "Common Enemy Attack",
       "level": "Lv.0",
-      "benefit": "T9 10",
+      "benefit": "T3 300",
       "time": "2d 7h 33m",
       "cost": "20 B",
       "state": "default",
@@ -64,7 +64,7 @@
     {
       "name": "Tank Enemy Health",
       "level": "Lv.0",
-      "benefit": "T9 30",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "30 B",
       "state": "default",
@@ -76,7 +76,7 @@
     {
       "name": "Tank Enemy Attack",
       "level": "Lv.0",
-      "benefit": "T9 30",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "30 B",
       "state": "default",
@@ -88,7 +88,7 @@
     {
       "name": "Ranged Enemy Health",
       "level": "Lv.0",
-      "benefit": "T9 40",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "30 B",
       "state": "default",
@@ -100,7 +100,7 @@
     {
       "name": "Ranged Enemy Attack",
       "level": "Lv.0",
-      "benefit": "T9 40",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "30 B",
       "state": "default",
@@ -112,7 +112,7 @@
     {
       "name": "Boss Health",
       "level": "Lv.0",
-      "benefit": "T9 50",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "40 B",
       "state": "default",
@@ -124,7 +124,7 @@
     {
       "name": "Boss Attack",
       "level": "Lv.0",
-      "benefit": "T9 50",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "40 B",
       "state": "default",
@@ -136,7 +136,7 @@
     {
       "name": "Protector Health",
       "level": "Lv.0",
-      "benefit": "T9 60",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "40 B",
       "state": "default",
@@ -148,7 +148,7 @@
     {
       "name": "Protector Radius",
       "level": "Lv.0",
-      "benefit": "T9 60",
+      "benefit": "T9 20",
       "time": "2d 7h 33m",
       "cost": "40 B",
       "state": "default",
@@ -160,7 +160,7 @@
     {
       "name": "Protector Damage Reduction",
       "level": "Lv.0",
-      "benefit": "T9 400",
+      "benefit": "T9 20",
       "time": "2d 18h 39m",
       "cost": "80 B",
       "state": "default",
@@ -174,72 +174,72 @@
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Ray Enemy Health",
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Vampire Enemy Attack",
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Vampire Enemy Health",
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Scatter Enemy Attack",
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Scatter Enemy Health",
       "level": "Lv.0",
       "benefit": "T19 60",
       "time": "10d 19h 11m",
-      "cost": "250 q",
+      "cost": "0.25 q",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 116250000000000000000,
-      "costPlusOne": "500 q"
+      "coinsToMaxRaw": 116250000000000000,
+      "costPlusOne": "0.50 q"
     },
     {
       "name": "Ranged Enemy Range",
@@ -250,7 +250,7 @@
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 30,
-      "coinsToMaxRaw": 60501100000000000,
+      "coinsToMaxRaw": 60501200000000000,
       "costPlusOne": "1.4 T"
     }
   ]
