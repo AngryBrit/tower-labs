@@ -24,6 +24,7 @@ interface SelectResearchProps {
 }
 
 const LEVEL_OVERRIDES_STORAGE_KEY = 'tower-export-level-overrides-v1'
+const SECTION_COLLAPSED_STORAGE_KEY = 'tower-export-section-collapsed-v1'
 
 function sanitizeLevelOverrides(
   data: ResearchData,
@@ -51,6 +52,19 @@ function sanitizeLevelOverrides(
   return out
 }
 
+function sanitizeSectionCollapsed(
+  sectionCount: number,
+  raw: Record<string, unknown>,
+): Record<number, boolean> {
+  const out: Record<number, boolean> = {}
+  for (const [key, val] of Object.entries(raw)) {
+    const si = Number(key)
+    if (!Number.isInteger(si) || si < 0 || si >= sectionCount) continue
+    if (val === true) out[si] = true
+  }
+  return out
+}
+
 export function SelectResearch({ data }: SelectResearchProps) {
   const [search, setSearch] = useState('')
   const [hideCompleted, setHideCompleted] = useState(false)
@@ -72,6 +86,33 @@ export function SelectResearch({ data }: SelectResearchProps) {
     let cancelled = false
 
     async function hydrate() {
+      const applySectionCollapsedFromStorage = () => {
+        try {
+          const rawJson = localStorage.getItem(SECTION_COLLAPSED_STORAGE_KEY)
+          if (!rawJson || cancelled) return
+          const parsed: unknown = JSON.parse(rawJson)
+          if (
+            !parsed ||
+            typeof parsed !== 'object' ||
+            !('collapsed' in parsed)
+          ) {
+            return
+          }
+          const c = (parsed as { collapsed?: unknown }).collapsed
+          if (!c || typeof c !== 'object' || Array.isArray(c)) return
+          if (!cancelled) {
+            setCollapsed(
+              sanitizeSectionCollapsed(
+                data.sections.length,
+                c as Record<string, unknown>,
+              ),
+            )
+          }
+        } catch {
+          /* ignore corrupt storage */
+        }
+      }
+
       try {
         const params = new URLSearchParams(window.location.search)
         const share = params.get(LABS_SHARE_SEARCH_PARAM)
@@ -83,6 +124,7 @@ export function SelectResearch({ data }: SelectResearchProps) {
               payload.o as Record<string, unknown>,
             )
             setLevelOverrides(sanitized)
+            applySectionCollapsedFromStorage()
             const url = new URL(window.location.href)
             url.searchParams.delete(LABS_SHARE_SEARCH_PARAM)
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
@@ -121,9 +163,11 @@ export function SelectResearch({ data }: SelectResearchProps) {
         }
       } catch {
         /* ignore corrupt storage */
-      } finally {
-        if (!cancelled) setHydrated(true)
       }
+
+      applySectionCollapsedFromStorage()
+
+      if (!cancelled) setHydrated(true)
     }
 
     void hydrate()
@@ -143,6 +187,18 @@ export function SelectResearch({ data }: SelectResearchProps) {
       /* quota / private mode */
     }
   }, [levelOverrides, hydrated])
+
+  useEffect(() => {
+    if (!hydrated) return
+    try {
+      localStorage.setItem(
+        SECTION_COLLAPSED_STORAGE_KEY,
+        JSON.stringify({ v: 1, collapsed }),
+      )
+    } catch {
+      /* quota / private mode */
+    }
+  }, [collapsed, hydrated])
 
   const labsCoinDiscountPercent = useMemo(
     () => resolveLabsCoinDiscountPercent(data, levelOverrides),
@@ -188,10 +244,13 @@ export function SelectResearch({ data }: SelectResearchProps) {
   )
 
   const toggleSection = useCallback((index: number) => {
-    setCollapsed((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }))
+    setCollapsed((prev) => {
+      if (prev[index]) {
+        const { [index]: _, ...rest } = prev
+        return rest
+      }
+      return { ...prev, [index]: true }
+    })
   }, [])
 
   const handleResetLevels = useCallback(() => {
@@ -390,79 +449,6 @@ export function SelectResearch({ data }: SelectResearchProps) {
         ))}
       </div>
 
-      <footer className="select-research__footer">
-        <p className="app-hint">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--coin"
-                src="/coin.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Coin costs and research times use the bundled lab table in{' '}
-          <code>src/data/tower-labs.json</code>. Card Mastery cards show wiki power-stone unlock on
-          the cost line (from <code>public/research/sections/card-mastery.json</code>), not abbreviated
-          coin ladder totals. Section rows and benefits come from <code>public/research/</code>. All
-          of that data lives in this repo only—nothing is loaded from external APIs.
-        </p>
-        <p className="app-hint app-hint--resource">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--gem"
-                src="/gem.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Shop gems and other non-coin prices are not included in these numbers.
-        </p>
-        <p className="app-hint app-hint--resource">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--stone"
-                src="/power-stone.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Other power-stone sinks besides the Card Mastery wiki unlock line are not included in these
-          numbers.
-        </p>
-        <p className="app-hint app-hint--resource">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--medal"
-                src="/medal.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Medals and medal-based unlocks are not included in these numbers.
-        </p>
-        <p className="app-hint app-hint--resource">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--eliteCell"
-                src="/elite-cell.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Elite cells and cell-based economy are not included in these numbers.
-        </p>
-        <p className="app-hint app-hint--resource">
-          <span className="resource-legend" aria-hidden>
-              <img
-                className="resource-legend__icon resource-legend__icon--cash"
-                src="/cash.png"
-                alt=""
-                decoding="async"
-              />
-          </span>{' '}
-          Run cash (in-wave $) is separate from lab coins; wave cash is not modeled here.
-        </p>
-      </footer>
       <p
         className="select-research__version"
         aria-label={`Tower Labs version ${APP_VERSION}`}

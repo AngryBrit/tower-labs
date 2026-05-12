@@ -69,10 +69,6 @@ export default function App() {
         </p>
       ) : null}
       {data ? <SelectResearch data={data} /> : null}
-      <p className="app-hint">
-        Edit <code>public/research/</code> (manifest + section JSON) and{' '}
-        <code>src/data/tower-labs.json</code> for lab costs/times, then refresh.
-      </p>
     </div>
   )
 }
