@@ -7,7 +7,7 @@ Repository: [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs)
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.1.0-2ea44f)
+![Version](https://img.shields.io/badge/version-1.0.0-2ea44f)
 
 ---
 
