@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+## Tower Labs — research & lab reference
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Static reference UI for **The Tower** research trees and lab upgrade data: browse section JSON, cards, costs, and related metadata in one place.
 
-Currently, two official plugins are available:
+Repository: [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
+![Version](https://img.shields.io/badge/version-0.1.0-2ea44f)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requirements
 
-## Expanding the ESLint configuration
+- **Node.js** 20+ (LTS recommended)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Quick start
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the URL Vite prints (usually `http://localhost:5173/`). The app loads `public/research/manifest.json` and the section files it references.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Production build:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run preview
 ```
+
+---
+
+## Project layout
+
+| Path | Purpose |
+|------|--------|
+| `public/research/` | Manifest + per-section JSON consumed at runtime |
+| `src/data/tower-labs.json` | Lab upgrade costs / times used by the UI |
+| `src/data/card-mastery-tier-labels.json` | Labels supporting card mastery display |
+| `src/types/research.ts` | Parsing and types for research JSON |
+| `src/components/` | `SelectResearch`, `ResearchCard`, `ResearchSection` |
+| `scripts/import-lab-csv.mjs` | CSV → lab data helper (`npm run import-lab`) |
+| `scripts/build-module-tower-labs.mjs` | Build pipeline for module lab JSON |
+| `scripts/merge-module-tower-labs.mjs` | Merge module exports into `tower-labs.json` |
+
+Edit `public/research/` and `src/data/tower-labs.json`, then refresh the browser to see changes.
+
+---
+
+## npm scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Typecheck + production bundle to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | ESLint |
+| `npm run test` | Vitest (unit tests) |
+| `npm run import-lab` | Run `scripts/import-lab-csv.mjs` |
+
+Module lab maintenance (run with `node` as needed):
+
+```bash
+node scripts/build-module-tower-labs.mjs
+node scripts/merge-module-tower-labs.mjs
+```
+
+---
+
+## Versioning & releases
+
+- Canonical release version is stored in **`VERSION`** and mirrored in **`package.json`** / **`package-lock.json`**.
+- User-facing history lives in **`CHANGELOG.md`** (Keep a Changelog).
+- For GitHub releases, start from **`RELEASE_NOTES_TEMPLATE.md`**.
+
+---
+
+## Licence & credits
+
+Licensed under **CC BY-NC-SA 4.0** — see [`LICENCE`](LICENCE).
+
+Contributors are listed in [`AUTHORS`](AUTHORS).
