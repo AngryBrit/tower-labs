@@ -1,6 +1,22 @@
 /** Query param name for encoded lab level overrides (`?labs=…`). */
 export const LABS_SHARE_SEARCH_PARAM = 'labs'
 
+/**
+ * Builds share URLs for the current `labs` payload.
+ * - **clean**: `origin` + `pathname` + `?labs=…` only (drops hash and other query params).
+ * - **full**: current `href` with `labs` set (keeps other params and hash).
+ */
+export function buildLabsShareUrls(
+  encoded: string,
+  pageHref: string,
+): { clean: string; full: string } {
+  const full = new URL(pageHref)
+  full.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  const clean = new URL(full.origin + full.pathname)
+  clean.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  return { clean: clean.toString(), full: full.toString() }
+}
+
 type LabsShareFile = { v: 1; o: Record<string, number> }
 
 /** Satisfies `Blob` constructor typing for `Uint8Array` views on shared buffers. */

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { toolkitMarginalCoinCost, toolkitUpgradeDurationSeconds } from './labCosts'
@@ -26,7 +26,8 @@ function loadAllSections() {
     const raw: unknown = JSON.parse(
       readFileSync(join(srcDir, '../public', rel.replace(/^\//, '')), 'utf-8'),
     )
-    return parseResearchSection(raw)
+    const slug = basename(rel, '.json')
+    return parseResearchSection(raw, slug)
   })
 }
 
@@ -1009,6 +1010,50 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       )
       expect(benefitLineWithNextUpgrade(workshop!, 28, max)).toBe(
         '14.00% » 14.50%',
+      )
+    })
+
+    it('Enhancement Attack - Coin Discount uses calculator Value (0.30% per level)', () => {
+      const lab = main.items.find(
+        (i) => i.name === 'Enhancement Attack - Coin Discount',
+      )
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 100
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.30%')
+      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe(
+        '1.20% » 1.50%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 99, max)).toBe(
+        '29.70% » 30.00%',
+      )
+      expect(toolkitMarginalCoinCost('Enhancement Attack - Coin Discount', 0)).toBe(
+        1_000_000_000,
+      )
+      expect(
+        toolkitUpgradeDurationSeconds('Enhancement Attack - Coin Discount', 0),
+      ).toBe(93_300)
+    })
+
+    it('Dissonant Echo - Attack uses echo chance Value (0.50% per level) + wiki ladder', () => {
+      const lab = main.items.find((i) => i.name === 'Dissonant Echo - Attack')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      const towerLabs: Record<string, Record<string, { COST: number }>> =
+        JSON.parse(
+          readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+        ) as Record<string, Record<string, { COST: number }>>
+      const attack = towerLabs['Dissonant Echo - Attack']
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe('2.00% » 2.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('9.50% » 10.00%')
+      expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 0)).toBe(
+        attack['1'].COST,
+      )
+      expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 0)).toBe(
+        1_800_000,
+      )
+      expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 18)).toBe(
+        attack['19'].COST,
       )
     })
   })

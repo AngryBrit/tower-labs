@@ -130,18 +130,19 @@ export function toolkitUpgradeDurationSeconds(
   return typeof d === 'number' && Number.isFinite(d) ? d : undefined
 }
 
-/** Inverse of `formatCoinAbbrev` for snapshot strings like `12.91 M`, `300`, `1.1 q`. */
+/** Inverse of `formatCoinAbbrev` for snapshot strings like `12.91 M`, `300`, `1.1 q`, `2.18 s`. */
 export function parseAbbreviatedCoinsToNumber(input: string): number | undefined {
   const t = String(input).trim().replace(/,/g, '')
   if (!t || t === '—' || /^max$/i.test(t)) return undefined
 
-  const m = /^([\d.]+)\s*([KkMmBbTtQq])?$/.exec(t.replace(/\s+/g, ' ').trim())
+  const m = /^([\d.]+)\s*([KkMmBbTtQqSs])?$/.exec(t.replace(/\s+/g, ' ').trim())
   if (!m) return undefined
 
   const n = Number(m[1])
   if (!Number.isFinite(n)) return undefined
 
-  const suf = (m[2] ?? '').toLowerCase()
+  const rawSuf = m[2] ?? ''
+  const suf = rawSuf.toLowerCase()
   const mult =
     suf === 'k'
       ? 1e3
@@ -152,18 +153,24 @@ export function parseAbbreviatedCoinsToNumber(input: string): number | undefined
           : suf === 't'
             ? 1e12
             : suf === 'q'
-              ? 1e15
-              : 1
+              ? rawSuf === 'Q'
+                ? 1e18
+                : 1e15
+              : suf === 's'
+                ? 1e21
+                : 1
 
   const v = n * mult
   return Number.isFinite(v) ? v : undefined
 }
 
-/** Abbreviated coin display (K/M/B/T/q): always two decimals (e.g. `197.60 K`). */
+/** Abbreviated coin display (K/M/B/T/q/Q/s): always two decimals (e.g. `197.60 K`). */
 export function formatCoinAbbrev(n: number): string {
   if (!Number.isFinite(n) || n < 0) return '—'
   if (n < 1e3) return n < 1 ? n.toFixed(2) : String(Math.round(n))
   const abs = n
+  if (abs >= 1e21) return `${(n / 1e21).toFixed(2)} s`
+  if (abs >= 1e18) return `${(n / 1e18).toFixed(2)} Q`
   if (abs >= 1e15) return `${(n / 1e15).toFixed(2)} q`
   if (abs >= 1e12) return `${(n / 1e12).toFixed(2)} T`
   if (abs >= 1e9) return `${(n / 1e9).toFixed(2)} B`

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import {
   benefitLineWithNextUpgrade,
   isCardMasteryResearchItem,
@@ -6,8 +6,14 @@ import {
   researchTimeForNextUpgrade,
   type ResearchItem,
 } from '../types/research'
+import { useI18n } from '../i18n'
 
 interface ResearchCardProps {
+  /** Parallel to manifest filename stem; used for Spanish name overlay. */
+  sectionSlug: string
+  itemIndex: number
+  /** Stable id for deep links (`#id` / `?lab=id`). Omitted when not provided. */
+  domId?: string
   item: ResearchItem
   hidden: boolean
   effectiveLevel: number
@@ -19,6 +25,9 @@ interface ResearchCardProps {
 }
 
 export function ResearchCard({
+  sectionSlug,
+  itemIndex,
+  domId,
   item,
   hidden,
   effectiveLevel,
@@ -27,11 +36,16 @@ export function ResearchCard({
   onLevelDelta,
   onLevelSet,
 }: ResearchCardProps) {
+  const { t, fmt, researchLabel, researchBenefitLine } = useI18n()
+  const displayName = researchLabel(sectionSlug, itemIndex, item.name, 'item')
+  const cardTitleId = useId()
   const [levelFocused, setLevelFocused] = useState(false)
   const [levelDraft, setLevelDraft] = useState(String(effectiveLevel))
 
   useEffect(() => {
     if (!levelFocused) {
+      // Keep numeric draft in sync with simulator props when the field is not being edited.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional prop→draft sync
       setLevelDraft(String(effectiveLevel))
     }
   }, [effectiveLevel, levelFocused])
@@ -62,12 +76,12 @@ export function ResearchCard({
   )
 
   function commitLevelDraft(raw: string) {
-    const t = raw.trim()
-    if (t === '') {
+    const trimmed = raw.trim()
+    if (trimmed === '') {
       setLevelDraft(String(effectiveLevel))
       return
     }
-    const n = Number.parseInt(t, 10)
+    const n = Number.parseInt(trimmed, 10)
     if (!Number.isFinite(n)) {
       setLevelDraft(String(effectiveLevel))
       return
@@ -79,6 +93,7 @@ export function ResearchCard({
 
   return (
     <article
+      id={domId}
       className={[
         'research-card',
         showMaxStyle ? 'research-card--max' : '',
@@ -89,12 +104,14 @@ export function ResearchCard({
         .join(' ')}
       data-testid="research-card"
     >
-      <div className="research-card__title">{item.name}</div>
+      <div className="research-card__title" id={cardTitleId}>
+        {displayName}
+      </div>
       <div className="research-card__levelRow">
         <button
           type="button"
           className="research-card__step"
-          aria-label="Decrease level"
+          aria-label={t('researchCard_decrease_aria')}
           disabled={!canDec}
           onClick={() => onLevelDelta(-1)}
         >
@@ -103,8 +120,8 @@ export function ResearchCard({
         <input
           type="number"
           className="research-card__level research-card__levelInput"
-          aria-label={`${item.name} level`}
-          title={maxLevelCap > 0 ? `Level 0–${maxLevelCap}` : undefined}
+          aria-label={fmt.levelAriaLabel(displayName)}
+          title={maxLevelCap > 0 ? fmt.levelRangeTitle(maxLevelCap) : undefined}
           min={0}
           max={maxLevelCap > 0 ? maxLevelCap : undefined}
           step={1}
@@ -127,20 +144,28 @@ export function ResearchCard({
         <button
           type="button"
           className="research-card__step"
-          aria-label="Increase level"
+          aria-label={t('researchCard_increase_aria')}
           disabled={!canInc}
           onClick={() => onLevelDelta(1)}
         >
           +
         </button>
       </div>
-      <div className="research-card__benefit">{benefitDisplay}</div>
+      <div className="research-card__benefit">
+        {researchBenefitLine(benefitDisplay)}
+      </div>
       {researching ? (
         <div className="research-card__overlay" aria-live="polite">
-          Researching...
+          {t('researchCard_researching')}
         </div>
       ) : null}
-      <div className="research-card__footer">
+      <div
+        className="research-card__footer"
+        role="group"
+        aria-labelledby={cardTitleId}
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <span
           className={
             researching
@@ -153,19 +178,19 @@ export function ResearchCard({
         <div className="research-card__costCol">
           {costIsMax ? (
             <span className="research-card__cost research-card__cost--text">
-              Max
+              {t('researchCard_max')}
             </span>
           ) : costUnknown ? (
             <span
               className="research-card__cost research-card__cost--unknown"
-              title="Not on this CSV row. Set Level in the Lab Calculator sheet to match, export CSV, and run import so cost reflects that level."
+              title={t('researchCard_cost_unknown_title')}
             >
               —
             </span>
           ) : (
             <span
               className="research-card__cost"
-              title={stoneCost ? 'Stones (wiki unlock cost)' : 'Coins (next upgrade)'}
+              title={stoneCost ? t('researchCard_cost_stones_title') : t('researchCard_cost_coins_title')}
             >
               {nextCost}
               <img

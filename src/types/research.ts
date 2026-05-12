@@ -103,6 +103,47 @@ export function marginalCostForNextUpgrade(
   return '—'
 }
 
+/**
+ * Discounted coin cost for the upgrade **from** `fromLevel` **to** `fromLevel + 1`
+ * (same rules as {@link marginalCostForNextUpgrade}, but numeric). Returns `undefined` for
+ * card mastery, maxed labs, or unknown CSV-only rows.
+ */
+export function rawDiscountedMarginalCoinAtCurrentLevel(
+  item: ResearchItem,
+  fromLevel: number,
+  maxLevelCap: number,
+  labsCoinDiscountPercent: number,
+): number | undefined {
+  if (maxLevelCap > 0 && fromLevel >= maxLevelCap) return undefined
+  if (isCardMasteryResearchItem(item)) return undefined
+
+  const fromToolkit = toolkitMarginalCoinCost(item.name, fromLevel)
+  if (fromToolkit != null) {
+    return applyLabsCoinDiscountToCoins(
+      fromToolkit,
+      labsCoinDiscountPercent,
+    )
+  }
+
+  const baseLevel = item.currentLevel ?? 0
+  const delta = fromLevel - baseLevel
+
+  if (delta <= 0 || item.cost === 'Max') {
+    if (item.cost === 'Max') return undefined
+    const parsed = parseAbbreviatedCoinsToNumber(item.cost)
+    if (parsed == null) return undefined
+    return applyLabsCoinDiscountToCoins(parsed, labsCoinDiscountPercent)
+  }
+
+  if (delta === 1 && item.costPlusOne && item.costPlusOne !== '—') {
+    const p = parseAbbreviatedCoinsToNumber(item.costPlusOne)
+    if (p == null) return undefined
+    return applyLabsCoinDiscountToCoins(p, labsCoinDiscountPercent)
+  }
+
+  return undefined
+}
+
 /** True for Card Mastery lab rows (`Damage Mastery`, …). */
 export function isCardMasteryResearchItem(item: { name: string }): boolean {
   return item.name.endsWith(' Mastery')
@@ -1421,9 +1462,52 @@ const WORKSHOP_DISCOUNT_VALUE_LABS = new Set([
 ])
 
 /**
+ * Enhancement Attack/Defense/Utility coin discount — same ladder; **Value** is **0.30 × lab level** %.
+ */
+const ENHANCEMENT_COIN_DISCOUNT_LABS = new Set([
+  'Enhancement Attack - Coin Discount',
+  'Enhancement Defense - Coin Discount',
+  'Enhancement Utility - Coin Discount',
+])
+
+/** Dissonant Echo — **Value** is echo chance: **0.50 × lab level** % (max 10% at Lv.20). */
+const DISSONANT_ECHO_LABS = new Set([
+  'Dissonant Echo - Attack',
+  'Dissonant Echo - Defense',
+  'Dissonant Echo - Utility',
+  'Dissonant Echo - Ultimate Weapons',
+])
+
+/**
  * Workshop Attack/Defense/Utility discount — Tower Lab Calculator **Value** column (e.g. Lv.1→0.50%, +0.50% per level).
  */
 export function workshopDiscountValuePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 0.5 * capped
+  return `${v.toFixed(2)}%`
+}
+
+/** Enhancement coin discount labs — **0.30%** per level (Lv.100→30.00%). */
+export function enhancementCoinDiscountValuePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 0.3 * capped
+  return `${v.toFixed(2)}%`
+}
+
+/** Dissonant Echo labs — **0.50%** echo chance per level (Lv.20→10.00%). */
+export function dissonantEchoBoostChancePercentDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
@@ -1800,6 +1884,12 @@ export function benefitDisplayForCard(
   if (WORKSHOP_DISCOUNT_VALUE_LABS.has(item.name)) {
     return workshopDiscountValuePercentDisplay(effectiveLevel, maxLevelCap)
   }
+  if (ENHANCEMENT_COIN_DISCOUNT_LABS.has(item.name)) {
+    return enhancementCoinDiscountValuePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (DISSONANT_ECHO_LABS.has(item.name)) {
+    return dissonantEchoBoostChancePercentDisplay(effectiveLevel, maxLevelCap)
+  }
   if (item.name === 'Recovery Package Max') {
     return includePercentTimesLabLevelDisplay(
       effectiveLevel,
@@ -2021,6 +2111,8 @@ export function resolveLabsCoinDiscountPercent(
 export interface ResearchSection {
   title: string
   items: ResearchItem[]
+  /** Filename stem from manifest path, e.g. `main-research` (for i18n overlays). */
+  sectionSlug: string
 }
 
 export interface ResearchData {
@@ -2071,7 +2163,7 @@ function isResearchItem(v: unknown): v is ResearchItem {
   return true
 }
 
-function isResearchSection(v: unknown): v is ResearchSection {
+function isResearchSection(v: unknown): v is Omit<ResearchSection, 'sectionSlug'> {
   if (!v || typeof v !== 'object') return false
   const o = v as Record<string, unknown>
   if (typeof o.title !== 'string' || !Array.isArray(o.items)) return false
@@ -2091,7 +2183,13 @@ export function parseResearchData(raw: unknown): ResearchData {
       'Invalid section or item shape (see public/research/sections/*.json)',
     )
   }
-  return { sections: o.sections }
+  const rawSections = o.sections as Omit<ResearchSection, 'sectionSlug'>[]
+  return {
+    sections: rawSections.map((s, i) => ({
+      ...s,
+      sectionSlug: `section-${i}`,
+    })),
+  }
 }
 
 export function parseResearchManifest(raw: unknown): ResearchManifest {
@@ -2108,9 +2206,13 @@ export function parseResearchManifest(raw: unknown): ResearchManifest {
   return { sectionFiles: o.sectionFiles as string[] }
 }
 
-export function parseResearchSection(raw: unknown): ResearchSection {
+export function parseResearchSection(
+  raw: unknown,
+  sectionSlug: string,
+): ResearchSection {
   if (!isResearchSection(raw)) {
     throw new Error('Invalid section file (need title + items[])')
   }
-  return raw
+  const o = raw as Omit<ResearchSection, 'sectionSlug'>
+  return { title: o.title, items: o.items, sectionSlug }
 }
