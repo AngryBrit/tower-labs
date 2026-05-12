@@ -139,6 +139,10 @@
   gap: 0.5rem;
 }
 
+.select-research__filter-actions-share {
+  grid-column: 1 / -1;
+}
+
 .select-research__import-notice {
   grid-column: 1 / -1;
   margin: 0;

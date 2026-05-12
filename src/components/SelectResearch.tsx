@@ -6,6 +6,11 @@ import {
   useState,
 } from 'react'
 import { APP_VERSION } from '../appVersion'
+import {
+  decodeLabsShareQueryValue,
+  encodeLabsShareQueryValue,
+  LABS_SHARE_SEARCH_PARAM,
+} from '../labsShareCodec'
 import type { ResearchData } from '../types/research'
 import {
   getLevelBounds,
@@ -64,27 +69,66 @@ export function SelectResearch({ data }: SelectResearchProps) {
   }, [importNotice])
 
   useEffect(() => {
-    try {
-      const rawJson = localStorage.getItem(LEVEL_OVERRIDES_STORAGE_KEY)
-      if (rawJson) {
-        const parsed: unknown = JSON.parse(rawJson)
-        if (
-          parsed &&
-          typeof parsed === 'object' &&
-          'levelOverrides' in parsed
-        ) {
-          const lo = (parsed as { levelOverrides?: unknown }).levelOverrides
-          if (lo && typeof lo === 'object') {
-            setLevelOverrides(
-              sanitizeLevelOverrides(data, lo as Record<string, unknown>),
+    let cancelled = false
+
+    async function hydrate() {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const share = params.get(LABS_SHARE_SEARCH_PARAM)
+        if (share) {
+          const payload = await decodeLabsShareQueryValue(share)
+          if (payload?.o && !cancelled) {
+            const sanitized = sanitizeLevelOverrides(
+              data,
+              payload.o as Record<string, unknown>,
             )
+            setLevelOverrides(sanitized)
+            const url = new URL(window.location.href)
+            url.searchParams.delete(LABS_SHARE_SEARCH_PARAM)
+            window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+            const n = Object.keys(sanitized).length
+            setImportNotice(
+              n === 0
+                ? 'Share link opened: lab levels cleared to defaults.'
+                : `Share link opened: loaded ${n} custom lab level${n === 1 ? '' : 's'}.`,
+            )
+            setHydrated(true)
+            return
           }
         }
+      } catch {
+        /* ignore corrupt share payload */
       }
-    } catch {
-      /* ignore corrupt storage */
-    } finally {
-      setHydrated(true)
+
+      try {
+        const rawJson = localStorage.getItem(LEVEL_OVERRIDES_STORAGE_KEY)
+        if (rawJson) {
+          const parsed: unknown = JSON.parse(rawJson)
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'levelOverrides' in parsed
+          ) {
+            const lo = (parsed as { levelOverrides?: unknown }).levelOverrides
+            if (lo && typeof lo === 'object') {
+              if (!cancelled) {
+                setLevelOverrides(
+                  sanitizeLevelOverrides(data, lo as Record<string, unknown>),
+                )
+              }
+            }
+          }
+        }
+      } catch {
+        /* ignore corrupt storage */
+      } finally {
+        if (!cancelled) setHydrated(true)
+      }
+    }
+
+    void hydrate()
+    return () => {
+      cancelled = true
     }
   }, [data])
 
@@ -166,6 +210,19 @@ export function SelectResearch({ data }: SelectResearchProps) {
     a.rel = 'noopener'
     a.click()
     URL.revokeObjectURL(url)
+  }, [levelOverrides])
+
+  const handleCopyShareLink = useCallback(async () => {
+    try {
+      const encoded = await encodeLabsShareQueryValue(levelOverrides)
+      const shareUrl = new URL(window.location.href)
+      shareUrl.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+      const text = shareUrl.toString()
+      await navigator.clipboard.writeText(text)
+      setImportNotice('Share link copied to clipboard.')
+    } catch {
+      setImportNotice('Could not copy link (clipboard blocked or unavailable).')
+    }
   }, [levelOverrides])
 
   const handleImportLevelsClick = useCallback(() => {
@@ -296,6 +353,14 @@ export function SelectResearch({ data }: SelectResearchProps) {
             disabled={!hydrated}
           >
             Export lab levels to file
+          </button>
+          <button
+            type="button"
+            className="glow-btn glow-btn--block select-research__filter-actions-share"
+            onClick={handleCopyShareLink}
+            disabled={!hydrated}
+          >
+            Copy link to share labs
           </button>
         </div>
         {importNotice ? (
