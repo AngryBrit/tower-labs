@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { toolkitMarginalCoinCost } from './labCosts'
 import {
   UNLOCK_LAB_LV0_LABELS,
   benefitDisplayForCard,
@@ -451,26 +452,557 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(pab!, max, max)).toBe('Unlocked')
     })
 
-    it('Recovery Package labs use calculator Value (+0.40% per level, Include %)', () => {
+    it('Recovery Package Amount uses +0.40%/level (Include %)', () => {
+      const lab = utility.items.find((i) => i.name === 'Recovery Package Amount')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.40%')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+8.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00% » +0.40%')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe(
+        '+7.60% » +8.00%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+8.00%')
+    })
+
+    it('Recovery Package Chance uses +0.20%/level (Include %)', () => {
+      const lab = utility.items.find((i) => i.name === 'Recovery Package Chance')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.20%')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+4.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00% » +0.20%')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe(
+        '+3.80% » +4.00%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+4.00%')
+    })
+
+    it('Recovery Package Max uses +1.00%/level (Include %)', () => {
+      const lab = utility.items.find((i) => i.name === 'Recovery Package Max')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1.00%')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+20.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        '+0.00% » +1.00%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe(
+        '+19.00% » +20.00%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+20.00%')
+    })
+
+    it('Enemy Attack & Health Level Skip use +0.10%/level (Include %)', () => {
       for (const name of [
-        'Recovery Package Amount',
-        'Recovery Package Max',
-        'Recovery Package Chance',
+        'Enemy Attack Level Skip',
+        'Enemy Health Level Skip',
       ] as const) {
         const lab = utility.items.find((i) => i.name === name)
         expect(lab).toBeDefined()
         const max = lab!.maxLevel ?? 20
         expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00%')
-        expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.40%')
-        expect(benefitDisplayForCard(lab!, 20, max)).toBe('+8.00%')
+        expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.10%')
+        expect(benefitDisplayForCard(lab!, 10, max)).toBe('+1.00%')
+        expect(benefitDisplayForCard(lab!, 20, max)).toBe('+2.00%')
         expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
-          '+0.00% » +0.40%',
+          '+0.00% » +0.10%',
         )
         expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe(
-          '+7.60% » +8.00%',
+          '+1.90% » +2.00%',
         )
-        expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+8.00%')
+        expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+2.00%')
       }
+    })
+  })
+
+  describe('ULTIMATE WEAPON RESEARCH spot checks', () => {
+    const ultimate = loadAllSections().find(
+      (s) => s.title === 'ULTIMATE WEAPON RESEARCH',
+    )
+    if (!ultimate) throw new Error('fixture missing ULTIMATE WEAPON RESEARCH')
+
+    it('Missile Despawn Time uses calculator Value (integer 1 per level)', () => {
+      const m = ultimate.items.find((i) => i.name === 'Missile Despawn Time')
+      expect(m).toBeDefined()
+      const max = m!.maxLevel ?? 20
+      expect(benefitDisplayForCard(m!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(m!, 1, max)).toBe('1')
+      expect(benefitDisplayForCard(m!, 20, max)).toBe('20')
+      expect(benefitLineWithNextUpgrade(m!, 0, max)).toBe('0 » 1')
+      expect(benefitLineWithNextUpgrade(m!, 19, max)).toBe('19 » 20')
+      expect(benefitLineWithNextUpgrade(m!, max, max)).toBe('20')
+    })
+
+    it('Black Hole Damage uses calculator Value (0.20%/level of max HP)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Black Hole Damage')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('0.20%')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('1.00%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('2.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.20%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('0.20% » 0.40%')
+      expect(benefitLineWithNextUpgrade(lab!, 9, max)).toBe('1.80% » 2.00%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('2.00%')
+    })
+
+    it('Black Hole Coin Bonus uses calculator Value (x1.00 + 0.50/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Black Hole Coin Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.50')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x6.00')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x11.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.00 » x1.50')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('x1.50 » x2.00')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('x10.50 » x11.00')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x11.00')
+    })
+
+    it('Spotlight Missiles uses calculator Value (20.00 − level, seconds)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Spotlight Missiles')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 18
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('20.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('19.00')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('10.00')
+      expect(benefitDisplayForCard(lab!, 18, max)).toBe('2.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('20.00 » 19.00')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('19.00 » 18.00')
+      expect(benefitLineWithNextUpgrade(lab!, 17, max)).toBe('3.00 » 2.00')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('2.00')
+    })
+
+    it('Spotlight Coin Bonus uses calculator Value (x1.00 + 0.10/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Spotlight Coin Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.10')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x2.00')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x3.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.00 » x1.10')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('x1.10 » x1.20')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('x2.90 » x3.00')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x3.00')
+    })
+
+    it('Missile Amplifier uses calculator Value with x (x1.00 + 1.50/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Missile Amplifier')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x2.50')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x31.00')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('x38.50')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.00 » x2.50')
+      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('x37.00 » x38.50')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x38.50')
+    })
+
+    it('Missile Barrage Quantity uses calculator Value (20 + 5/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Missile Barrage Quantity')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 6
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('20')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('25')
+      expect(benefitDisplayForCard(lab!, 6, max)).toBe('50')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('20 » 25')
+      expect(benefitLineWithNextUpgrade(lab!, 5, max)).toBe('45 » 50')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('50')
+    })
+
+    it('Recharge Missile Barrage uses calculator Value per level (wiki table)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Recharge Missile Barrage')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 7
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('1750')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1500')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('500')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('200')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('1750 » 1500')
+      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe('350 » 200')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('200')
+    })
+
+    it('Chrono Field Duration uses calculator Value (1.00 per level)', () => {
+      const c = ultimate.items.find((i) => i.name === 'Chrono Field Duration')
+      expect(c).toBeDefined()
+      const max = c!.maxLevel ?? 30
+      expect(benefitDisplayForCard(c!, 0, max)).toBe('0.00')
+      expect(benefitDisplayForCard(c!, 1, max)).toBe('1.00')
+      expect(benefitDisplayForCard(c!, 30, max)).toBe('30.00')
+      expect(benefitLineWithNextUpgrade(c!, 0, max)).toBe('0.00 » 1.00')
+      expect(benefitLineWithNextUpgrade(c!, 29, max)).toBe('29.00 » 30.00')
+      expect(benefitLineWithNextUpgrade(c!, max, max)).toBe('30.00')
+    })
+
+    it('Chrono Field Reduction % uses 10.00% + 0.50%/level (calculator Value)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Chrono Field Reduction %')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('10.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('10.50%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('15.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('25.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('10.00% » 10.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('24.50% » 25.00%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('25.00%')
+    })
+
+    it('Chrono Field Range uses calculator Value with + and m (3.00m per level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Chrono Field Range')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00m')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+3.00m')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('+21.00m')
+      expect(benefitDisplayForCard(lab!, 8, max)).toBe('+24.00m')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+30.00m')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+60.00m')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00m » +3.00m')
+      expect(benefitLineWithNextUpgrade(lab!, 7, max)).toBe('+21.00m » +24.00m')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('+57.00m » +60.00m')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+60.00m')
+    })
+
+    it('Missile Radius uses 0.30 + 0.05/level (calculator Value)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Missile Radius')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.30')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('0.35')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('0.80')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('1.30')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.30 » 0.35')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('1.25 » 1.30')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('1.30')
+    })
+
+    it('Swamp Radius uses +0.04/level (calculator Value)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Swamp Radius')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.04')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+0.40')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('+1.20')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.00 » +0.04')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('+1.16 » +1.20')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+1.20')
+    })
+
+    it('Swamp Stun Chance uses +5% + 2.50%/level (Include %)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Swamp Stun Chance')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+5.00%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+7.50%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+30.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('+80.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+5.00% » +7.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe(
+        '+77.50% » +80.00%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+80.00%')
+    })
+
+    it('Swamp Stun Time uses +1.00s + 0.30s/level (calculator Value)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Swamp Stun Time')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+1.00s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1.30s')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+4.00s')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('+10.00s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+1.00s » +1.30s')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe(
+        '+9.70s » +10.00s',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+10.00s')
+    })
+
+    it('Swamp Rend uses calculator Value (3%/level rend on basics, 90% max)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Swamp Rend')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('3%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('30%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('90%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 3%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('3% » 6%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('87% » 90%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('90%')
+    })
+
+    it('Swamp Rend labs have tower-labs marginal coin costs', () => {
+      expect(toolkitMarginalCoinCost('Swamp Rend', 0)).toBe(100_000_000_000)
+      expect(toolkitMarginalCoinCost('Swamp Rend', 29)).toBe(
+        12_780_000_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Swamp Rend - Additional Enemies', 0)).toBe(
+        100_000_000_000,
+      )
+      expect(toolkitMarginalCoinCost('Swamp Rend - Additional Enemies', 5)).toBe(
+        759_380_000_000,
+      )
+    })
+
+    it('Swamp Rend - Additional Enemies uses wiki Value labels per level', () => {
+      const lab = ultimate.items.find(
+        (i) => i.name === 'Swamp Rend - Additional Enemies',
+      )
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 6
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('—')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Ranged enemies')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('Fast enemies')
+      expect(benefitDisplayForCard(lab!, 3, max)).toBe('Tank Enemies')
+      expect(benefitDisplayForCard(lab!, 6, max)).toBe('Vampire')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        '— » Ranged enemies',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe(
+        'Ranged enemies » Fast enemies',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 5, max)).toBe(
+        'Boss Enemies » Vampire',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Vampire')
+    })
+
+    it('Golden Tower Bonus uses 0.15/level (calculator Value)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Golden Tower Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('0.15')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('1.50')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('3.75')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00 » 0.15')
+      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('3.60 » 3.75')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('3.75')
+    })
+
+    it('Golden Tower Duration uses +1.0s/level display (one decimal)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Golden Tower Duration')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0.0s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1.0s')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+10.0s')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+20.0s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0.0s » +1.0s')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe(
+        '+19.0s » +20.0s',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+20.0s')
+    })
+
+    it('Missiles Explosion is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Missiles Explosion')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe(
+        'Unlock Missiles Explosion',
+      )
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Missiles Explosion',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Missile Barrage is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Missile Barrage')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Missile Barrage')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('Unlock Missile Barrage')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Chrono Field Damage Reduction is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find(
+        (i) => i.name === 'Chrono Field Damage Reduction',
+      )
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe(
+        'Unlock Chrono Field Damage Reduction',
+      )
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Chrono Field Damage Reduction',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Swamp Stun is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Swamp Stun')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Swamp Stun')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('Unlock Swamp Stun')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Chain Lightning Shock is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Chain Lightning Shock')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe(
+        'Unlock Chain Lightning Shock',
+      )
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Chain Lightning Shock',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Shock Chance uses calculator Value with % (2.50% + 0.50%/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Shock Chance')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('2.50%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('3.00%')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('5.00%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('7.50%')
+      expect(benefitDisplayForCard(lab!, 15, max)).toBe('10.00%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('17.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('2.50% » 3.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('3.00% » 3.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('17.00% » 17.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 30, max)).toBe('17.50%')
+    })
+
+    it('Shock Multiplier uses calculator Value with x (x1.10 + 0.04/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Shock Multiplier')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 14
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.10')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.14')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('x1.30')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x1.50')
+      expect(benefitDisplayForCard(lab!, 14, max)).toBe('x1.66')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.10 » x1.14')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('x1.14 » x1.18')
+      expect(benefitLineWithNextUpgrade(lab!, 13, max)).toBe('x1.62 » x1.66')
+      expect(benefitLineWithNextUpgrade(lab!, 14, max)).toBe('x1.66')
+    })
+
+    it('Death Wave Health uses calculator Value with % (500% + 25%/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Death Wave Health')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('500%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('525%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('750%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('1250%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('500% » 525%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('525% » 550%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe(
+        '1225% » 1250%',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 30, max)).toBe('1250%')
+    })
+
+    it('Death Wave Coin Bonus uses calculator Value (x1.50 + 0.05/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Death Wave Coin Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.50')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.55')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x2.00')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x2.50')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.50 » x1.55')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('x2.45 » x2.50')
+      expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('x2.50')
+    })
+
+    it('Death Wave Cells Bonus uses calculator Value (x1.00 + 0.10/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Death Wave Cells Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.10')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x2.00')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x3.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.00 » x1.10')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('x2.90 » x3.00')
+      expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('x3.00')
+    })
+
+    it('Death Wave Damage Amplifier uses calculator Value (x5.00 + 1.50/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Death Wave Damage Amplifier')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x5.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x6.50')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x20.00')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('x50.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x5.00 » x6.50')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('x48.50 » x50.00')
+      expect(benefitLineWithNextUpgrade(lab!, 30, max)).toBe('x50.00')
+    })
+
+    it('Death Wave Armor Stripping uses calculator Value (1.00 per level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Death Wave Armor Stripping')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1.00')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('10.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00 » 1.00')
+      expect(benefitLineWithNextUpgrade(lab!, 9, max)).toBe('9.00 » 10.00')
+      expect(benefitLineWithNextUpgrade(lab!, 10, max)).toBe('10.00')
+    })
+
+    it('Inner Mine Blast Radius uses +1.40 + 0.10/level display', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Inner Mine Blast Radius')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+1.40')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1.50')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+2.40')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+3.40')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+1.40 » +1.50')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('+1.50 » +1.60')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('+3.30 » +3.40')
+      expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('+3.40')
+    })
+
+    it('Inner Mine Rotation Speed uses calculator Value (0.80/level)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Inner Mine Rotation Speed')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('0.80')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('8.00')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('16.00')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00 » 0.80')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('15.20 » 16.00')
+      expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('16.00')
+    })
+
+    it('Inner Mine Stun is a single-level unlock (no » benefit line)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Inner Mine Stun')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Inner Mine Stun')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('Unlock Inner Mine Stun')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
     })
   })
 

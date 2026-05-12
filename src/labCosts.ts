@@ -21,6 +21,7 @@ const towerLabs = towerLabsJson as ToolkitLabsFile
 /** Display-name mismatches between our research JSON and Tower Data lab keys */
 const LAB_NAME_ALIASES: Record<string, string> = {
   'Labs Speed': 'Lab Speed',
+  'Black Hole Coin Bonus': 'Blackhole Coin Bonus',
 }
 
 function resolveToolkitLabKey(displayName: string): string | undefined {

@@ -167,6 +167,14 @@ export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'Reroll Daily Mission': 'Unlock Reroll Daily Mission',
   'Workshop Enhancements': 'Unlock Workshop Enhancements',
   'Light Speed Shots': 'Unlock Light Speed Shots',
+  'Missiles Explosion': 'Unlock Missiles Explosion',
+  'Chrono Field Damage Reduction': 'Unlock Chrono Field Damage Reduction',
+  'Swamp Stun': 'Unlock Swamp Stun',
+  'Chain Lightning Shock': 'Unlock Chain Lightning Shock',
+  'Missile Barrage': 'Unlock Missile Barrage',
+  'Inner Mine Stun': 'Unlock Inner Mine Stun',
+  'Extra Black Hole': 'Unlock Extra Black Hole',
+  'Black Hole Disable Ranged Enemies': 'Unlock Black Hole Disable Ranged Enemies',
 }
 
 function isUnlockLabItem(name: string): boolean {
@@ -317,6 +325,146 @@ export function shockwaveSizePlusDisplay(
 }
 
 /**
+ * Shock Chance — same numeric curve as the calculator **Value** column (**2.50 + 0.50 × lab level**),
+ * shown with **`%`** (e.g. Lv.0→**2.50%**, Lv.1→**3.00%** … Lv.30→**17.50%**).
+ */
+export function shockChanceValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 2.5 + 0.5 * capped
+  return `${v.toFixed(2)}%`
+}
+
+/**
+ * Shock Multiplier — same numeric curve as the calculator **Value** column (**1.10 + 0.04 × lab level**),
+ * shown with **`x`** (e.g. Lv.0→**x1.10**, Lv.1→**x1.14** … Lv.14→**x1.66**).
+ */
+export function shockMultiplierValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.1 + 0.04 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Death Wave Health — same curve as the calculator **Value** with Include **%**:
+ * **500 + 25 × lab level**; whole-number **%** only (e.g. Lv.0→**500%**, Lv.1→**525%** … Lv.30→**1250%**).
+ */
+export function deathWaveHealthPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 500 + 25 * capped
+  return `${v}%`
+}
+
+/**
+ * Death Wave Coin Bonus — calculator **Value**: **1.50 + 0.05 × lab level** as **`x`** multiplier
+ * (Lv.0→**x1.50** … Lv.20→**x2.50**).
+ */
+export function deathWaveCoinBonusMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.5 + 0.05 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Death Wave Cells Bonus — calculator **Value**: **1.00 + 0.10 × lab level** as **`x`** multiplier
+ * (Lv.0→**x1.00** … Lv.20→**x3.00**).
+ */
+export function deathWaveCellsBonusMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.0 + 0.1 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Death Wave Damage Amplifier — calculator **Value**: **5.00 + 1.50 × lab level** as **`x`**
+ * (Lv.0→**x5.00**, Lv.1→**x6.50** … Lv.30→**x50.00**).
+ */
+export function deathWaveDamageAmplifierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 5.0 + 1.5 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Death Wave Armor Stripping — calculator **Value**: **1.00 × lab level** (Lv.0→**0.00** … Lv.10→**10.00**).
+ */
+export function deathWaveArmorStrippingDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.0 * capped
+  return v.toFixed(2)
+}
+
+/**
+ * Inner Mine Blast Radius — in-game style **+1.40 + 0.10 × lab level** (Lv.0→**+1.40**, Lv.1→**+1.50** … Lv.20→**+3.40**).
+ */
+export function innerMineBlastRadiusValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.4 + 0.1 * capped
+  return `+${v.toFixed(2)}`
+}
+
+/**
+ * Inner Mine Rotation Speed — calculator **Value**: **0.80 × lab level** (Lv.0→**0.00** … Lv.20→**16.00**).
+ */
+export function innerMineRotationSpeedValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return (0.8 * capped).toFixed(2)
+}
+
+/**
  * Defense % / **Orb Boss Hit** — Tower Lab Calculator **Value** with Include **%**: **+0.20% × lab level**.
  */
 export function defensePercentValueDisplay(
@@ -332,18 +480,21 @@ export function defensePercentValueDisplay(
 }
 
 /**
- * Recovery Package Amount / **Max** / **Chance** — Tower Lab Calculator **Value** with Include **%**:
- * **+0.40% × lab level** (Lv.1→+0.40% … Lv.20→+8.00%).
+ * Tower Lab calculator **Value** when **Include %** is on: **+pctPerLevel% × lab level**
+ * (Lv.0→+0.00%; Lv.1→+pctPerLevel formatted to two decimals).
+ *
+ * Used by Recovery Package labs, **Enemy Attack Level Skip**, **Enemy Health Level Skip**, etc.
  */
-export function recoveryPackagePercentValueDisplay(
+function includePercentTimesLabLevelDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
+  pctPerLevel: number,
 ): string {
   const capped =
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const pct = 0.4 * capped
+  const pct = pctPerLevel * capped
   return `+${pct.toFixed(2)}%`
 }
 
@@ -443,6 +594,70 @@ export function landMineDamagePercentDisplay(
 }
 
 /**
+ * Black Hole Damage — Tower Lab calculator **Value**: **0.20% × lab level** of enemy max health per tick
+ * (Lv.0→**0.00%**, Lv.1→**0.20%** … Lv.10→**2.00%**); two decimals and **`%`** only (no **`+`**).
+ */
+export function blackHoleDamagePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const pct = 0.2 * capped
+  return `${pct.toFixed(2)}%`
+}
+
+/**
+ * Black Hole Coin Bonus — calculator **Value**: **1.00 + 0.50 × lab level** as coin multiplier (**`x`**)
+ * (Lv.0→**x1.00**, Lv.1→**x1.50** … Lv.20→**x11.00**).
+ */
+export function blackHoleCoinBonusMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1 + 0.5 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Spotlight Missiles — Tower Lab calculator **Value**: missile fire interval **20.00 − lab level** (seconds),
+ * two decimals (Lv.0→**20.00**, Lv.1→**19.00** … Lv.18→**2.00**).
+ */
+export function spotlightMissilesIntervalDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 20 - capped
+  return v.toFixed(2)
+}
+
+/**
+ * Spotlight Coin Bonus — calculator **Value**: **1.00 + 0.10 × lab level** as **`x`** multiplier
+ * (Lv.0→**x1.00**, Lv.1→**x1.10** … Lv.20→**x3.00**).
+ */
+export function spotlightCoinBonusMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1 + 0.1 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
  * Land Mine Decay — Tower Lab Calculator **Value**: **+0.50s × lab level** (seconds), shown as **`+`…`s`**.
  * (Lv.1→+0.50s … Lv.35→+17.50s).
  */
@@ -456,6 +671,250 @@ export function landMineDecaySecondsDisplay(
       : Math.max(0, effectiveLevel)
   const sec = 0.5 * capped
   return `+${sec.toFixed(2)}s`
+}
+
+/**
+ * Missile Despawn Time — Tower Lab calculator **Value** column: **1…20** (= lab level; Lv.0→**0**).
+ */
+export function missileDespawnTimeSecondsDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return String(capped)
+}
+
+/**
+ * Missile Amplifier — same numeric curve as the calculator **Value** (**1.00 + 1.50 × lab level**),
+ * shown with **`x`** (e.g. Lv.0→**x1.00**, Lv.1→**x2.50** … Lv.25→**x38.50**).
+ */
+export function missileAmplifierValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1 + 1.5 * capped
+  return `x${v.toFixed(2)}`
+}
+
+/**
+ * Missile Barrage Quantity — Tower Lab calculator **Value**: **20 + 5 × lab level**
+ * (Lv.0→**20**, Lv.1→**25** … Lv.6→**50**).
+ */
+export function missileBarrageQuantityValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return String(20 + 5 * capped)
+}
+
+/**
+ * Recharge Missile Barrage — Tower Lab calculator **Value** by level (wiki table;
+ * Lv.0→**1750** extrapolated −250 from Lv.1→**1500** … Lv.7→**200**).
+ */
+const RECHARGE_MISSILE_BARRAGE_VALUES = [
+  1750, 1500, 1250, 1000, 750, 500, 350, 200,
+] as const
+
+export function rechargeMissileBarrageValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const idx = Math.min(capped, RECHARGE_MISSILE_BARRAGE_VALUES.length - 1)
+  return String(RECHARGE_MISSILE_BARRAGE_VALUES[idx])
+}
+
+/**
+ * Chrono Field Duration — Tower Lab calculator **Value** column: **1.00 × lab level**
+ * (Lv.0→**0.00** … Lv.30→**30.00**); plain decimals (no **`+`** / **`s`**).
+ */
+export function chronoFieldDurationSecondsDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return capped.toFixed(2)
+}
+
+/**
+ * Chrono Field Range — same numeric curve as the calculator **Value** (**3.00 × lab level**),
+ * shown with **`+`** and **`m`** (e.g. Lv.7→**+21.00m**, Lv.8→**+24.00m** … Lv.20→**+60.00m**).
+ */
+export function chronoFieldRangeValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `+${(3 * capped).toFixed(2)}m`
+}
+
+/**
+ * Golden Tower Duration — Tower Lab calculator **Value**: **+1.00s × lab level** (display **one** decimal like Wall Invincibility: Lv.20→+20.0s).
+ */
+export function goldenTowerDurationSecondsDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `+${capped.toFixed(1)}s`
+}
+
+/**
+ * Chrono Field Reduction % — Tower Lab calculator **Value** (Include **%**):
+ * **10.00% + 0.50% × lab level** (Lv.0→**10.00%**, Lv.1→**10.50%** … Lv.30→**25.00%**); no **`+`** prefix on the string.
+ */
+export function chronoFieldReductionPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const pct = 10 + 0.5 * capped
+  return `${pct.toFixed(2)}%`
+}
+
+/**
+ * Missile Radius — Tower Lab calculator **Value**: **0.30 + 0.05 × lab level** (two decimals; Lv.0→0.30, Lv.1→0.35 … Lv.20→1.30).
+ */
+export function missileRadiusValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 0.3 + 0.05 * capped
+  return v.toFixed(2)
+}
+
+/**
+ * Swamp Radius — Tower Lab calculator **Value**: **+0.04 × lab level** (two decimals; Lv.0→+0.00 … Lv.30→+1.20).
+ */
+export function swampRadiusPlusDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 0.04 * capped
+  return `+${v.toFixed(2)}`
+}
+
+/**
+ * Swamp Stun Chance — Tower Lab calculator **Value** (Include **%**):
+ * **+5.00% + 2.50% × lab level** (Lv.0→+5.00%, Lv.1→+7.50% … Lv.30→+80.00%).
+ */
+export function swampStunChancePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const pct = 5 + 2.5 * capped
+  return `+${pct.toFixed(2)}%`
+}
+
+/**
+ * Swamp Stun Time — Tower Lab calculator **Value** (**+`…`s**): **+1.00s + 0.30s × lab level**
+ * (Lv.0→+1.00s, Lv.1→+1.30s … Lv.30→+10.00s).
+ */
+export function swampStunTimeValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.0 + 0.3 * capped
+  return `+${v.toFixed(2)}s`
+}
+
+/** Wiki / calculator order for **Swamp Rend - Additional Enemies** (one label per lab level 1…6). */
+const SWAMP_REND_ADDITIONAL_ENEMY_LABELS: readonly string[] = [
+  'Ranged enemies',
+  'Fast enemies',
+  'Tank Enemies',
+  'Protector Enemies',
+  'Boss Enemies',
+  'Vampire',
+]
+
+/**
+ * Swamp Rend (basic enemies) — Tower Lab calculator **Value**: **3% × lab level** cumulative rend percent
+ * (Lv.0→**0%**, Lv.1→**3%** … Lv.30→**90%**); whole-number **`%`** only.
+ */
+export function swampRendPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `${3 * capped}%`
+}
+
+/**
+ * Swamp Rend - Additional Enemies — discrete **Value** per wiki level (Lv.0→**—**, then one enemy type per level).
+ */
+export function swampRendAdditionalEnemiesDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '—'
+  const idx =
+    Math.min(capped, SWAMP_REND_ADDITIONAL_ENEMY_LABELS.length) - 1
+  return SWAMP_REND_ADDITIONAL_ENEMY_LABELS[idx] ?? '—'
+}
+
+/**
+ * Golden Tower Bonus — Tower Lab calculator **Value**: **0.15 × lab level** (two decimals; Lv.0→0.00 … Lv.25→3.75).
+ */
+export function goldenTowerBonusValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 0.15 * capped
+  return v.toFixed(2)
 }
 
 /**
@@ -522,13 +981,31 @@ export function labsCoinDiscountTotalPercent(
   return capped * LAB_COIN_DISCOUNT_PCT_PER_LEVEL
 }
 
+/** Omit `0d` when under 24h; omit `0h` when under 1h. */
+function formatResearchDurationDhm(d: number, h: number, m: number): string {
+  if (d > 0) return `${d}d ${h}h ${m}m`
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
+
 function formatResearchDurationSeconds(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '—'
   const totalMin = Math.floor(seconds / 60)
   const d = Math.floor(totalMin / (60 * 24))
   const h = Math.floor((totalMin % (60 * 24)) / 60)
   const m = totalMin % 60
-  return `${d}d ${h}h ${m}m`
+  return formatResearchDurationDhm(d, h, m)
+}
+
+const STATIC_RESEARCH_TIME_RE = /^(\d+)d (\d+)h (\d+)m$/
+
+function normalizeStaticResearchTime(time: string): string {
+  const m = time.match(STATIC_RESEARCH_TIME_RE)
+  if (!m) return time
+  const d = Number.parseInt(m[1]!, 10)
+  const h = Number.parseInt(m[2]!, 10)
+  const min = Number.parseInt(m[3]!, 10)
+  return formatResearchDurationDhm(d, h, min)
 }
 
 /**
@@ -728,8 +1205,92 @@ export function benefitDisplayForCard(
   if (item.name === 'Land Mine Damage') {
     return landMineDamagePercentDisplay(effectiveLevel, maxLevelCap)
   }
+  if (item.name === 'Black Hole Damage') {
+    return blackHoleDamagePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Black Hole Coin Bonus') {
+    return blackHoleCoinBonusMultiplierDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Spotlight Missiles') {
+    return spotlightMissilesIntervalDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Spotlight Coin Bonus') {
+    return spotlightCoinBonusMultiplierDisplay(effectiveLevel, maxLevelCap)
+  }
   if (item.name === 'Land Mine Decay') {
     return landMineDecaySecondsDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Missile Despawn Time') {
+    return missileDespawnTimeSecondsDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Missile Amplifier') {
+    return missileAmplifierValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Missile Barrage Quantity') {
+    return missileBarrageQuantityValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Recharge Missile Barrage') {
+    return rechargeMissileBarrageValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Chrono Field Duration') {
+    return chronoFieldDurationSecondsDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Chrono Field Range') {
+    return chronoFieldRangeValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Golden Tower Duration') {
+    return goldenTowerDurationSecondsDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Chrono Field Reduction %') {
+    return chronoFieldReductionPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Missile Radius') {
+    return missileRadiusValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Swamp Radius') {
+    return swampRadiusPlusDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Swamp Stun Chance') {
+    return swampStunChancePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Swamp Stun Time') {
+    return swampStunTimeValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Swamp Rend') {
+    return swampRendPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Swamp Rend - Additional Enemies') {
+    return swampRendAdditionalEnemiesDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Golden Tower Bonus') {
+    return goldenTowerBonusValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Shock Chance') {
+    return shockChanceValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Shock Multiplier') {
+    return shockMultiplierValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Death Wave Health') {
+    return deathWaveHealthPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Death Wave Coin Bonus') {
+    return deathWaveCoinBonusMultiplierDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Death Wave Cells Bonus') {
+    return deathWaveCellsBonusMultiplierDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Death Wave Damage Amplifier') {
+    return deathWaveDamageAmplifierDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Death Wave Armor Stripping') {
+    return deathWaveArmorStrippingDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Inner Mine Blast Radius') {
+    return innerMineBlastRadiusValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Inner Mine Rotation Speed') {
+    return innerMineRotationSpeedValueDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Max Rend Armor Multiplier') {
     return maxRendArmorMultiplierValueDisplay(effectiveLevel, maxLevelCap)
@@ -746,12 +1307,36 @@ export function benefitDisplayForCard(
   if (WORKSHOP_DISCOUNT_VALUE_LABS.has(item.name)) {
     return workshopDiscountValuePercentDisplay(effectiveLevel, maxLevelCap)
   }
+  if (item.name === 'Recovery Package Max') {
+    return includePercentTimesLabLevelDisplay(
+      effectiveLevel,
+      maxLevelCap,
+      1,
+    )
+  }
+  if (item.name === 'Recovery Package Chance') {
+    return includePercentTimesLabLevelDisplay(
+      effectiveLevel,
+      maxLevelCap,
+      0.2,
+    )
+  }
+  if (item.name === 'Recovery Package Amount') {
+    return includePercentTimesLabLevelDisplay(
+      effectiveLevel,
+      maxLevelCap,
+      0.4,
+    )
+  }
   if (
-    item.name === 'Recovery Package Amount' ||
-    item.name === 'Recovery Package Max' ||
-    item.name === 'Recovery Package Chance'
+    item.name === 'Enemy Attack Level Skip' ||
+    item.name === 'Enemy Health Level Skip'
   ) {
-    return recoveryPackagePercentValueDisplay(effectiveLevel, maxLevelCap)
+    return includePercentTimesLabLevelDisplay(
+      effectiveLevel,
+      maxLevelCap,
+      0.1,
+    )
   }
 
   const tier = tierStyleBenefitDisplay(item, effectiveLevel, maxLevelCap)
@@ -837,7 +1422,7 @@ export function researchTimeForNextUpgrade(
     return formatResearchDurationSeconds(sec)
   }
 
-  return item.time
+  return normalizeStaticResearchTime(item.time)
 }
 
 export function levelOverrideKey(sectionIndex: number, itemIndex: number): string {

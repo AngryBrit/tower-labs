@@ -2,87 +2,39 @@
   "title": "ULTIMATE WEAPON RESEARCH",
   "items": [
     {
-      "name": "Golden Tower Bonus",
+      "name": "Missile Despawn Time",
       "level": "Lv.0",
-      "benefit": "T4 200",
-      "time": "1d 16h 0m",
-      "cost": "1 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 25,
-      "coinsToMaxRaw": 124848790000,
-      "costPlusOne": "1.31 M"
-    },
-    {
-      "name": "Golden Tower Duration",
-      "level": "Lv.0",
-      "benefit": "T4 200",
-      "time": "1d 16h 0m",
-      "cost": "1 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 20,
-      "coinsToMaxRaw": 34388790000,
-      "costPlusOne": "1.31 M"
-    },
-    {
-      "name": "Death Wave Health",
-      "level": "Lv.0",
-      "benefit": "T3 250",
+      "benefit": "T7 30",
       "time": "0d 19h 59m",
       "cost": "250 K",
       "state": "default",
       "currentLevel": 0,
-      "maxLevel": 30,
-      "coinsToMaxRaw": 15790390000,
-      "costPlusOne": "560 K"
-    },
-    {
-      "name": "Death Wave Coin Bonus",
-      "level": "Lv.0",
-      "benefit": "T3 250",
-      "time": "0d 20h 0m",
-      "cost": "250 K",
-      "state": "default",
-      "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 34379790000,
-      "costPlusOne": "560 K"
+      "coinsToMaxRaw": 12941771980,
+      "costPlusOne": "285 K"
     },
     {
-      "name": "Black Hole Damage",
+      "name": "Missiles Explosion",
       "level": "Lv.0",
-      "benefit": "T5 150",
-      "time": "1d 15h 59m",
-      "cost": "20 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 10,
-      "coinsToMaxRaw": 820520000,
-      "costPlusOne": "20.81 M"
-    },
-    {
-      "name": "Extra Black Hole",
-      "level": "Lv.0",
-      "benefit": "T5 500",
-      "time": "17d 8h 39m",
-      "cost": "15 B",
+      "benefit": "T7 30",
+      "time": "0d 22h 23m",
+      "cost": "900 K",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 1,
-      "coinsToMaxRaw": 15000000000
+      "coinsToMaxRaw": 900000
     },
     {
-      "name": "Black Hole Coin Bonus",
+      "name": "Missile Radius",
       "level": "Lv.0",
-      "benefit": "T5 150",
-      "time": "1d 15h 59m",
-      "cost": "20 M",
+      "benefit": "T7 30",
+      "time": "1d 14h 53m",
+      "cost": "800 K",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 91921243243,
-      "costPlusOne": "21.41 M"
+      "coinsToMaxRaw": 12960025000,
+      "costPlusOne": "835 K"
     },
     {
       "name": "Chrono Field Duration",
@@ -118,42 +70,6 @@
       "maxLevel": 30,
       "coinsToMaxRaw": 116241771980,
       "costPlusOne": "285 K"
-    },
-    {
-      "name": "Chrono Field Range",
-      "level": "Lv.0",
-      "benefit": "T7 90",
-      "time": "0d 20h 0m",
-      "cost": "250 K",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 20,
-      "coinsToMaxRaw": 34379790000,
-      "costPlusOne": "560 K"
-    },
-    {
-      "name": "Spotlight Coin Bonus",
-      "level": "Lv.0",
-      "benefit": "T7 80",
-      "time": "1d 15h 59m",
-      "cost": "20 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 20,
-      "coinsToMaxRaw": 91921243243,
-      "costPlusOne": "21.41 M"
-    },
-    {
-      "name": "Spotlight Missiles",
-      "level": "Lv.0",
-      "benefit": "T3 400",
-      "time": "6d 15h 58m",
-      "cost": "200 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 18,
-      "coinsToMaxRaw": 22233286486,
-      "costPlusOne": "200.31 M"
     },
     {
       "name": "Swamp Radius",
@@ -203,39 +119,28 @@
       "costPlusOne": "285 K"
     },
     {
-      "name": "Inner Mine Blast Radius",
+      "name": "Golden Tower Bonus",
       "level": "Lv.0",
-      "benefit": "T7 40",
-      "time": "0d 20h 0m",
-      "cost": "250 K",
+      "benefit": "T4 200",
+      "time": "1d 16h 0m",
+      "cost": "1 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 25,
+      "coinsToMaxRaw": 124848790000,
+      "costPlusOne": "1.31 M"
+    },
+    {
+      "name": "Golden Tower Duration",
+      "level": "Lv.0",
+      "benefit": "T4 200",
+      "time": "1d 16h 0m",
+      "cost": "1 M",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 34379790000,
-      "costPlusOne": "560 K"
-    },
-    {
-      "name": "Inner Mine Rotation Speed",
-      "level": "Lv.0",
-      "benefit": "T7 40",
-      "time": "0d 20h 0m",
-      "cost": "250 K",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 20,
-      "coinsToMaxRaw": 34379790000,
-      "costPlusOne": "560 K"
-    },
-    {
-      "name": "Inner Mine Stun",
-      "level": "Lv.0",
-      "benefit": "T7 40",
-      "time": "13d 21h 19m",
-      "cost": "250 M",
-      "state": "default",
-      "currentLevel": 0,
-      "maxLevel": 1,
-      "coinsToMaxRaw": 250000000
+      "coinsToMaxRaw": 34388790000,
+      "costPlusOne": "1.31 M"
     },
     {
       "name": "Chain Lightning Shock",
@@ -273,16 +178,64 @@
       "costPlusOne": "560 K"
     },
     {
-      "name": "Missile Despawn Time",
+      "name": "Death Wave Health",
       "level": "Lv.0",
-      "benefit": "T7 30",
+      "benefit": "T3 250",
       "time": "0d 19h 59m",
       "cost": "250 K",
       "state": "default",
       "currentLevel": 0,
+      "maxLevel": 30,
+      "coinsToMaxRaw": 15790390000,
+      "costPlusOne": "560 K"
+    },
+    {
+      "name": "Death Wave Coin Bonus",
+      "level": "Lv.0",
+      "benefit": "T3 250",
+      "time": "0d 20h 0m",
+      "cost": "250 K",
+      "state": "default",
+      "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 12941771980,
-      "costPlusOne": "285 K"
+      "coinsToMaxRaw": 34379790000,
+      "costPlusOne": "560 K"
+    },
+    {
+      "name": "Inner Mine Blast Radius",
+      "level": "Lv.0",
+      "benefit": "T7 40",
+      "time": "0d 20h 0m",
+      "cost": "250 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 34379790000,
+      "costPlusOne": "560 K"
+    },
+    {
+      "name": "Inner Mine Rotation Speed",
+      "level": "Lv.0",
+      "benefit": "T7 40",
+      "time": "0d 20h 0m",
+      "cost": "250 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 34379790000,
+      "costPlusOne": "560 K"
+    },
+    {
+      "name": "Chrono Field Range",
+      "level": "Lv.0",
+      "benefit": "T7 90",
+      "time": "0d 20h 0m",
+      "cost": "250 K",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 20,
+      "coinsToMaxRaw": 34379790000,
+      "costPlusOne": "560 K"
     },
     {
       "name": "Missile Amplifier",
@@ -297,6 +250,17 @@
       "costPlusOne": "860 K"
     },
     {
+      "name": "Missile Barrage",
+      "level": "Lv.0",
+      "benefit": "T8 50",
+      "time": "6d 15h 59m",
+      "cost": "1.5 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 1500000
+    },
+    {
       "name": "Missile Barrage Quantity",
       "level": "Lv.0",
       "benefit": "T8 50",
@@ -309,44 +273,80 @@
       "costPlusOne": "1.66 M"
     },
     {
-      "name": "Missile Radius",
+      "name": "Inner Mine Stun",
       "level": "Lv.0",
-      "benefit": "T7 30",
-      "time": "1d 14h 53m",
-      "cost": "800 K",
+      "benefit": "T7 40",
+      "time": "13d 21h 19m",
+      "cost": "250 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 250000000
+    },
+    {
+      "name": "Black Hole Damage",
+      "level": "Lv.0",
+      "benefit": "T5 150",
+      "time": "1d 15h 59m",
+      "cost": "20 M",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 10,
+      "coinsToMaxRaw": 820520000,
+      "costPlusOne": "20.81 M"
+    },
+    {
+      "name": "Extra Black Hole",
+      "level": "Lv.0",
+      "benefit": "T5 500",
+      "time": "17d 8h 39m",
+      "cost": "15 B",
+      "state": "default",
+      "currentLevel": 0,
+      "maxLevel": 1,
+      "coinsToMaxRaw": 15000000000
+    },
+    {
+      "name": "Black Hole Coin Bonus",
+      "level": "Lv.0",
+      "benefit": "T5 150",
+      "time": "1d 15h 59m",
+      "cost": "20 M",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 20,
-      "coinsToMaxRaw": 12960025000,
-      "costPlusOne": "835 K"
+      "coinsToMaxRaw": 91921243243,
+      "costPlusOne": "21.41 M"
     },
     {
-      "name": "Missiles Explosion",
+      "name": "Spotlight Coin Bonus",
       "level": "Lv.0",
-      "benefit": "T7 30",
-      "time": "0d 22h 23m",
-      "cost": "900 K",
+      "benefit": "T7 80",
+      "time": "1d 15h 59m",
+      "cost": "20 M",
       "state": "default",
       "currentLevel": 0,
-      "maxLevel": 1,
-      "coinsToMaxRaw": 900000
+      "maxLevel": 20,
+      "coinsToMaxRaw": 91921243243,
+      "costPlusOne": "21.41 M"
     },
     {
-      "name": "Missile Barrage",
+      "name": "Spotlight Missiles",
       "level": "Lv.0",
-      "benefit": "T8 50",
-      "time": "6d 15h 59m",
-      "cost": "1.5 M",
+      "benefit": "T3 400",
+      "time": "6d 15h 58m",
+      "cost": "200 M",
       "state": "default",
       "currentLevel": 0,
-      "maxLevel": 1,
-      "coinsToMaxRaw": 1500000
+      "maxLevel": 18,
+      "coinsToMaxRaw": 22233286486,
+      "costPlusOne": "200.31 M"
     },
     {
       "name": "Black Hole Disable Ranged Enemies",
       "level": "Lv.0",
       "benefit": "T14 20",
-      "time": "28d 22h 26m",
+      "time": "25d 9h 9m",
       "cost": "550 B",
       "state": "default",
       "currentLevel": 0,
