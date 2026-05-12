@@ -345,9 +345,19 @@ export function SelectResearch({ data }: SelectResearchProps) {
       aria-labelledby="select-research-title"
     >
       <header className="select-research__header">
-        <h1 className="select-research__title" id="select-research-title">
-          SELECT RESEARCH
-        </h1>
+        <div className="select-research__brand">
+          <img
+            className="select-research__logo"
+            src="/tower-site-logo.png"
+            alt="The Tower"
+            width={500}
+            height={439}
+            decoding="async"
+          />
+          <h1 className="select-research__title" id="select-research-title">
+            SELECT RESEARCH
+          </h1>
+        </div>
         <button
           type="button"
           className="select-research__close"
