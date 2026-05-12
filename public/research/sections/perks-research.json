@@ -52,11 +52,11 @@
       "level": "Lv.0",
       "benefit": "T4 80",
       "time": "4d 23h 26m",
-      "cost": "200 M",
+      "cost": "2 M",
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 2,
-      "coinsToMaxRaw": 2200000000,
+      "coinsToMaxRaw": 2002000000,
       "costPlusOne": "2 B"
     },
     {
@@ -79,7 +79,7 @@
       "state": "default",
       "currentLevel": 0,
       "maxLevel": 8,
-      "coinsToMaxRaw": 1101120000000000,
+      "coinsToMaxRaw": 1101116110000000,
       "costPlusOne": "100 M"
     },
     {

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { toolkitMarginalCoinCost } from './labCosts'
+import { toolkitMarginalCoinCost, toolkitUpgradeDurationSeconds } from './labCosts'
 import {
   UNLOCK_LAB_LV0_LABELS,
   benefitDisplayForCard,
@@ -72,6 +72,165 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
         }
       })
     }
+  })
+
+  describe('BOTS research spot checks', () => {
+    const bots = loadAllSections().find((s) => s.title === 'BOTS')
+    if (!bots) throw new Error('fixture missing BOTS')
+
+    it('Flame Bot - Cooldown Value shows −n as seconds (0s … -25s)', () => {
+      const lab = bots.items.find((i) => i.name === 'Flame Bot - Cooldown')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('-1s')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('-25s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0s » -1s')
+      expect(benefitLineWithNextUpgrade(lab!, 23, max)).toBe('-23s » -24s')
+      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('-24s » -25s')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('-25s')
+    })
+
+    it('Thunder Bot - Cooldown shares bot cooldown seconds display', () => {
+      const lab = bots.items.find((i) => i.name === 'Thunder Bot - Cooldown')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 3, max)).toBe('-3s')
+    })
+
+    it('Flame Bot - Burn Stack max stacks is 2 + lab level (2 … 7)', () => {
+      const lab = bots.items.find((i) => i.name === 'Flame Bot - Burn Stack')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 5
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('2')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('3')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('7')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('2 » 3')
+      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe('6 » 7')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('7')
+    })
+
+    it('Flame Bot - Cooldown tower-labs match wiki rows 1 and 25', () => {
+      expect(toolkitMarginalCoinCost('Flame Bot - Cooldown', 0)).toBe(30_000_000)
+      expect(toolkitUpgradeDurationSeconds('Flame Bot - Cooldown', 0)).toBe(
+        139_980,
+      )
+      expect(toolkitMarginalCoinCost('Flame Bot - Cooldown', 24)).toBe(
+        398_880_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Flame Bot - Cooldown', 24)).toBe(
+        7_374_120,
+      )
+    })
+
+    it('Flame Bot - Burn Stack tower-labs match wiki rows 1 and 5', () => {
+      expect(toolkitMarginalCoinCost('Flame Bot - Burn Stack', 0)).toBe(
+        43_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Flame Bot - Burn Stack', 0)).toBe(
+        3_942_000,
+      )
+      expect(toolkitMarginalCoinCost('Flame Bot - Burn Stack', 4)).toBe(
+        217_690_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Flame Bot - Burn Stack', 4)).toBe(
+        6_894_540,
+      )
+    })
+
+    it('Golden Bot - Cooldown uses bot cooldown seconds display', () => {
+      const lab = bots.items.find((i) => i.name === 'Golden Bot - Cooldown')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 12, max)).toBe('-12s')
+    })
+
+    it('Golden Bot - Duration Value is +0.5s × lab level (+0s … +10s)', () => {
+      const lab = bots.items.find((i) => i.name === 'Golden Bot - Duration')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+0.5s')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('+1s')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+10s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0s » +0.5s')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('+9.5s » +10s')
+    })
+
+    it('Thunder Bot - Linger Time is +3s base + 0.5s/level (+3s … +13s)', () => {
+      const lab = bots.items.find((i) => i.name === 'Thunder Bot - Linger Time')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+3s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+3.5s')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('+4s')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('+13s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+3s » +3.5s')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('+12.5s » +13s')
+    })
+
+    it('Thunder Bot - Linger Time toolkit uses Golden Bot - Duration tower-labs', () => {
+      expect(toolkitMarginalCoinCost('Thunder Bot - Linger Time', 0)).toBe(
+        100_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Thunder Bot - Linger Time', 0)).toBe(
+        720_000,
+      )
+    })
+
+    it('Legacy Gold Bot names resolve via lab alias to Golden Bot tower-labs', () => {
+      expect(toolkitMarginalCoinCost('Gold Bot - Cooldown', 0)).toBe(30_000_000)
+      expect(toolkitMarginalCoinCost('Gold Bot - Duration', 0)).toBe(
+        100_000_000_000,
+      )
+    })
+
+    it('Golden Bot - Duration tower-labs match wiki rows 1 and 20', () => {
+      expect(toolkitMarginalCoinCost('Golden Bot - Duration', 0)).toBe(
+        100_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Golden Bot - Duration', 0)).toBe(
+        720_000,
+      )
+      expect(toolkitMarginalCoinCost('Golden Bot - Duration', 19)).toBe(
+        221_680_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Golden Bot - Duration', 19)).toBe(
+        10_246_860,
+      )
+    })
+
+    it('Bot Bot - Duration shares Gold duration Value + wiki T6 90 milestone', () => {
+      const lab = bots.items.find((i) => i.name === 'Bot Bot - Duration')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T6 90')
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+5s')
+      expect(toolkitMarginalCoinCost('Bot Bot Duration', 0)).toBe(100_000_000_000)
+    })
+
+    it('Amplify Bot - Cooldown matches wiki -1s/level + T5 90; wiki name resolves toolkit', () => {
+      const lab = bots.items.find((i) => i.name === 'Amplify Bot - Cooldown')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T5 90')
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 12, max)).toBe('-12s')
+      expect(toolkitMarginalCoinCost('Amplify Bot Cooldown', 0)).toBe(30_000_000)
+      expect(toolkitUpgradeDurationSeconds('Amplify Bot Cooldown', 24)).toBe(
+        7_374_120,
+      )
+    })
+
+    it('Amplify Bot - Duration shares Gold duration Value + wiki T5 90 milestone', () => {
+      const lab = bots.items.find((i) => i.name === 'Amplify Bot - Duration')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T5 90')
+      const max = lab!.maxLevel ?? 20
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('+5s')
+      expect(toolkitMarginalCoinCost('Amplify Bot Duration', 0)).toBe(
+        100_000_000_000,
+      )
+    })
   })
 
   describe('MAIN RESEARCH spot checks', () => {
@@ -778,6 +937,51 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Vampire')
     })
 
+    it('Chain Thunder uses calculator Value (3%/level max reduction, 90% cap)', () => {
+      const lab = ultimate.items.find((i) => i.name === 'Chain Thunder')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('3%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('90%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 3%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('90%')
+    })
+
+    it('Chain Thunder and Lightning Amplifier - Scatter use tower-labs costs/times', () => {
+      expect(toolkitMarginalCoinCost('Chain Thunder', 0)).toBe(100_000_000_000)
+      expect(toolkitMarginalCoinCost('Chain Thunder', 29)).toBe(
+        12_780_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Chain Thunder', 0)).toBe(719940)
+      expect(toolkitUpgradeDurationSeconds('Chain Thunder', 1)).toBe(806400)
+      expect(toolkitMarginalCoinCost('Lightning Amplifier - Scatter', 0)).toBe(
+        100_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Lightning Amplifier - Scatter', 0)).toBe(
+        720000,
+      )
+    })
+
+    it('Lightning Amplifier - Scatter uses calculator Value (x1.25 × level)', () => {
+      const lab = ultimate.items.find(
+        (i) => i.name === 'Lightning Amplifier - Scatter',
+      )
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.25')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('x2.5')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('x5')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('x12.5')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('x25')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('x37.5')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x0 » x1.25')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('x1.25 » x2.5')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('x36.25 » x37.5')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x37.5')
+    })
+
     it('Golden Tower Bonus uses 0.15/level (calculator Value)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Golden Tower Bonus')
       expect(lab).toBeDefined()
@@ -943,6 +1147,19 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('x3.00')
     })
 
+    it('Death Wave Cells Bonus tower-labs match wiki time/cost (row 1 and max)', () => {
+      expect(toolkitMarginalCoinCost('Death Wave Cells Bonus', 0)).toBe(1_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Death Wave Cells Bonus', 0)).toBe(
+        279999,
+      )
+      expect(toolkitMarginalCoinCost('Death Wave Cells Bonus', 19)).toBe(
+        2_220_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Death Wave Cells Bonus', 19)).toBe(
+        2411573,
+      )
+    })
+
     it('Death Wave Damage Amplifier uses calculator Value (x5.00 + 1.50/level)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Death Wave Damage Amplifier')
       expect(lab).toBeDefined()
@@ -995,6 +1212,37 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(lab!, 20, max)).toBe('16.00')
     })
 
+    it('Inner Land Mine - Chrono Jump uses calculator Value (5s/level)', () => {
+      const lab = ultimate.items.find(
+        (i) => i.name === 'Inner Land Mine - Chrono Jump',
+      )
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0s')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('5s')
+      expect(benefitDisplayForCard(lab!, 6, max)).toBe('30s')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('50s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0s » 5s')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('5s » 10s')
+      expect(benefitLineWithNextUpgrade(lab!, 9, max)).toBe('45s » 50s')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('50s')
+    })
+
+    it('Inner Land Mine - Chrono Jump tower-labs match wiki row 1 and row 6', () => {
+      expect(toolkitMarginalCoinCost('Inner Land Mine - Chrono Jump', 0)).toBe(
+        1_000_000_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Inner Land Mine - Chrono Jump', 0)).toBe(
+        1440000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Inner Land Mine - Chrono Jump', 5)).toBe(
+        8640600,
+      )
+      expect(toolkitMarginalCoinCost('Inner Land Mine - Chrono Jump', 9)).toBe(
+        639_400_000_000_000_000,
+      )
+    })
+
     it('Inner Mine Stun is a single-level unlock (no » benefit line)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Inner Mine Stun')
       expect(lab).toBeDefined()
@@ -1003,6 +1251,407 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
       expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('Unlock Inner Mine Stun')
       expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+  })
+
+  describe('CARDS RESEARCH spot checks', () => {
+    const cards = loadAllSections().find((s) => s.title === 'CARDS RESEARCH')
+    if (!cards) throw new Error('fixture missing CARDS RESEARCH')
+
+    it('Second Wind Blast uses calculator Value (25%/level, 100% max)', () => {
+      const lab = cards.items.find((i) => i.name === 'Second Wind Blast')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 4
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('25%')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('100%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 25%')
+      expect(benefitLineWithNextUpgrade(lab!, 3, max)).toBe('75% » 100%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('100%')
+    })
+
+    it('Second Wind Blast tower-labs match wiki row 1 and row 4', () => {
+      expect(toolkitMarginalCoinCost('Second Wind Blast', 0)).toBe(1_800_000)
+      expect(toolkitUpgradeDurationSeconds('Second Wind Blast', 0)).toBe(
+        99_960,
+      )
+      expect(toolkitMarginalCoinCost('Second Wind Blast', 3)).toBe(75_000_000)
+      expect(toolkitUpgradeDurationSeconds('Second Wind Blast', 3)).toBe(
+        299_940,
+      )
+    })
+
+    it('Recharge Second Wind uses wiki Value table (waves)', () => {
+      const lab = cards.items.find((i) => i.name === 'Recharge Second Wind')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 7
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('—')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('2000 waves')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('1000 waves')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('400 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('— » 2000 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe(
+        '2000 waves » 1500 waves',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe('550 waves » 400 waves')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('400 waves')
+    })
+
+    it('Recharge Second Wind tower-labs match wiki row 1 and row 3', () => {
+      expect(toolkitMarginalCoinCost('Recharge Second Wind', 0)).toBe(
+        550_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Second Wind', 0)).toBe(
+        449940,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Second Wind', 2)).toBe(
+        694479,
+      )
+    })
+
+    it('Recharge Demon Mode uses wiki Value table (waves)', () => {
+      const lab = cards.items.find((i) => i.name === 'Recharge Demon Mode')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 7
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('—')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1500 waves')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('750 waves')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('300 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('— » 1500 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe(
+        '1500 waves » 1250 waves',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe(
+        '400 waves » 300 waves',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('300 waves')
+    })
+
+    it('Recharge Demon Mode tower-labs match wiki row 1 and row 7', () => {
+      expect(toolkitMarginalCoinCost('Recharge Demon Mode', 0)).toBe(
+        550_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Demon Mode', 0)).toBe(
+        449940,
+      )
+      expect(toolkitMarginalCoinCost('Recharge Demon Mode', 6)).toBe(
+        3_600_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Demon Mode', 6)).toBe(
+        4435860,
+      )
+    })
+
+    it('Recharge Nuke uses wiki Value table (waves)', () => {
+      const lab = cards.items.find((i) => i.name === 'Recharge Nuke')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 7
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('—')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1500 waves')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('750 waves')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('300 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('— » 1500 waves')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('300 waves')
+    })
+
+    it('Recharge Nuke tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Recharge Nuke', 0)).toBe(550_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Recharge Nuke', 0)).toBe(449940)
+    })
+
+    it('Double Death Ray uses calculator Chance (1%/level, 30% max)', () => {
+      const lab = cards.items.find((i) => i.name === 'Double Death Ray')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1%')
+      expect(benefitDisplayForCard(lab!, 15, max)).toBe('15%')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('30%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 1%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('1% » 2%')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('29% » 30%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('30%')
+    })
+
+    it('Double Death Ray tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Double Death Ray', 0)).toBe(2_500_000)
+      expect(toolkitUpgradeDurationSeconds('Double Death Ray', 0)).toBe(3599)
+    })
+
+    it('Extra Orb Adjuster is a single-level unlock (no » benefit line)', () => {
+      const lab = cards.items.find((i) => i.name === 'Extra Orb Adjuster')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Extra Orb Adjuster')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Extra Orb Adjuster',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Extra Extra Orbs uses calculator Value (+1 per level)', () => {
+      const lab = cards.items.find((i) => i.name === 'Extra Extra Orbs')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 2
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('+2')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0 » +1')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('+1 » +2')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+2')
+    })
+
+    it('Extra Extra Orbs tower-labs resolve via Extra Inner Orbs key', () => {
+      expect(toolkitMarginalCoinCost('Extra Extra Orbs', 0)).toBe(25_000_000)
+      expect(toolkitMarginalCoinCost('Extra Extra Orbs', 1)).toBe(900_000_000)
+      expect(toolkitUpgradeDurationSeconds('Extra Extra Orbs', 0)).toBe(139980)
+    })
+
+    it('Energy Shield Extra Hit uses calculator Value (integer hits = level)', () => {
+      const lab = cards.items.find((i) => i.name === 'Energy Shield Extra Hit')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 2
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('2')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0 » 1')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('1 » 2')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('2')
+    })
+
+    it('Energy Shield Extra Hit tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Energy Shield Extra Hit', 0)).toBe(
+        40_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Energy Shield Extra Hit', 0)).toBe(
+        999960,
+      )
+    })
+
+    it('Super Tower Bonus uses calculator Value (x1.00 + 0.03/level)', () => {
+      const lab = cards.items.find((i) => i.name === 'Super Tower Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 30
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('x1.03')
+      expect(benefitDisplayForCard(lab!, 4, max)).toBe('x1.12')
+      expect(benefitDisplayForCard(lab!, 30, max)).toBe('x1.90')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('x1.00 » x1.03')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('x1.03 » x1.06')
+      expect(benefitLineWithNextUpgrade(lab!, 29, max)).toBe('x1.87 » x1.90')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('x1.90')
+    })
+
+    it('Super Tower Bonus tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Super Tower Bonus', 0)).toBe(2_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Super Tower Bonus', 0)).toBe(17940)
+    })
+  })
+
+  describe('PERKS RESEARCH spot checks', () => {
+    const perks = loadAllSections().find((s) => s.title === 'PERKS RESEARCH')
+    if (!perks) throw new Error('fixture missing PERKS RESEARCH')
+
+    it('Unlock Perks is a single-level unlock (wiki Value Unlocked)', () => {
+      const lab = perks.items.find((i) => i.name === 'Unlock Perks')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Perks')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('Unlock Perks')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Unlock Perks tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Unlock Perks', 0)).toBe(1_500_000)
+      expect(toolkitUpgradeDurationSeconds('Unlock Perks', 0)).toBe(299_940)
+    })
+
+    it('Auto Pick Perks is a single-level unlock (wiki Value Unlocked)', () => {
+      const lab = perks.items.find((i) => i.name === 'Auto Pick Perks')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock Auto Pick Perks')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Auto Pick Perks',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('Auto Pick Perks tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('Auto Pick Perks', 0)).toBe(100_000_000)
+      expect(toolkitUpgradeDurationSeconds('Auto Pick Perks', 0)).toBe(429_960)
+    })
+
+    it('Perk Option Quantity uses +1 per lab level (+0 … +2)', () => {
+      const lab = perks.items.find((i) => i.name === 'Perk Option Quantity')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 2
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('+0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('+1')
+      expect(benefitDisplayForCard(lab!, 2, max)).toBe('+2')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('+0 » +1')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('+1 » +2')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('+2')
+    })
+
+    it('Perk Option Quantity tower-labs match wiki rows 1–2', () => {
+      expect(toolkitMarginalCoinCost('Perk Option Quantity', 0)).toBe(2_000_000)
+      expect(toolkitUpgradeDurationSeconds('Perk Option Quantity', 0)).toBe(
+        429_960,
+      )
+      expect(toolkitMarginalCoinCost('Perk Option Quantity', 1)).toBe(
+        2_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Perk Option Quantity', 1)).toBe(
+        879_960,
+      )
+    })
+
+    it('Ban Perks Value equals lab level (0 … 8)', () => {
+      const lab = perks.items.find((i) => i.name === 'Ban Perks')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 8
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1')
+      expect(benefitDisplayForCard(lab!, 8, max)).toBe('8')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0 » 1')
+      expect(benefitLineWithNextUpgrade(lab!, 7, max)).toBe('7 » 8')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('8')
+    })
+
+    it('Ban Perks tower-labs match wiki rows 1 and 5', () => {
+      expect(toolkitMarginalCoinCost('Ban Perks', 0)).toBe(10_000_000)
+      expect(toolkitUpgradeDurationSeconds('Ban Perks', 0)).toBe(199_980)
+      expect(toolkitMarginalCoinCost('Ban Perks', 4)).toBe(100_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Ban Perks', 4)).toBe(3_600_900)
+    })
+
+    it('Auto Pick Ranking Value equals lab level (0 … 32)', () => {
+      const lab = perks.items.find((i) => i.name === 'Auto Pick Ranking')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 32
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1')
+      expect(benefitDisplayForCard(lab!, 32, max)).toBe('32')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0 » 1')
+      expect(benefitLineWithNextUpgrade(lab!, 31, max)).toBe('31 » 32')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('32')
+    })
+
+    it('Auto Pick Ranking tower-labs match wiki rows 1, 24, and 32', () => {
+      expect(toolkitMarginalCoinCost('Auto Pick Ranking', 0)).toBe(100_000)
+      expect(toolkitUpgradeDurationSeconds('Auto Pick Ranking', 0)).toBe(171_960)
+      expect(toolkitMarginalCoinCost('Auto Pick Ranking', 23)).toBe(
+        40_260_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Auto Pick Ranking', 23)).toBe(
+        21_084_138,
+      )
+      expect(toolkitMarginalCoinCost('Auto Pick Ranking', 31)).toBe(
+        154_260_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Auto Pick Ranking', 31)).toBe(
+        66_301_200,
+      )
+    })
+
+    it('Waves Required Value is −1 × lab level (plain ints: 0, -1 … -100)', () => {
+      const lab = perks.items.find((i) => i.name === 'Waves Required')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 100
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('-1')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('-10')
+      expect(benefitDisplayForCard(lab!, 100, max)).toBe('-100')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0 » -1')
+      expect(benefitLineWithNextUpgrade(lab!, 5, max)).toBe('-5 » -6')
+      expect(benefitLineWithNextUpgrade(lab!, 99, max)).toBe('-99 » -100')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('-100')
+    })
+
+    it('Waves Required tower-labs match wiki rows 1 and 100', () => {
+      expect(toolkitMarginalCoinCost('Waves Required', 0)).toBe(100_000)
+      expect(toolkitUpgradeDurationSeconds('Waves Required', 0)).toBe(5940)
+      expect(toolkitMarginalCoinCost('Waves Required', 99)).toBe(
+        190_200_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Waves Required', 99)).toBe(
+        676_998_780,
+      )
+    })
+
+    it('Standard Perks Bonus Value is n% at lab level n (wiki 1% … 25%)', () => {
+      const lab = perks.items.find((i) => i.name === 'Standard Perks Bonus')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1%')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('25%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 1%')
+      expect(benefitLineWithNextUpgrade(lab!, 24, max)).toBe('24% » 25%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('25%')
+    })
+
+    it('Standard Perks Bonus tower-labs match wiki rows 1 and 25', () => {
+      expect(toolkitMarginalCoinCost('Standard Perks Bonus', 0)).toBe(100_000)
+      expect(toolkitUpgradeDurationSeconds('Standard Perks Bonus', 0)).toBe(
+        5940,
+      )
+      expect(toolkitMarginalCoinCost('Standard Perks Bonus', 24)).toBe(
+        238_880_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Standard Perks Bonus', 24)).toBe(
+        5_082_600,
+      )
+    })
+
+    it('First Perk Choice is a single-level unlock (wiki Value Unlocked)', () => {
+      const lab = perks.items.find((i) => i.name === 'First Perk Choice')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 1
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('Unlock First Perk Choice')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('Unlocked')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock First Perk Choice',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('Unlocked')
+    })
+
+    it('First Perk Choice tower-labs match wiki row 1', () => {
+      expect(toolkitMarginalCoinCost('First Perk Choice', 0)).toBe(1_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('First Perk Choice', 0)).toBe(
+        399_960,
+      )
+    })
+
+    it('Improve Trade-off Perks Value is n% at lab level n (wiki 1% … 10%)', () => {
+      const lab = perks.items.find((i) => i.name === 'Improve Trade-off Perks')
+      expect(lab).toBeDefined()
+      const max = lab!.maxLevel ?? 10
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1%')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('10%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0% » 1%')
+      expect(benefitLineWithNextUpgrade(lab!, 9, max)).toBe('9% » 10%')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('10%')
+    })
+
+    it('Improve Trade-off Perks tower-labs match wiki rows 1 and 10', () => {
+      expect(toolkitMarginalCoinCost('Improve Trade-off Perks', 0)).toBe(
+        600_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Improve Trade-off Perks', 0)).toBe(
+        89_940,
+      )
+      expect(toolkitMarginalCoinCost('Improve Trade-off Perks', 9)).toBe(
+        4_920_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Improve Trade-off Perks', 9)).toBe(
+        730_680,
+      )
     })
   })
 
@@ -1046,15 +1695,16 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(dp!, max, max)).toBe('+10.00%')
     })
 
-    it('Orb Boss Hit uses same +0.20%/level Value as Defense % (Include %)', () => {
+    it('Orb Boss Hit uses calculator Value (0.20%/level boss HP, 2.00% max)', () => {
       const obh = defense.items.find((i) => i.name === 'Orb Boss Hit')
       expect(obh).toBeDefined()
       const max = obh!.maxLevel ?? 10
-      expect(benefitDisplayForCard(obh!, 0, max)).toBe('+0.00%')
-      expect(benefitDisplayForCard(obh!, 1, max)).toBe('+0.20%')
-      expect(benefitDisplayForCard(obh!, 10, max)).toBe('+2.00%')
-      expect(benefitLineWithNextUpgrade(obh!, 0, max)).toBe('+0.00% » +0.20%')
-      expect(benefitLineWithNextUpgrade(obh!, max, max)).toBe('+2.00%')
+      expect(benefitDisplayForCard(obh!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(obh!, 1, max)).toBe('0.20%')
+      expect(benefitDisplayForCard(obh!, 10, max)).toBe('2.00%')
+      expect(benefitLineWithNextUpgrade(obh!, 0, max)).toBe('0.00% » 0.20%')
+      expect(benefitLineWithNextUpgrade(obh!, 9, max)).toBe('1.80% » 2.00%')
+      expect(benefitLineWithNextUpgrade(obh!, max, max)).toBe('2.00%')
     })
 
     it('Wall Health uses calculator Value (+2.00% per level, Include %)', () => {

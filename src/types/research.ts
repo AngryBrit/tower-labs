@@ -175,6 +175,10 @@ export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'Inner Mine Stun': 'Unlock Inner Mine Stun',
   'Extra Black Hole': 'Unlock Extra Black Hole',
   'Black Hole Disable Ranged Enemies': 'Unlock Black Hole Disable Ranged Enemies',
+  'Extra Orb Adjuster': 'Unlock Extra Orb Adjuster',
+  'Unlock Perks': 'Unlock Perks',
+  'Auto Pick Perks': 'Unlock Auto Pick Perks',
+  'First Perk Choice': 'Unlock First Perk Choice',
 }
 
 function isUnlockLabItem(name: string): boolean {
@@ -390,7 +394,7 @@ export function deathWaveCoinBonusMultiplierDisplay(
 
 /**
  * Death Wave Cells Bonus — calculator **Value**: **1.00 + 0.10 × lab level** as **`x`** multiplier
- * (Lv.0→**x1.00** … Lv.20→**x3.00**).
+ * (Lv.0→**x1.00** … Lv.20→**x3.00**); wiki caps extra cell bonus at **×3** on enemies from enhancement waves / Death Wave.
  */
 export function deathWaveCellsBonusMultiplierDisplay(
   effectiveLevel: number,
@@ -406,7 +410,7 @@ export function deathWaveCellsBonusMultiplierDisplay(
 
 /**
  * Death Wave Damage Amplifier — calculator **Value**: **5.00 + 1.50 × lab level** as **`x`**
- * (Lv.0→**x5.00**, Lv.1→**x6.50** … Lv.30→**x50.00**).
+ * (Lv.0→**x5.00**, Lv.1→**x6.50** … Lv.30→**x50.00**); wiki caps at **+50×** Death Wave damage per Effect Wave on a target.
  */
 export function deathWaveDamageAmplifierDisplay(
   effectiveLevel: number,
@@ -421,7 +425,8 @@ export function deathWaveDamageAmplifierDisplay(
 }
 
 /**
- * Death Wave Armor Stripping — calculator **Value**: **1.00 × lab level** (Lv.0→**0.00** … Lv.10→**10.00**).
+ * Death Wave Armor Stripping — calculator **Value**: **1.00 × lab level** (Lv.0→**0.00** … Lv.10→**10.00**);
+ * wiki max armor stripped per hit caps at **10**.
  */
 export function deathWaveArmorStrippingDisplay(
   effectiveLevel: number,
@@ -465,7 +470,23 @@ export function innerMineRotationSpeedValueDisplay(
 }
 
 /**
- * Defense % / **Orb Boss Hit** — Tower Lab Calculator **Value** with Include **%**: **+0.20% × lab level**.
+ * Inner Land Mine - Chrono Jump — Tower Lab calculator **Value**: **5s × lab level** charge boost
+ * (per wiki; Lv.0→**0s**, Lv.1→**5s** … Lv.10→**50s**).
+ */
+export function innerLandMineChronoJumpChargeSecondsDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const sec = 5 * capped
+  return `${sec}s`
+}
+
+/**
+ * Defense % — Tower Lab Calculator **Value** with Include **%**: **+0.20% × lab level**.
  */
 export function defensePercentValueDisplay(
   effectiveLevel: number,
@@ -477,6 +498,131 @@ export function defensePercentValueDisplay(
       : Math.max(0, effectiveLevel)
   const pct = 0.2 * capped
   return `+${pct.toFixed(2)}%`
+}
+
+/**
+ * Orb Boss Hit — Tower Lab **Value**: **0.20% × lab level** of boss max HP as orb damage (two decimals, no **`+`**;
+ * Lv.0→**0.00%** … Lv.10→**2.00%**).
+ */
+export function orbBossHitPercentValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const pct = 0.2 * capped
+  return `${pct.toFixed(2)}%`
+}
+
+/**
+ * Extra Extra Orbs — Tower Lab **Value**: **+1 × lab level** (Lv.0→**+0**, Lv.1→**+1**, Lv.2→**+2**).
+ */
+export function extraExtraOrbsBonusDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `+${capped}`
+}
+
+/**
+ * Energy Shield Extra Hit — Tower Lab **Value** column: extra hit count **= lab level**
+ * (Lv.0→**0**, Lv.1→**1**, Lv.2→**2**).
+ */
+export function energyShieldExtraHitCountDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return String(capped)
+}
+
+/**
+ * Waves Required — Tower Lab **Value**: **−1 × lab level** as plain integers (**Lv.0→`0`**; **Lv.1→`-1`** … **Lv.100→`-100`**; upgrade lines like **`-5 » -6`**).
+ */
+export function wavesRequiredReductionDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '0'
+  return String(-capped)
+}
+
+/**
+ * Bot **Cooldown** labs — **Value**: **−n seconds** as **`-{n}s`** (**Lv.0→`0s`**; **Lv.1→`-1s`** …; e.g. **`-23s » -24s`**).
+ */
+export function botCooldownReductionSecondsDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '0s'
+  return `${-capped}s`
+}
+
+/**
+ * **Golden Bot - Duration** (and **Amplify Bot - Duration** / **Bot Bot - Duration**) —
+ * **Value**: **+0.5s × lab level** as **`+{…}s`** (e.g. **Lv.0→`+0s`**, **Lv.1→`+0.5s`** … **Lv.20→`+10s`**).
+ */
+export function goldBotDurationValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '+0s'
+  const sec = capped / 2
+  if (Number.isInteger(sec)) return `+${sec}s`
+  return `+${sec.toFixed(1)}s`
+}
+
+/**
+ * **Thunder Bot - Linger Time** — **Value**: **+3.00s base + 0.5s × lab level** as **`+{…}s`**
+ * (Lv.0→**`+3s`** … Lv.20→**`+13s`**; wiki **3.50 … 13.00** at Lv.1…20).
+ */
+export function thunderBotLingerValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const sec = 3 + capped / 2
+  if (Number.isInteger(sec)) return `+${sec}s`
+  return `+${sec.toFixed(1)}s`
+}
+
+/**
+ * Flame Bot - Burn Stack — **Value**: max burn stacks **= 2 + lab level**
+ * (Lv.0→**2**; Lv.1→**3** … Lv.5→**7**).
+ */
+export function flameBotBurnStackMaxDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return String(2 + capped)
 }
 
 /**
@@ -739,6 +885,92 @@ export function rechargeMissileBarrageValueDisplay(
 }
 
 /**
+ * Second Wind Blast — Tower Lab calculator **Value**: **25% × lab level** of enemies cleared
+ * (Lv.0→**0%**, Lv.1→**25%** … Lv.4→**100%**).
+ */
+export function secondWindBlastPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `${25 * capped}%`
+}
+
+/** Wiki **Value**: waves until Second Wind can recharge again (Lv.0→**—**). */
+const RECHARGE_SECOND_WIND_WAVE_VALUES = [
+  2000, 1500, 1250, 1000, 750, 550, 400,
+] as const
+
+/**
+ * Recharge Second Wind — Tower Lab calculator **Value** by level (wiki table; Lv.1→**2000 waves** … Lv.7→**400 waves**).
+ */
+export function rechargeSecondWindValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '—'
+  const idx =
+    Math.min(capped, RECHARGE_SECOND_WIND_WAVE_VALUES.length) - 1
+  const n = RECHARGE_SECOND_WIND_WAVE_VALUES[idx]
+  return n !== undefined ? `${n} waves` : '—'
+}
+
+/** Wiki **Value**: waves until Demon Mode can recharge again (Lv.0→**—**). */
+const RECHARGE_DEMON_MODE_WAVE_VALUES = [
+  1500, 1250, 1000, 750, 550, 400, 300,
+] as const
+
+/**
+ * Recharge Demon Mode — Tower Lab calculator **Value** by level (wiki table; Lv.1→**1500 waves** … Lv.7→**300 waves**).
+ */
+export function rechargeDemonModeValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  if (capped <= 0) return '—'
+  const idx =
+    Math.min(capped, RECHARGE_DEMON_MODE_WAVE_VALUES.length) - 1
+  const n = RECHARGE_DEMON_MODE_WAVE_VALUES[idx]
+  return n !== undefined ? `${n} waves` : '—'
+}
+
+/**
+ * Recharge Nuke — same **Value** curve as Recharge Demon Mode (**1500 waves** … **300 waves**; Lv.0→**—**).
+ */
+export function rechargeNukeValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  return rechargeDemonModeValueDisplay(effectiveLevel, maxLevelCap)
+}
+
+/**
+ * Double Death Ray — Tower Lab **Chance** column: **1% × lab level** (integer **`%`** only;
+ * Lv.0→**0%**, Lv.1→**1%** … Lv.30→**30%**).
+ */
+export function doubleDeathRayChancePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return `${capped}%`
+}
+
+/**
  * Chrono Field Duration — Tower Lab calculator **Value** column: **1.00 × lab level**
  * (Lv.0→**0.00** … Lv.30→**30.00**); plain decimals (no **`+`** / **`s`**).
  */
@@ -871,10 +1103,10 @@ const SWAMP_REND_ADDITIONAL_ENEMY_LABELS: readonly string[] = [
 ]
 
 /**
- * Swamp Rend (basic enemies) — Tower Lab calculator **Value**: **3% × lab level** cumulative rend percent
- * (Lv.0→**0%**, Lv.1→**3%** … Lv.30→**90%**); whole-number **`%`** only.
+ * Tower Lab calculator **Value**: **3% × lab level** (whole-number **`%`** only).
+ * **Swamp Rend** (basic rend %) and **Chain Thunder** (max damage reduction vs health lost from Chain Lightning).
  */
-export function swampRendPercentDisplay(
+export function threePercentTimesLabLevelPercentDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
@@ -883,6 +1115,33 @@ export function swampRendPercentDisplay(
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
   return `${3 * capped}%`
+}
+
+/**
+ * Swamp Rend (basic enemies) — same **Value** as {@link threePercentTimesLabLevelPercentDisplay}.
+ */
+export function swampRendPercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  return threePercentTimesLabLevelPercentDisplay(effectiveLevel, maxLevelCap)
+}
+
+/**
+ * Lightning Amplifier - Scatter — calculator **Value**: **1.25 × lab level** as **`x`** (Lv.0→**x0**;
+ * wiki level 1→**x1.25** … 30→**x37.5**); trims redundant **`.0`** (e.g. **x5**, **x10**).
+ */
+export function lightningAmplifierScatterMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1.25 * capped
+  const s = parseFloat(v.toFixed(2)).toString()
+  return `x${s}`
 }
 
 /**
@@ -915,6 +1174,22 @@ export function goldenTowerBonusValueDisplay(
       : Math.max(0, effectiveLevel)
   const v = 0.15 * capped
   return v.toFixed(2)
+}
+
+/**
+ * Super Tower Bonus — Tower Lab calculator **Value**: **1.00 + 0.03 × lab level** as **`x`** multiplier
+ * (Lv.0→**x1.00**, Lv.1→**x1.03** … Lv.30→**x1.90**).
+ */
+export function superTowerBonusMultiplierDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  const v = 1 + 0.03 * capped
+  return `x${v.toFixed(2)}`
 }
 
 /**
@@ -1068,7 +1343,7 @@ export function workshopDiscountValuePercentDisplay(
 
 const TIER_BENEFIT_RE = /^T(\d+)\s+(\d+)$/
 
-/** Parsed `T{n} {m}` from the CSV snapshot benefit string (value at `item.currentLevel`). */
+/** Parsed `T{n} {m}` milestone from the CSV snapshot benefit string (tier + wave; not lab level). */
 export function parseTierBenefitSnapshot(benefitStr: string): {
   tier: number
   value: number
@@ -1081,20 +1356,11 @@ export function parseTierBenefitSnapshot(benefitStr: string): {
   return { tier, value }
 }
 
-function tierStyleBenefitDisplay(
-  item: ResearchItem,
-  effectiveLevel: number,
-  maxLevelCap: number,
-): string | null {
+/** `T{n} {wave}` — unlock milestone only; does not change when simulating lab level. */
+function tierStyleBenefitDisplay(item: ResearchItem): string | null {
   const parsed = parseTierBenefitSnapshot(item.benefit)
   if (!parsed) return null
-  const baseLv = item.currentLevel ?? 0
-  const capped =
-    maxLevelCap > 0
-      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
-      : Math.max(0, effectiveLevel)
-  const n = parsed.value + (capped - baseLv)
-  return `T${parsed.tier} ${n}`
+  return `T${parsed.tier} ${parsed.value}`
 }
 
 const KMH_BENEFIT_RE = /^([\d.]+)\s*K\/h$/i
@@ -1178,8 +1444,11 @@ export function benefitDisplayForCard(
   if (item.name === 'Shockwave Size') {
     return shockwaveSizePlusDisplay(effectiveLevel, maxLevelCap)
   }
-  if (item.name === 'Defense %' || item.name === 'Orb Boss Hit') {
+  if (item.name === 'Defense %') {
     return defensePercentValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Orb Boss Hit') {
+    return orbBossHitPercentValueDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Wall Health') {
     return wallHealthPercentValueDisplay(effectiveLevel, maxLevelCap)
@@ -1232,6 +1501,71 @@ export function benefitDisplayForCard(
   if (item.name === 'Recharge Missile Barrage') {
     return rechargeMissileBarrageValueDisplay(effectiveLevel, maxLevelCap)
   }
+  if (item.name === 'Second Wind Blast') {
+    return secondWindBlastPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Recharge Second Wind') {
+    return rechargeSecondWindValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Recharge Demon Mode') {
+    return rechargeDemonModeValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Recharge Nuke') {
+    return rechargeNukeValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Double Death Ray') {
+    return doubleDeathRayChancePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Extra Extra Orbs') {
+    return extraExtraOrbsBonusDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Perk Option Quantity') {
+    return extraExtraOrbsBonusDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Waves Required') {
+    return wavesRequiredReductionDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Standard Perks Bonus') {
+    return doubleDeathRayChancePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Improve Trade-off Perks') {
+    return doubleDeathRayChancePercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (
+    item.name === 'Flame Bot - Cooldown' ||
+    item.name === 'Thunder Bot - Cooldown' ||
+    item.name === 'Golden Bot - Cooldown' ||
+    item.name === 'Gold Bot - Cooldown' ||
+    item.name === 'Amplify Bot - Cooldown' ||
+    item.name === 'Amp Bot - Cooldown' ||
+    item.name === 'Bot Bot - Cooldown'
+  ) {
+    return botCooldownReductionSecondsDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Flame Bot - Burn Stack') {
+    return flameBotBurnStackMaxDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Thunder Bot - Linger Time') {
+    return thunderBotLingerValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (
+    item.name === 'Golden Bot - Duration' ||
+    item.name === 'Gold Bot - Duration' ||
+    item.name === 'Amplify Bot - Duration' ||
+    item.name === 'Amp Bot - Duration' ||
+    item.name === 'Bot Bot - Duration'
+  ) {
+    return goldBotDurationValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Energy Shield Extra Hit') {
+    return energyShieldExtraHitCountDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Ban Perks') {
+    return energyShieldExtraHitCountDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Auto Pick Ranking') {
+    return energyShieldExtraHitCountDisplay(effectiveLevel, maxLevelCap)
+  }
   if (item.name === 'Chrono Field Duration') {
     return chronoFieldDurationSecondsDisplay(effectiveLevel, maxLevelCap)
   }
@@ -1257,10 +1591,19 @@ export function benefitDisplayForCard(
     return swampStunTimeValueDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Swamp Rend') {
-    return swampRendPercentDisplay(effectiveLevel, maxLevelCap)
+    return threePercentTimesLabLevelPercentDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Swamp Rend - Additional Enemies') {
     return swampRendAdditionalEnemiesDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Chain Thunder') {
+    return threePercentTimesLabLevelPercentDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Lightning Amplifier - Scatter') {
+    return lightningAmplifierScatterMultiplierDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Super Tower Bonus') {
+    return superTowerBonusMultiplierDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Golden Tower Bonus') {
     return goldenTowerBonusValueDisplay(effectiveLevel, maxLevelCap)
@@ -1291,6 +1634,9 @@ export function benefitDisplayForCard(
   }
   if (item.name === 'Inner Mine Rotation Speed') {
     return innerMineRotationSpeedValueDisplay(effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Inner Land Mine - Chrono Jump') {
+    return innerLandMineChronoJumpChargeSecondsDisplay(effectiveLevel, maxLevelCap)
   }
   if (item.name === 'Max Rend Armor Multiplier') {
     return maxRendArmorMultiplierValueDisplay(effectiveLevel, maxLevelCap)
@@ -1339,7 +1685,7 @@ export function benefitDisplayForCard(
     )
   }
 
-  const tier = tierStyleBenefitDisplay(item, effectiveLevel, maxLevelCap)
+  const tier = tierStyleBenefitDisplay(item)
   if (tier != null) return tier
 
   const kmh = kmhStyleBenefitDisplay(item, effectiveLevel, maxLevelCap)

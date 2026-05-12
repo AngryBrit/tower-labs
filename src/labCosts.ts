@@ -22,6 +22,21 @@ const towerLabs = towerLabsJson as ToolkitLabsFile
 const LAB_NAME_ALIASES: Record<string, string> = {
   'Labs Speed': 'Lab Speed',
   'Black Hole Coin Bonus': 'Blackhole Coin Bonus',
+  'Lightning Amplifier - Scatter': 'Swamp Rend',
+  'Extra Extra Orbs': 'Extra Inner Orbs',
+  // Thunder / Amplify / Bot duration: same marginal table as Golden Bot - Duration
+  'Thunder Bot - Linger Time': 'Golden Bot - Duration',
+  'Thunder Bot Linger Time': 'Golden Bot - Duration',
+  'Amplify Bot - Duration': 'Golden Bot - Duration',
+  'Amp Bot - Duration': 'Golden Bot - Duration',
+  'Amplify Bot Cooldown': 'Amplify Bot - Cooldown',
+  'Amp Bot - Cooldown': 'Amplify Bot - Cooldown',
+  'Amplify Bot Duration': 'Golden Bot - Duration',
+  'Bot Bot - Duration': 'Golden Bot - Duration',
+  'Bot Bot Duration': 'Golden Bot - Duration',
+  'Gold Bot - Cooldown': 'Golden Bot - Cooldown',
+  'Gold Bot - Duration': 'Golden Bot - Duration',
+  'Thunder Bot Cooldown': 'Thunder Bot - Cooldown',
 }
 
 function resolveToolkitLabKey(displayName: string): string | undefined {

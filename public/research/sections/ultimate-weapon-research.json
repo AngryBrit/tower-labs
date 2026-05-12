@@ -368,7 +368,7 @@
     {
       "name": "Swamp Rend",
       "level": "Lv.0",
-      "benefit": "T16 60",
+      "benefit": "T16 50",
       "time": "8d 8h 0m",
       "cost": "100 B",
       "state": "default",
@@ -380,7 +380,7 @@
     {
       "name": "Swamp Rend - Additional Enemies",
       "level": "Lv.0",
-      "benefit": "T16 60",
+      "benefit": "T16 50",
       "time": "8d 7h 59m",
       "cost": "100 B",
       "state": "default",

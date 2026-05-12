@@ -175,9 +175,6 @@ export function SelectResearch({ data }: SelectResearchProps) {
       />
 
       <div className="select-research__filters">
-        <button type="button" className="glow-btn" disabled>
-          History
-        </button>
         <label className="glow-btn glow-btn--toggle">
           <input
             type="checkbox"
@@ -186,9 +183,6 @@ export function SelectResearch({ data }: SelectResearchProps) {
           />
           Hide Completed
         </label>
-      </div>
-
-      <div className="select-research__actions">
         <button
           type="button"
           className="glow-btn glow-btn--danger glow-btn--block"

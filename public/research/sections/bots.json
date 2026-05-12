@@ -26,7 +26,7 @@
       "costPlusOne": "60.05 M"
     },
     {
-      "name": "Gold Bot - Cooldown",
+      "name": "Golden Bot - Cooldown",
       "level": "Lv.0",
       "benefit": "T5 80",
       "time": "1d 14h 53m",
@@ -38,7 +38,7 @@
       "costPlusOne": "60.05 M"
     },
     {
-      "name": "Amp Bot - Cooldown",
+      "name": "Amplify Bot - Cooldown",
       "level": "Lv.0",
       "benefit": "T5 90",
       "time": "1d 14h 53m",
@@ -64,7 +64,7 @@
     {
       "name": "Flame Bot - Burn Stack",
       "level": "Lv.0",
-      "benefit": "T10 60",
+      "benefit": "T5 60",
       "time": "45d 15h 0m",
       "cost": "43 T",
       "state": "default",
@@ -86,7 +86,7 @@
       "costPlusOne": "150 B"
     },
     {
-      "name": "Gold Bot - Duration",
+      "name": "Golden Bot - Duration",
       "level": "Lv.0",
       "benefit": "T10 60",
       "time": "8d 8h 0m",
@@ -98,9 +98,9 @@
       "costPlusOne": "150 B"
     },
     {
-      "name": "Amp Bot - Duration",
+      "name": "Amplify Bot - Duration",
       "level": "Lv.0",
-      "benefit": "T10 60",
+      "benefit": "T5 90",
       "time": "8d 8h 0m",
       "cost": "100 B",
       "state": "default",
@@ -112,7 +112,7 @@
     {
       "name": "Bot Bot - Duration",
       "level": "Lv.0",
-      "benefit": "T10 60",
+      "benefit": "T6 90",
       "time": "8d 8h 0m",
       "cost": "100 B",
       "state": "default",
