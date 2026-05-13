@@ -3,8 +3,7 @@
  * `src/data/tower-labs.json` table (per lab, per target level: `COST`, `DURATION`). **Card Mastery**
  * rows still resolve through that table for durations and toolkit coin lookups; the **cost line** on
  * those cards uses `stoneUnlockCost` from `public/research/sections/card-mastery.json` instead of
- * abbreviated coin ladder amounts. Labs not in that map fall back to CSV snapshot fields in
- * `marginalCostForNextUpgrade`.
+ * abbreviated coin ladder amounts. Labs missing from the map show **—** in the app (no snapshot fallback).
  */
 
 import towerLabsJson from './data/tower-labs.json'
@@ -24,6 +23,8 @@ const towerLabs = towerLabsJson as ToolkitLabsFile
 /** Display-name mismatches between our research JSON and Tower Data lab keys */
 const LAB_NAME_ALIASES: Record<string, string> = {
   'Labs Speed': 'Lab Speed',
+  // Legacy typo from game data / old exports; canonical key in tower-labs.json is Super Crit Multi
+  'Super Crit Mult': 'Super Crit Multi',
   'Black Hole Coin Bonus': 'Blackhole Coin Bonus',
   'Lightning Amplifier - Scatter': 'Swamp Rend',
   'Extra Extra Orbs': 'Extra Inner Orbs',
@@ -37,6 +38,7 @@ const LAB_NAME_ALIASES: Record<string, string> = {
   'Amplify Bot Duration': 'Golden Bot - Duration',
   'Bot Bot - Duration': 'Golden Bot - Duration',
   'Bot Bot Duration': 'Golden Bot - Duration',
+  'Bot Bot Cooldown': 'Bot Bot - Cooldown',
   'Gold Bot - Cooldown': 'Golden Bot - Cooldown',
   'Gold Bot - Duration': 'Golden Bot - Duration',
   'Thunder Bot Cooldown': 'Thunder Bot - Cooldown',

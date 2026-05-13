@@ -1,6 +1,5 @@
 import {
   formatCoinAbbrev,
-  parseAbbreviatedCoinsToNumber,
   toolkitMarginalCoinCost,
   toolkitUpgradeDurationSeconds,
 } from '../labCosts'
@@ -15,12 +14,12 @@ export interface ResearchItem {
   time: string
   cost: string
   state: ResearchState
-  /** From Lab Calculator CSV; optional on legacy JSON */
+  /** Snapshot level from export JSON; used for bounds when present. */
   currentLevel?: number
   maxLevel?: number
-  /** Raw total coins to max from export (Lab Calculator “Max Level → Coins”); optional metadata. */
+  /** Raw total coins to max from export; optional metadata (not used for marginal cost). */
   coinsToMaxRaw?: number
-  /** Lab Calculator “Next level +1” abbreviated coins (CSV col 14); optional */
+  /** Legacy export field; ignored for marginal coin (toolkit only). */
   costPlusOne?: string
   /** Wiki: power stones to unlock this card’s mastery on the cards screen (Card Mastery section only). */
   stoneUnlockCost?: number
@@ -36,22 +35,9 @@ function applyLabsCoinDiscountToCoins(
   return Math.max(0, rawCoins * mult)
 }
 
-function applyLabsCoinDiscountToCoinLabel(
-  label: string,
-  labsCoinDiscountPercent: number,
-): string {
-  if (labsCoinDiscountPercent <= 0) return label
-  const parsed = parseAbbreviatedCoinsToNumber(label)
-  if (parsed == null) return label
-  return formatCoinAbbrev(
-    applyLabsCoinDiscountToCoins(parsed, labsCoinDiscountPercent),
-  )
-}
-
 /**
  * Marginal cost for the **next** upgrade at the simulated `effectiveLevel`.
- * Primary source: bundled `tower-labs.json` (per-lab per-level `COST`).
- * Fallback when the lab is not in that table: CSV snapshot `cost` / `costPlusOne` from import.
+ * Source: bundled `tower-labs.json` (per-lab per-level `COST`). Missing lab or level → **—**.
  *
  * **Card Mastery** labs (`* Mastery`): the cost line shows **wiki stone unlock** (`stoneUnlockCost`
  * on the row), not coin-style lab ladder totals. **Labs Coin Discount** does not apply.
@@ -85,28 +71,13 @@ export function marginalCostForNextUpgrade(
     return formatCoinAbbrev(discounted)
   }
 
-  const baseLevel = item.currentLevel ?? 0
-  const delta = effectiveLevel - baseLevel
-
-  if (delta <= 0 || item.cost === 'Max') {
-    if (item.cost === 'Max') return 'Max'
-    return applyLabsCoinDiscountToCoinLabel(item.cost, labsCoinDiscountPercent)
-  }
-
-  if (delta === 1 && item.costPlusOne && item.costPlusOne !== '—') {
-    return applyLabsCoinDiscountToCoinLabel(
-      item.costPlusOne,
-      labsCoinDiscountPercent,
-    )
-  }
-
   return '—'
 }
 
 /**
  * Discounted coin cost for the upgrade **from** `fromLevel` **to** `fromLevel + 1`
  * (same rules as {@link marginalCostForNextUpgrade}, but numeric). Returns `undefined` for
- * card mastery, maxed labs, or unknown CSV-only rows.
+ * card mastery, maxed labs, or labs/levels missing from `tower-labs.json`.
  */
 export function rawDiscountedMarginalCoinAtCurrentLevel(
   item: ResearchItem,
@@ -123,22 +94,6 @@ export function rawDiscountedMarginalCoinAtCurrentLevel(
       fromToolkit,
       labsCoinDiscountPercent,
     )
-  }
-
-  const baseLevel = item.currentLevel ?? 0
-  const delta = fromLevel - baseLevel
-
-  if (delta <= 0 || item.cost === 'Max') {
-    if (item.cost === 'Max') return undefined
-    const parsed = parseAbbreviatedCoinsToNumber(item.cost)
-    if (parsed == null) return undefined
-    return applyLabsCoinDiscountToCoins(parsed, labsCoinDiscountPercent)
-  }
-
-  if (delta === 1 && item.costPlusOne && item.costPlusOne !== '—') {
-    const p = parseAbbreviatedCoinsToNumber(item.costPlusOne)
-    if (p == null) return undefined
-    return applyLabsCoinDiscountToCoins(p, labsCoinDiscountPercent)
   }
 
   return undefined
@@ -189,8 +144,9 @@ export function formatLevelLabel(level: number, max: number): string {
 }
 
 /**
- * Game Speed multiplier shown on the card — aligns with Tower Lab Calculator rows:
- * Lv.0 → x1.0, then Lv.1→2.0 … Lv.7→5.0 in steps of 0.5 (same “Value” column as the sheet).
+ * Game Speed lab **Value** (wiki; max **7** levels): **Lv.0 → x1.0**, **Lv.1→x2.0** … **Lv.7→x5.0**
+ * in steps of **0.5**. In-game max with perks/labs can exceed this (e.g. **6.25** shown **6.3**); this
+ * card reflects the lab ladder only.
  */
 export function gameSpeedMultiplierLabel(
   effectiveLevel: number,
@@ -204,8 +160,8 @@ export function gameSpeedMultiplierLabel(
 }
 
 /**
- * Labs Speed — **Value** column formula: **0.6 + floor((L − 28) / 5) × 0.1** at lab level `L`, shown with **`x`**
- * like Game Speed (e.g. L1→`x0.0`, L28→`x0.6`, L99→`x2.0`).
+ * Labs Speed — wiki **Value**: **1.00 + 0.02 × lab level** as **`x`** (Lv.0→**x1.00**, Lv.1→**x1.02** … Lv.99→**x2.98**).
+ * Max **99** levels (Milestones tier 1 wave 150). Cost/time in `tower-labs.json` under **`Lab Speed`** (display name **Labs Speed** aliases here).
  */
 export function labsSpeedValueDisplay(
   effectiveLevel: number,
@@ -215,9 +171,8 @@ export function labsSpeedValueDisplay(
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const raw = 0.6 + Math.floor((capped - 28) / 5) * 0.1
-  const v = Math.round(raw * 10) / 10
-  return `x${v.toFixed(1)}`
+  const v = 1 + 0.02 * capped
+  return `x${v.toFixed(2)}`
 }
 
 function moduleLabCappedLevel(
@@ -229,7 +184,7 @@ function moduleLabCappedLevel(
     : Math.max(0, effectiveLevel)
 }
 
-/** Single-level unlock labs: Lv.0 shows prompt; purchased → **Unlocked**. */
+/** Single-level unlock labs: Lv.0 → prompt; Lv.≥1 → **Unlocked** (wiki **Value** column at level 1). */
 export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'More Round Stats': 'Unlock Round Stats',
   'Card Presets': 'Unlock Card Presets',
@@ -237,6 +192,7 @@ export const UNLOCK_LAB_LV0_LABELS: Record<string, string> = {
   'Workshop Respec': 'Unlock Workshop Respec',
   'Reroll Daily Mission': 'Unlock Reroll Daily Mission',
   'Workshop Enhancements': 'Unlock Workshop Enhancements',
+  /** Wiki Light Speed Shots: Milestones tier 7 wave 10; single level Unlocked (instant travel; untargeted enemy between tower and target can block and take damage). Marginal L1: 0d 19h 59m, 3,000,000 coins (`tower-labs.json`). */
   'Light Speed Shots': 'Unlock Light Speed Shots',
   'Missiles Explosion': 'Unlock Missiles Explosion',
   'Chrono Field Damage Reduction': 'Unlock Chrono Field Damage Reduction',
@@ -261,7 +217,7 @@ function benefitLineShowsCurrentBenefitOnly(itemName: string): boolean {
   return isUnlockLabItem(itemName) || itemName === 'Target Priority'
 }
 
-/** Lv.0 → mapped prompt; Lv.≥1 → `Unlocked`; unknown lab → `null`. */
+/** Lv.0 → mapped prompt; Lv.≥1 → **Unlocked** (wiki **Value**); unknown lab → `null`. */
 export function unlockLabBenefitDisplay(
   itemName: string,
   effectiveLevel: number,
@@ -293,7 +249,7 @@ export function targetPriorityBenefitDisplay(
   return 'Unlocked'
 }
 
-/** Calculator Value = tier **1…max**; Lv.0 → **x1**. Used by Buy Multiplier only here. */
+/** Wiki **Value** by lab level (max **4**): Lv.0→**x1**, Lv.1→**x5**, Lv.2→**x10**, Lv.3→**Max**, Lv.4→**x100** (tier 2 wave 20). */
 export function buyMultiplierValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
@@ -302,8 +258,20 @@ export function buyMultiplierValueDisplay(
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const v = capped <= 0 ? 1 : capped
-  return `x${v}`
+  switch (capped) {
+    case 0:
+      return 'x1'
+    case 1:
+      return 'x5'
+    case 2:
+      return 'x10'
+    case 3:
+      return 'Max'
+    case 4:
+      return 'x100'
+    default:
+      return capped < 0 ? 'x1' : 'x100'
+  }
 }
 
 /** BC Groups 1–4 resistance / BC reduction labs — wiki **Value**: **1% × lab level** (Lv.0→**0%**; cap by **maxLevel**). */
@@ -331,9 +299,10 @@ export function battleConditionReductionValueDisplay(
 }
 
 /**
- * Damage-style labs (+0.02/level multiplier): Damage, Attack Speed, Range, Damage / Meter,
+ * Damage-style labs (+0.02/level multiplier): **Damage** (max **100**→x3.00), **Attack Speed** (max **99**→x2.98),
+ * **Range** (max **80**→x2.60; wiki **Tier 2 wave 30**), **Damage / Meter** (max **99**→x2.98; wiki **Tier 3 wave 30**),
  * **Super Crit Multi**, **Cash Bonus**, **Cash / Wave**, **Coins / Kill Bonus**, **Coins / Wave**,
- * **Interest** (Lv.1→x1.02 … Lv.99→x2.98; Damage Lv.100→x3.00; Super Crit Multi max 40→x1.80).
+ * **Interest** (Lv.1→x1.02 … Lv.99→x2.98; Damage **100** levels Lv.100→x3.00; **Super Crit Multi** max **40**→x1.80, wiki unlock **Tier 5 wave 200** with **Super Crit Chance**).
  */
 export function damageValueDisplay(
   effectiveLevel: number,
@@ -348,8 +317,9 @@ export function damageValueDisplay(
 }
 
 /**
- * Critical Factor / **Health-style** labs — Tower Lab Calculator **Value**: **x1.00** at Lv.0,
- * **+0.03** per level (Lv.1→x1.03 … Lv.100→x4.00).
+ * Critical Factor / **Health-style** labs — **Value**: **x1.00** at Lv.0, **+0.03 × effective level**
+ * (Lv.1→x1.03 … **Critical Factor** max **99**→x3.97; **Health** / **Health Regen** max **100**→x4.00).
+ * Marginal **Time** / **Coins** for **Critical Factor** match **Damage** levels **1–99** in `tower-labs.json`.
  */
 export function criticalFactorValueDisplay(
   effectiveLevel: number,
@@ -365,6 +335,7 @@ export function criticalFactorValueDisplay(
 
 /**
  * Super Crit Chance — **+0.10% × lab level** with Include **%**.
+ * Marginal **Time** / **Coins** through **50** levels live in `tower-labs.json` (wiki unlock **Tier 5 wave 200** with **Super Crit Multi**).
  */
 export function superCritChancePercentDisplay(
   effectiveLevel: number,
@@ -646,6 +617,7 @@ export function wavesRequiredReductionDisplay(
 
 /**
  * Bot **Cooldown** labs — **Value**: **−n seconds** as **`-{n}s`** (**Lv.0→`0s`**; **Lv.1→`-1s`** …; e.g. **`-23s » -24s`**).
+ * **Bot Bot - Cooldown** (wiki **Bot Bot Cooldown**): Milestones **tier 6 wave 90**, **25** levels (−**25**s total); marginal **Time** / **Coins** in `tower-labs.json` (same ladder as other bot cooldown labs).
  */
 export function botCooldownReductionSecondsDisplay(
   effectiveLevel: number,
@@ -908,7 +880,7 @@ export function blackHoleCoinBonusMultiplierDisplay(
 
 /**
  * Spotlight Missiles — Tower Lab calculator **Value**: missile fire interval **20.00 − lab level** (seconds),
- * two decimals (Lv.0→**20.00**, Lv.1→**19.00** … Lv.18→**2.00**).
+ * two decimals + **`s`** from Lv.1 (Lv.0→**Unlock Spotlight Missiles**, Lv.1→**19.00s** … Lv.18→**2.00s**).
  */
 export function spotlightMissilesIntervalDisplay(
   effectiveLevel: number,
@@ -918,8 +890,9 @@ export function spotlightMissilesIntervalDisplay(
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
+  if (capped <= 0) return 'Unlock Spotlight Missiles'
   const v = 20 - capped
-  return v.toFixed(2)
+  return `${v.toFixed(2)}s`
 }
 
 /**
@@ -1001,7 +974,7 @@ export function missileBarrageQuantityValueDisplay(
 
 /**
  * Recharge Missile Barrage — Tower Lab calculator **Value** by level (wiki table;
- * Lv.0→**1750** extrapolated −250 from Lv.1→**1500** … Lv.7→**200**).
+ * Lv.0→**1750 waves**, Lv.1→**1500 waves** … Lv.7→**200 waves**).
  */
 const RECHARGE_MISSILE_BARRAGE_VALUES = [
   1750, 1500, 1250, 1000, 750, 500, 350, 200,
@@ -1016,7 +989,8 @@ export function rechargeMissileBarrageValueDisplay(
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
   const idx = Math.min(capped, RECHARGE_MISSILE_BARRAGE_VALUES.length - 1)
-  return String(RECHARGE_MISSILE_BARRAGE_VALUES[idx])
+  const n = RECHARGE_MISSILE_BARRAGE_VALUES[idx]
+  return `${n} waves`
 }
 
 /**
@@ -1357,8 +1331,9 @@ export function wallRebuildSecondsDisplay(
 }
 
 /**
- * Max Rend Armor Multiplier — raw calculator **Value** is **800 + 25 × lab level**; display as
- * **`x` + (that ÷ 100)** with **three decimals** (Lv.0→**x8.000** … Lv.30→**x15.500**).
+ * Max Rend Armor Multiplier (wiki **Rend Armor Max**) — raw **Value** is **800 + 25 × lab level** (percent points);
+ * display as **`x` + (that ÷ 100)** with **three decimals** (Lv.0→**x8.000** … Lv.30→**x15.500** = **1550%**).
+ * Wiki unlock **Tier 13 wave 10**; max **30** levels; marginal **Time** / **Coins** in `tower-labs.json`.
  */
 export function maxRendArmorMultiplierValueDisplay(
   effectiveLevel: number,
@@ -1374,8 +1349,8 @@ export function maxRendArmorMultiplierValueDisplay(
 }
 
 /**
- * Total Labs Coin Discount % at the given lab level (1.20% at L4 → 0.30%/level).
- * Tower Data does not ship per-level benefit text.
+ * Total Labs Coin Discount % at the given lab level — wiki **Value**: **0.30% × lab level**
+ * (Lv.0→0.00% … Lv.99→29.70%). Max **99** levels (Milestones tier 1 wave 30). Cost/time per step in `tower-labs.json`.
  */
 const LAB_COIN_DISCOUNT_PCT_PER_LEVEL = 0.3
 
@@ -1398,28 +1373,36 @@ function formatResearchDurationDhm(d: number, h: number, m: number): string {
   return `${m}m`
 }
 
+/** **365-day** years, remainder as days/h/m; omits zero tail parts (wiki Dissonant Echo ladder). */
+function formatResearchDurationYdh(y: number, d: number, h: number, m: number): string {
+  const parts: string[] = [`${y}y`]
+  if (d > 0) parts.push(`${d}d`)
+  if (h > 0) parts.push(`${h}h`)
+  if (m > 0) parts.push(`${m}m`)
+  return parts.join(' ')
+}
+
 function formatResearchDurationSeconds(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '—'
   const totalMin = Math.floor(seconds / 60)
+  const minPerYear = 365 * 24 * 60
+  const y = Math.floor(totalMin / minPerYear)
+  if (y > 0) {
+    const remMin = totalMin - y * minPerYear
+    const d = Math.floor(remMin / (24 * 60))
+    const h = Math.floor((remMin % (24 * 60)) / 60)
+    const m = remMin % 60
+    return formatResearchDurationYdh(y, d, h, m)
+  }
   const d = Math.floor(totalMin / (60 * 24))
   const h = Math.floor((totalMin % (60 * 24)) / 60)
   const m = totalMin % 60
   return formatResearchDurationDhm(d, h, m)
 }
 
-const STATIC_RESEARCH_TIME_RE = /^(\d+)d (\d+)h (\d+)m$/
-
-function normalizeStaticResearchTime(time: string): string {
-  const m = time.match(STATIC_RESEARCH_TIME_RE)
-  if (!m) return time
-  const d = Number.parseInt(m[1]!, 10)
-  const h = Number.parseInt(m[2]!, 10)
-  const min = Number.parseInt(m[3]!, 10)
-  return formatResearchDurationDhm(d, h, min)
-}
-
 /**
- * Starting Cash — Tower Lab Calculator “Value” column: **5 × lab level** (Lv.1→5 … Lv.99→495).
+ * Starting Cash — wiki **Value**: **5 × lab level** dollars (Lv.0→**+$0**, Lv.1→**+$5** … Lv.99→**+$495**);
+ * max **99** levels (Milestones tier 1 wave 30). Cost/time steps **1–99** come from `tower-labs.json`.
  */
 export function startingCashValueDisplay(
   effectiveLevel: number,
@@ -1454,7 +1437,7 @@ export function maxInterestDollarValueDisplay(
   return `$${v}`
 }
 
-/** Labs whose calculator “Value” column is **0.50 × lab level** (with Include %). */
+/** Labs whose wiki **Value** is **0.50% × lab level** (Lv.0→0.00% … Lv.99→49.50%). */
 const WORKSHOP_DISCOUNT_VALUE_LABS = new Set([
   'Workshop Attack Discount',
   'Workshop Defense Discount',
@@ -1462,7 +1445,9 @@ const WORKSHOP_DISCOUNT_VALUE_LABS = new Set([
 ])
 
 /**
- * Enhancement Attack/Defense/Utility coin discount — same ladder; **Value** is **0.30 × lab level** %.
+ * Enhancement Attack/Defense/Utility coin discount — three independent labs, **one shared marginal ladder**
+ * in `tower-labs.json` (see `scripts/gen-enhancement-coin-discount-labs.mjs`). Wiki unlock **Tier 21 wave 60**;
+ * max **100** levels; **Value** is **0.30% × lab level** (Lv.100→30.00%).
  */
 const ENHANCEMENT_COIN_DISCOUNT_LABS = new Set([
   'Enhancement Attack - Coin Discount',
@@ -1470,7 +1455,11 @@ const ENHANCEMENT_COIN_DISCOUNT_LABS = new Set([
   'Enhancement Utility - Coin Discount',
 ])
 
-/** Dissonant Echo — **Value** is echo chance: **0.50 × lab level** % (max 10% at Lv.20). */
+/**
+ * Dissonant Echo — one lab per category (Attack / Defense / Utility / Ultimate Weapons).
+ * In-game **Value** is echo chance: **0.50% × effective lab level** (Lv.0→0.00%, Lv.20→10.00%).
+ * Wiki per-tier echo boost scales as `(Dissonance Boost − 1) × lab percentage` (additive across tiers).
+ */
 const DISSONANT_ECHO_LABS = new Set([
   'Dissonant Echo - Attack',
   'Dissonant Echo - Defense',
@@ -1479,7 +1468,9 @@ const DISSONANT_ECHO_LABS = new Set([
 ])
 
 /**
- * Workshop Attack/Defense/Utility discount — Tower Lab Calculator **Value** column (e.g. Lv.1→0.50%, +0.50% per level).
+ * Workshop Attack/Defense/Utility discount — wiki **Value**: **0.50% × lab level**
+ * (Lv.1→0.50% … Lv.99→49.50%; Lv.0→0.00%). Max **99** levels; cost/time match **Starting Cash** ladder in `tower-labs.json`.
+ * Unlock milestones differ by lab (wiki: **Attack** tier 1 wave 40; **Defense** tier 2 wave 50; **Utility** tier 2 wave 60).
  */
 export function workshopDiscountValuePercentDisplay(
   effectiveLevel: number,
@@ -1493,7 +1484,11 @@ export function workshopDiscountValuePercentDisplay(
   return `${v.toFixed(2)}%`
 }
 
-/** Enhancement coin discount labs — **0.30%** per level (Lv.100→30.00%). */
+/**
+ * Enhancement coin discount labs — **0.30%** per effective lab level (Lv.100→30.00%).
+ * Marginal **Time** / **Coins** (cost **×1.3** per level from **1 B**) are in `tower-labs.json`
+ * (`scripts/gen-enhancement-coin-discount-labs.mjs`).
+ */
 export function enhancementCoinDiscountValuePercentDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
@@ -1506,7 +1501,11 @@ export function enhancementCoinDiscountValuePercentDisplay(
   return `${v.toFixed(2)}%`
 }
 
-/** Dissonant Echo labs — **0.50%** echo chance per level (Lv.20→10.00%). */
+/**
+ * Dissonant Echo labs — **0.50%** echo chance per level (Lv.20→10.00%).
+ * Marginal **Time** / **Coins** (cost **×2.25** per level from **1 q**) live in `tower-labs.json`
+ * (see `scripts/gen-dissonant-echo-labs.mjs`).
+ */
 export function dissonantEchoBoostChancePercentDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
@@ -1996,27 +1995,11 @@ export function benefitDisplayForCard(
   return item.benefit
 }
 
-const LABS_SCAN_NEXT_DISTINCT_BENEFIT = new Set([
-  'Labs Speed',
-  'Buy Multiplier',
-])
-
-/** Next benefit after `»` — listed labs scan until Value changes on plateaus. */
 function nextBenefitDisplayForUpgradeLine(
   item: ResearchItem,
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
-  const current = benefitDisplayForCard(item, effectiveLevel, maxLevelCap)
-
-  if (LABS_SCAN_NEXT_DISTINCT_BENEFIT.has(item.name)) {
-    for (let L = effectiveLevel + 1; L <= maxLevelCap; L++) {
-      const cand = benefitDisplayForCard(item, L, maxLevelCap)
-      if (cand !== current) return cand
-    }
-    return current
-  }
-
   return benefitDisplayForCard(item, effectiveLevel + 1, maxLevelCap)
 }
 
@@ -2024,6 +2007,7 @@ function nextBenefitDisplayForUpgradeLine(
  * **current » simulated benefit at level + 1** (same rules as the left side).
  * Unknown / unchanged tail → `» —`; **maxed lab → current value only** (no `» Max`).
  * **Unlock labs** and **Target Priority** omit `»` (current phrase only).
+ * **Spotlight Missiles** at Lv.0 omits `»` (unlock prompt only).
  */
 export function benefitLineWithNextUpgrade(
   item: ResearchItem,
@@ -2031,6 +2015,9 @@ export function benefitLineWithNextUpgrade(
   maxLevelCap: number,
 ): string {
   if (benefitLineShowsCurrentBenefitOnly(item.name)) {
+    return benefitDisplayForCard(item, effectiveLevel, maxLevelCap)
+  }
+  if (item.name === 'Spotlight Missiles' && effectiveLevel <= 0) {
     return benefitDisplayForCard(item, effectiveLevel, maxLevelCap)
   }
 
@@ -2057,7 +2044,7 @@ export function benefitLineWithNextUpgrade(
   return `${current} » ${nextStr}`
 }
 
-/** Time for the next upgrade at `effectiveLevel`; uses Tower Data duration when the lab is in `tower-labs.json`. */
+/** Time for the next upgrade at `effectiveLevel`; from `tower-labs.json` `DURATION` only. */
 export function researchTimeForNextUpgrade(
   item: ResearchItem,
   effectiveLevel: number,
@@ -2070,7 +2057,7 @@ export function researchTimeForNextUpgrade(
     return formatResearchDurationSeconds(sec)
   }
 
-  return normalizeStaticResearchTime(item.time)
+  return '—'
 }
 
 export function levelOverrideKey(sectionIndex: number, itemIndex: number): string {

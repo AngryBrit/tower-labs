@@ -18,7 +18,7 @@ export type SimulatorCoinAggregates = {
 
 /**
  * Coin-only budgeting totals from `tower-labs.json` marginal costs and the current simulator state.
- * Card Mastery rows (stones) are excluded. Labs without toolkit/CSV coin data contribute `0` for
+ * Card Mastery rows (stones) are excluded. Labs without toolkit coin data contribute `0` for
  * missing steps (same gaps as the per-card “—” cost line).
  */
 export function computeSimulatorCoinAggregates(

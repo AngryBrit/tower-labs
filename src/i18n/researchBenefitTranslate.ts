@@ -29,6 +29,7 @@ const UNLOCK_LAB_BENEFIT_ES: Record<string, string> = {
 
 const EXTRA_PHRASE_PAIRS: readonly [string, string][] = [
   ['Better Target Priority', 'Mejor prioridad de objetivo'],
+  ['Unlock Spotlight Missiles', 'Desbloquear misiles del foco'],
   ['Unlock Target Priority', 'Desbloquear prioridad de objetivo'],
   ['Unlocked', 'Desbloqueado'],
 ]

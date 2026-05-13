@@ -34,7 +34,8 @@ function loadAllSections() {
 function expectedBenefitLineAtLv0(item: ResearchItem, max: number): string {
   if (
     Object.prototype.hasOwnProperty.call(UNLOCK_LAB_LV0_LABELS, item.name) ||
-    item.name === 'Target Priority'
+    item.name === 'Target Priority' ||
+    item.name === 'Spotlight Missiles'
   ) {
     return benefitDisplayForCard(item, 0, max)
   }
@@ -42,19 +43,7 @@ function expectedBenefitLineAtLv0(item: ResearchItem, max: number): string {
     return `${benefitDisplayForCard(item, 0, max)} » —`
   }
   const left = benefitDisplayForCard(item, 0, max)
-  let right: string
-  if (item.name === 'Labs Speed' || item.name === 'Buy Multiplier') {
-    right = left
-    for (let L = 1; L <= max; L++) {
-      const cand = benefitDisplayForCard(item, L, max)
-      if (cand !== left) {
-        right = cand
-        break
-      }
-    }
-  } else {
-    right = benefitDisplayForCard(item, 1, max)
-  }
+  const right = benefitDisplayForCard(item, 1, max)
   if (left === right) {
     return `${left} » —`
   }
@@ -222,6 +211,21 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(toolkitUpgradeDurationSeconds('Amplify Bot Cooldown', 24)).toBe(
         7_374_120,
       )
+    })
+
+    it('Bot Bot - Cooldown matches wiki -1s/level + T6 90; wiki name resolves toolkit', () => {
+      const lab = bots.items.find((i) => i.name === 'Bot Bot - Cooldown')
+      expect(lab).toBeDefined()
+      expect(lab!.benefit).toBe('T6 90')
+      const max = lab!.maxLevel ?? 25
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0s')
+      expect(benefitDisplayForCard(lab!, 25, max)).toBe('-25s')
+      expect(toolkitMarginalCoinCost('Bot Bot - Cooldown', 0)).toBe(30_000_000)
+      expect(toolkitMarginalCoinCost('Bot Bot Cooldown', 0)).toBe(30_000_000)
+      expect(toolkitUpgradeDurationSeconds('Bot Bot - Cooldown', 0)).toBe(139_980)
+      expect(toolkitMarginalCoinCost('Bot Bot - Cooldown', 24)).toBe(398_880_000_000)
+      expect(toolkitUpgradeDurationSeconds('Bot Bot - Cooldown', 24)).toBe(7_374_120)
+      expect(toolkitMarginalCoinCost('Bot Bot - Cooldown', 25)).toBeUndefined()
     })
 
     it('Amplify Bot - Duration shares Gold duration Value + wiki T5 90 milestone', () => {
@@ -869,32 +873,62 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
     const labsCoin = main.items.find((i) => i.name === 'Labs Coin Discount')
     const startingCash = main.items.find((i) => i.name === 'Starting Cash')
 
-    it('Starting Cash mid / max', () => {
+    it('Starting Cash wiki Value, early tower-lab times, and benefit lines', () => {
       expect(startingCash).toBeDefined()
       const max = startingCash!.maxLevel ?? 99
+      expect(benefitDisplayForCard(startingCash!, 0, max)).toBe('+$0')
+      expect(benefitDisplayForCard(startingCash!, 1, max)).toBe('+$5')
       expect(benefitLineWithNextUpgrade(startingCash!, 4, max)).toBe(
         '+$20 » +$25',
       )
       expect(benefitLineWithNextUpgrade(startingCash!, max, max)).toBe('+$495')
+      expect(toolkitMarginalCoinCost('Starting Cash', 0)).toBe(30)
+      expect(toolkitUpgradeDurationSeconds('Starting Cash', 0)).toBe(0)
+      expect(toolkitUpgradeDurationSeconds('Starting Cash', 1)).toBe(360)
+      expect(toolkitUpgradeDurationSeconds('Starting Cash', 4)).toBe(3120)
+      expect(researchTimeForNextUpgrade(startingCash!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(startingCash!, 1, max)).toBe('6m')
     })
 
-    it('Game Speed mid / max', () => {
+    it('Game Speed wiki Value, tower-lab times, and benefit lines', () => {
       expect(gameSpeed).toBeDefined()
       const max = gameSpeed!.maxLevel ?? 7
+      expect(benefitDisplayForCard(gameSpeed!, 0, max)).toBe('x1.0')
+      expect(benefitDisplayForCard(gameSpeed!, 1, max)).toBe('x2.0')
+      expect(benefitLineWithNextUpgrade(gameSpeed!, 0, max)).toBe('x1.0 » x2.0')
       expect(benefitLineWithNextUpgrade(gameSpeed!, 4, max)).toBe(
         'x3.5 » x4.0',
       )
       expect(benefitLineWithNextUpgrade(gameSpeed!, max, max)).toBe('x5.0')
+      expect(toolkitMarginalCoinCost('Game Speed', 0)).toBe(300)
+      expect(toolkitMarginalCoinCost('Game Speed', 6)).toBe(1_000_000)
+      expect(toolkitUpgradeDurationSeconds('Game Speed', 0)).toBe(540)
+      expect(toolkitUpgradeDurationSeconds('Game Speed', 1)).toBe(9000)
+      expect(toolkitUpgradeDurationSeconds('Game Speed', 2)).toBe(35280)
+      expect(toolkitUpgradeDurationSeconds('Game Speed', 3)).toBe(122520)
+      expect(researchTimeForNextUpgrade(gameSpeed!, 0, max)).toBe('9m')
+      expect(researchTimeForNextUpgrade(gameSpeed!, 6, max)).toBe(
+        '25d 11h 6m',
+      )
     })
 
-    it('Labs Coin Discount at Lv.4', () => {
+    it('Labs Coin Discount wiki Value, early tower-lab times, and benefit lines', () => {
       expect(labsCoin).toBeDefined()
+      const max = labsCoin!.maxLevel ?? 99
+      expect(benefitDisplayForCard(labsCoin!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(labsCoin!, 1, max)).toBe('0.30%')
+      expect(benefitDisplayForCard(labsCoin!, 99, max)).toBe('29.70%')
       expect(
-        benefitLineWithNextUpgrade(labsCoin!, 4, labsCoin!.maxLevel ?? 99),
+        benefitLineWithNextUpgrade(labsCoin!, 4, max),
       ).toBe('1.20% » 1.50%')
+      expect(toolkitMarginalCoinCost('Labs Coin Discount', 0)).toBe(40)
+      expect(toolkitUpgradeDurationSeconds('Labs Coin Discount', 0)).toBe(0)
+      expect(toolkitUpgradeDurationSeconds('Labs Coin Discount', 1)).toBe(540)
+      expect(researchTimeForNextUpgrade(labsCoin!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(labsCoin!, 1, max)).toBe('9m')
     })
 
-    it('Workshop Respec shows unlock copy (single line, no »)', () => {
+    it('Workshop Respec wiki unlock, cost, time, and benefit copy', () => {
       const wr = main.items.find((i) => i.name === 'Workshop Respec')
       expect(wr).toBeDefined()
       const max = wr!.maxLevel ?? 1
@@ -902,9 +936,12 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitDisplayForCard(wr!, 1, max)).toBe('Unlocked')
       expect(benefitLineWithNextUpgrade(wr!, 0, max)).toBe('Unlock Workshop Respec')
       expect(benefitLineWithNextUpgrade(wr!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('Workshop Respec', 0)).toBe(3_000_000)
+      expect(toolkitUpgradeDurationSeconds('Workshop Respec', 0)).toBe(219_960)
+      expect(researchTimeForNextUpgrade(wr!, 0, max)).toBe('2d 13h 6m')
     })
 
-    it('Reroll Daily Mission shows unlock copy (single line, no »)', () => {
+    it('Reroll Daily Mission wiki unlock, cost, time, and benefit copy', () => {
       const rdm = main.items.find((i) => i.name === 'Reroll Daily Mission')
       expect(rdm).toBeDefined()
       const max = rdm!.maxLevel ?? 1
@@ -916,9 +953,14 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
         'Unlock Reroll Daily Mission',
       )
       expect(benefitLineWithNextUpgrade(rdm!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('Reroll Daily Mission', 0)).toBe(20_000_000)
+      expect(toolkitUpgradeDurationSeconds('Reroll Daily Mission', 0)).toBe(
+        143_940,
+      )
+      expect(researchTimeForNextUpgrade(rdm!, 0, max)).toBe('1d 15h 59m')
     })
 
-    it('Workshop Enhancements shows unlock copy (single line, no »)', () => {
+    it('Workshop Enhancements wiki unlock, cost, time, and benefit copy', () => {
       const we = main.items.find((i) => i.name === 'Workshop Enhancements')
       expect(we).toBeDefined()
       const max = we!.maxLevel ?? 1
@@ -930,9 +972,16 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
         'Unlock Workshop Enhancements',
       )
       expect(benefitLineWithNextUpgrade(we!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('Workshop Enhancements', 0)).toBe(
+        5_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Workshop Enhancements', 0)).toBe(
+        575_940,
+      )
+      expect(researchTimeForNextUpgrade(we!, 0, max)).toBe('6d 15h 59m')
     })
 
-    it('Card Presets shows unlock copy (single line, no »)', () => {
+    it('Card Presets wiki unlock, cost, time, and benefit copy', () => {
       const cp = main.items.find((i) => i.name === 'Card Presets')
       expect(cp).toBeDefined()
       const max = cp!.maxLevel ?? 1
@@ -940,9 +989,12 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitDisplayForCard(cp!, 1, max)).toBe('Unlocked')
       expect(benefitLineWithNextUpgrade(cp!, 0, max)).toBe('Unlock Card Presets')
       expect(benefitLineWithNextUpgrade(cp!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('Card Presets', 0)).toBe(350_000)
+      expect(toolkitUpgradeDurationSeconds('Card Presets', 0)).toBe(49_980)
+      expect(researchTimeForNextUpgrade(cp!, 0, max)).toBe('13h 53m')
     })
 
-    it('More Round Stats shows unlock copy (Lv.0 vs Lv.1)', () => {
+    it('More Round Stats wiki unlock, cost, time, and benefit copy', () => {
       const mrs = main.items.find((i) => i.name === 'More Round Stats')
       expect(mrs).toBeDefined()
       const max = mrs!.maxLevel ?? 1
@@ -950,9 +1002,12 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitDisplayForCard(mrs!, 1, max)).toBe('Unlocked')
       expect(benefitLineWithNextUpgrade(mrs!, 0, max)).toBe('Unlock Round Stats')
       expect(benefitLineWithNextUpgrade(mrs!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('More Round Stats', 0)).toBe(250_000)
+      expect(toolkitUpgradeDurationSeconds('More Round Stats', 0)).toBe(43_140)
+      expect(researchTimeForNextUpgrade(mrs!, 0, max)).toBe('11h 59m')
     })
 
-    it('Target Priority shows three-stage copy (single line per level, no »)', () => {
+    it('Target Priority three-stage benefit copy + wiki cost/time (no »)', () => {
       const tp = main.items.find((i) => i.name === 'Target Priority')
       expect(tp).toBeDefined()
       const max = tp!.maxLevel ?? 2
@@ -962,46 +1017,68 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(tp!, 0, max)).toBe('Unlock Target Priority')
       expect(benefitLineWithNextUpgrade(tp!, 1, max)).toBe('Better Target Priority')
       expect(benefitLineWithNextUpgrade(tp!, max, max)).toBe('Unlocked')
+      expect(toolkitMarginalCoinCost('Target Priority', 0)).toBe(1_000_000)
+      expect(toolkitMarginalCoinCost('Target Priority', 1)).toBe(1_000_000_000)
+      expect(toolkitUpgradeDurationSeconds('Target Priority', 0)).toBe(172_740)
+      expect(toolkitUpgradeDurationSeconds('Target Priority', 1)).toBe(691_200)
+      expect(researchTimeForNextUpgrade(tp!, 0, max)).toBe('1d 23h 59m')
+      expect(researchTimeForNextUpgrade(tp!, 1, max)).toBe('8d 0h 0m')
     })
 
-    it('Buy Multiplier matches calculator Value (x1…x4)', () => {
+    it('Buy Multiplier wiki Value (x1, x5, x10, Max, x100) and tower-lab time L1', () => {
       const buyMul = main.items.find((i) => i.name === 'Buy Multiplier')
       expect(buyMul).toBeDefined()
       const max = buyMul!.maxLevel ?? 4
       expect(benefitDisplayForCard(buyMul!, 0, max)).toBe('x1')
-      expect(benefitDisplayForCard(buyMul!, 1, max)).toBe('x1')
-      expect(benefitDisplayForCard(buyMul!, 4, max)).toBe('x4')
-      expect(benefitLineWithNextUpgrade(buyMul!, 0, max)).toBe('x1 » x2')
-      expect(benefitLineWithNextUpgrade(buyMul!, 3, max)).toBe('x3 » x4')
-      expect(benefitLineWithNextUpgrade(buyMul!, max, max)).toBe('x4')
+      expect(benefitDisplayForCard(buyMul!, 1, max)).toBe('x5')
+      expect(benefitDisplayForCard(buyMul!, 2, max)).toBe('x10')
+      expect(benefitDisplayForCard(buyMul!, 3, max)).toBe('Max')
+      expect(benefitDisplayForCard(buyMul!, 4, max)).toBe('x100')
+      expect(benefitLineWithNextUpgrade(buyMul!, 0, max)).toBe('x1 » x5')
+      expect(benefitLineWithNextUpgrade(buyMul!, 1, max)).toBe('x5 » x10')
+      expect(benefitLineWithNextUpgrade(buyMul!, 2, max)).toBe('x10 » Max')
+      expect(benefitLineWithNextUpgrade(buyMul!, 3, max)).toBe('Max » x100')
+      expect(benefitLineWithNextUpgrade(buyMul!, max, max)).toBe('x100')
+      expect(toolkitMarginalCoinCost('Buy Multiplier', 0)).toBe(2500)
+      expect(toolkitUpgradeDurationSeconds('Buy Multiplier', 0)).toBe(3540)
     })
 
-    it('Labs Speed uses calculator Value column (tier steps from L28)', () => {
+    it('Labs Speed wiki Value, early tower-lab times, and benefit lines', () => {
       const labsSpeed = main.items.find((i) => i.name === 'Labs Speed')
       expect(labsSpeed).toBeDefined()
       const max = labsSpeed!.maxLevel ?? 99
-      expect(benefitDisplayForCard(labsSpeed!, 0, max)).toBe('x0.0')
-      expect(benefitDisplayForCard(labsSpeed!, 1, max)).toBe('x0.0')
-      expect(benefitDisplayForCard(labsSpeed!, 27, max)).toBe('x0.5')
-      expect(benefitDisplayForCard(labsSpeed!, 28, max)).toBe('x0.6')
-      expect(benefitDisplayForCard(labsSpeed!, 33, max)).toBe('x0.7')
-      expect(benefitDisplayForCard(labsSpeed!, 99, max)).toBe('x2.0')
-      expect(benefitLineWithNextUpgrade(labsSpeed!, 0, max)).toBe('x0.0 » x0.1')
+      expect(benefitDisplayForCard(labsSpeed!, 0, max)).toBe('x1.00')
+      expect(benefitDisplayForCard(labsSpeed!, 1, max)).toBe('x1.02')
+      expect(benefitDisplayForCard(labsSpeed!, 27, max)).toBe('x1.54')
+      expect(benefitDisplayForCard(labsSpeed!, 28, max)).toBe('x1.56')
+      expect(benefitDisplayForCard(labsSpeed!, 33, max)).toBe('x1.66')
+      expect(benefitDisplayForCard(labsSpeed!, 99, max)).toBe('x2.98')
+      expect(benefitLineWithNextUpgrade(labsSpeed!, 0, max)).toBe(
+        'x1.00 » x1.02',
+      )
       expect(benefitLineWithNextUpgrade(labsSpeed!, 26, max)).toBe(
-        'x0.5 » x0.6',
+        'x1.52 » x1.54',
       )
       expect(benefitLineWithNextUpgrade(labsSpeed!, 27, max)).toBe(
-        'x0.5 » x0.6',
+        'x1.54 » x1.56',
       )
-      expect(benefitLineWithNextUpgrade(labsSpeed!, max, max)).toBe('x2.0')
+      expect(benefitLineWithNextUpgrade(labsSpeed!, max, max)).toBe('x2.98')
+      expect(toolkitMarginalCoinCost('Labs Speed', 0)).toBe(40)
+      expect(toolkitUpgradeDurationSeconds('Labs Speed', 0)).toBe(0)
+      expect(toolkitUpgradeDurationSeconds('Labs Speed', 1)).toBe(540)
+      expect(researchTimeForNextUpgrade(labsSpeed!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(labsSpeed!, 1, max)).toBe('9m')
     })
 
-    it('Workshop Attack Discount uses calculator Value (0.50% per level)', () => {
+    it('Workshop Attack Discount wiki Value, early tower-lab times, and benefit lines', () => {
       const workshop = main.items.find(
         (i) => i.name === 'Workshop Attack Discount',
       )
       expect(workshop).toBeDefined()
       const max = workshop!.maxLevel ?? 99
+      expect(benefitDisplayForCard(workshop!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(workshop!, 1, max)).toBe('0.50%')
+      expect(benefitDisplayForCard(workshop!, 99, max)).toBe('49.50%')
       expect(benefitLineWithNextUpgrade(workshop!, 0, max)).toBe(
         '0.00% » 0.50%',
       )
@@ -1011,37 +1088,124 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(workshop!, 28, max)).toBe(
         '14.00% » 14.50%',
       )
+      expect(toolkitMarginalCoinCost('Workshop Attack Discount', 0)).toBe(30)
+      expect(toolkitUpgradeDurationSeconds('Workshop Attack Discount', 0)).toBe(
+        0,
+      )
+      expect(toolkitUpgradeDurationSeconds('Workshop Attack Discount', 1)).toBe(
+        360,
+      )
+      expect(researchTimeForNextUpgrade(workshop!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(workshop!, 1, max)).toBe('6m')
     })
 
-    it('Enhancement Attack - Coin Discount uses calculator Value (0.30% per level)', () => {
-      const lab = main.items.find(
+    it('Workshop Defense Discount shares Attack wiki ladder (tier 2 wave 50 unlock)', () => {
+      const defense = main.items.find(
+        (i) => i.name === 'Workshop Defense Discount',
+      )
+      expect(defense).toBeDefined()
+      const max = defense!.maxLevel ?? 99
+      expect(benefitDisplayForCard(defense!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(defense!, 99, max)).toBe('49.50%')
+      expect(benefitLineWithNextUpgrade(defense!, 0, max)).toBe('0.00% » 0.50%')
+      expect(toolkitMarginalCoinCost('Workshop Defense Discount', 0)).toBe(30)
+      expect(toolkitUpgradeDurationSeconds('Workshop Defense Discount', 0)).toBe(
+        0,
+      )
+      expect(toolkitUpgradeDurationSeconds('Workshop Defense Discount', 1)).toBe(
+        360,
+      )
+      expect(researchTimeForNextUpgrade(defense!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(defense!, 1, max)).toBe('6m')
+    })
+
+    it('Workshop Utility Discount shares Attack wiki ladder (tier 2 wave 60 unlock)', () => {
+      const utility = main.items.find(
+        (i) => i.name === 'Workshop Utility Discount',
+      )
+      expect(utility).toBeDefined()
+      const max = utility!.maxLevel ?? 99
+      expect(benefitDisplayForCard(utility!, 0, max)).toBe('0.00%')
+      expect(benefitDisplayForCard(utility!, 99, max)).toBe('49.50%')
+      expect(benefitLineWithNextUpgrade(utility!, 0, max)).toBe('0.00% » 0.50%')
+      expect(toolkitMarginalCoinCost('Workshop Utility Discount', 0)).toBe(30)
+      expect(toolkitUpgradeDurationSeconds('Workshop Utility Discount', 0)).toBe(
+        0,
+      )
+      expect(toolkitUpgradeDurationSeconds('Workshop Utility Discount', 1)).toBe(
+        360,
+      )
+      expect(researchTimeForNextUpgrade(utility!, 0, max)).toBe('0m')
+      expect(researchTimeForNextUpgrade(utility!, 1, max)).toBe('6m')
+    })
+
+    it('Enhancement Coin Discount labs wiki Value (0.30%/level), shared ladder, research times', () => {
+      const attack = main.items.find(
         (i) => i.name === 'Enhancement Attack - Coin Discount',
       )
-      expect(lab).toBeDefined()
-      const max = lab!.maxLevel ?? 100
-      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.30%')
-      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe(
+      const defense = main.items.find(
+        (i) => i.name === 'Enhancement Defense - Coin Discount',
+      )
+      const utility = main.items.find(
+        (i) => i.name === 'Enhancement Utility - Coin Discount',
+      )
+      expect(attack).toBeDefined()
+      expect(defense).toBeDefined()
+      expect(utility).toBeDefined()
+      const max = attack!.maxLevel ?? 100
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const table = towerLabs['Enhancement Attack - Coin Discount']
+      expect(benefitLineWithNextUpgrade(attack!, 0, max)).toBe('0.00% » 0.30%')
+      expect(benefitLineWithNextUpgrade(attack!, 4, max)).toBe(
         '1.20% » 1.50%',
       )
-      expect(benefitLineWithNextUpgrade(lab!, 99, max)).toBe(
+      expect(benefitLineWithNextUpgrade(attack!, 99, max)).toBe(
         '29.70% » 30.00%',
       )
       expect(toolkitMarginalCoinCost('Enhancement Attack - Coin Discount', 0)).toBe(
-        1_000_000_000,
+        table['1'].COST,
       )
       expect(
         toolkitUpgradeDurationSeconds('Enhancement Attack - Coin Discount', 0),
-      ).toBe(93_300)
+      ).toBe(table['1'].DURATION)
+      expect(researchTimeForNextUpgrade(attack!, 0, max)).toBe('1d 1h 55m')
+      expect(toolkitUpgradeDurationSeconds('Enhancement Attack - Coin Discount', 12)).toBe(
+        table['13'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(attack!, 12, max)).toBe('14d 0h 56m')
+      expect(toolkitMarginalCoinCost('Enhancement Attack - Coin Discount', 53)).toBe(
+        table['54'].COST,
+      )
+      expect(toolkitMarginalCoinCost('Enhancement Defense - Coin Discount', 53)).toBe(
+        table['54'].COST,
+      )
+      expect(toolkitMarginalCoinCost('Enhancement Utility - Coin Discount', 53)).toBe(
+        table['54'].COST,
+      )
+      expect(toolkitMarginalCoinCost('Enhancement Attack - Coin Discount', 99)).toBe(
+        table['100'].COST,
+      )
+      expect(
+        toolkitUpgradeDurationSeconds('Enhancement Attack - Coin Discount', 99),
+      ).toBe(table['100'].DURATION)
+      expect(researchTimeForNextUpgrade(attack!, 99, max)).toBe('107d 23h 53m')
     })
 
-    it('Dissonant Echo - Attack uses echo chance Value (0.50% per level) + wiki ladder', () => {
+    it('Dissonant Echo - Attack wiki Value (0.50%/level), ladder, and year-style research times', () => {
       const lab = main.items.find((i) => i.name === 'Dissonant Echo - Attack')
       expect(lab).toBeDefined()
       const max = lab!.maxLevel ?? 20
-      const towerLabs: Record<string, Record<string, { COST: number }>> =
-        JSON.parse(
-          readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
-        ) as Record<string, Record<string, { COST: number }>>
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
       const attack = towerLabs['Dissonant Echo - Attack']
       expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.50%')
       expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe('2.00% » 2.50%')
@@ -1052,9 +1216,30 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 0)).toBe(
         1_800_000,
       )
+      expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 1)).toBe(
+        attack['2'].COST,
+      )
+      expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 5)).toBe(
+        attack['6'].DURATION,
+      )
       expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 18)).toBe(
         attack['19'].COST,
       )
+      expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 19)).toBe(
+        attack['20'].COST,
+      )
+      expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 17)).toBe(
+        32_400_000,
+      )
+      expect(researchTimeForNextUpgrade(lab!, 17, max)).toBe('1y 10d')
+      expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 18)).toBe(
+        34_200_000,
+      )
+      expect(researchTimeForNextUpgrade(lab!, 18, max)).toBe('1y 30d 20h')
+      expect(toolkitUpgradeDurationSeconds('Dissonant Echo - Attack', 19)).toBe(
+        36_000_000,
+      )
+      expect(researchTimeForNextUpgrade(lab!, 19, max)).toBe('1y 51d 16h')
     })
   })
 
@@ -1159,10 +1344,17 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
     const attack = loadAllSections().find((s) => s.title === 'ATTACK RESEARCH')
     if (!attack) throw new Error('fixture missing ATTACK RESEARCH')
 
-    it('Damage uses calculator Value (x1.00..x3.00)', () => {
+    it('Damage wiki Value (+0.02/level to x3.00), cost/time ladder (100 levels)', () => {
       const dmg = attack.items.find((i) => i.name === 'Damage')
       expect(dmg).toBeDefined()
       const max = dmg!.maxLevel ?? 100
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const table = towerLabs.Damage
       expect(benefitDisplayForCard(dmg!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(dmg!, 1, max)).toBe('x1.02')
       expect(benefitDisplayForCard(dmg!, 50, max)).toBe('x2.00')
@@ -1170,24 +1362,69 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(dmg!, 0, max)).toBe('x1.00 » x1.02')
       expect(benefitLineWithNextUpgrade(dmg!, 99, max)).toBe('x2.98 » x3.00')
       expect(benefitLineWithNextUpgrade(dmg!, max, max)).toBe('x3.00')
+      expect(toolkitMarginalCoinCost('Damage', 0)).toBe(table['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Damage', 0)).toBe(table['1'].DURATION)
+      expect(researchTimeForNextUpgrade(dmg!, 0, max)).toBe('0m')
+      expect(toolkitMarginalCoinCost('Damage', 18)).toBe(table['19'].COST)
+      expect(toolkitUpgradeDurationSeconds('Damage', 18)).toBe(table['19'].DURATION)
+      expect(researchTimeForNextUpgrade(dmg!, 18, max)).toBe('21h 31m')
+      expect(toolkitMarginalCoinCost('Damage', 58)).toBe(table['59'].COST)
+      expect(researchTimeForNextUpgrade(dmg!, 58, max)).toBe('14d 0h 44m')
+      expect(toolkitMarginalCoinCost('Damage', 98)).toBe(table['99'].COST)
+      expect(toolkitMarginalCoinCost('Damage', 99)).toBe(table['100'].COST)
+      expect(toolkitUpgradeDurationSeconds('Damage', 99)).toBe(table['100'].DURATION)
+      expect(researchTimeForNextUpgrade(dmg!, 99, max)).toBe('50d 5h 52m')
     })
 
-    it('Attack Speed uses same calculator Value as Damage (max 99 → x2.98)', () => {
+    it('Attack Speed wiki Value (+0.02/level to x2.98), same marginal ladder as Damage (99 levels)', () => {
       const as = attack.items.find((i) => i.name === 'Attack Speed')
       expect(as).toBeDefined()
       const max = as!.maxLevel ?? 99
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const damageTable = towerLabs.Damage
+      const asTable = towerLabs['Attack Speed']
       expect(benefitDisplayForCard(as!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(as!, 1, max)).toBe('x1.02')
       expect(benefitDisplayForCard(as!, 99, max)).toBe('x2.98')
       expect(benefitLineWithNextUpgrade(as!, 0, max)).toBe('x1.00 » x1.02')
       expect(benefitLineWithNextUpgrade(as!, 98, max)).toBe('x2.96 » x2.98')
       expect(benefitLineWithNextUpgrade(as!, max, max)).toBe('x2.98')
+      expect(asTable['99'].COST).toBe(damageTable['99'].COST)
+      expect(asTable['99'].DURATION).toBe(damageTable['99'].DURATION)
+      expect(toolkitMarginalCoinCost('Attack Speed', 0)).toBe(asTable['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Attack Speed', 0)).toBe(
+        asTable['1'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(as!, 0, max)).toBe('0m')
+      expect(toolkitMarginalCoinCost('Attack Speed', 18)).toBe(asTable['19'].COST)
+      expect(researchTimeForNextUpgrade(as!, 18, max)).toBe('21h 31m')
+      expect(toolkitMarginalCoinCost('Attack Speed', 58)).toBe(asTable['59'].COST)
+      expect(researchTimeForNextUpgrade(as!, 58, max)).toBe('14d 0h 44m')
+      expect(toolkitMarginalCoinCost('Attack Speed', 98)).toBe(asTable['99'].COST)
+      expect(toolkitUpgradeDurationSeconds('Attack Speed', 98)).toBe(
+        asTable['99'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(as!, 98, max)).toBe('49d 0h 57m')
+      expect(toolkitMarginalCoinCost('Attack Speed', 99)).toBeUndefined()
     })
 
-    it('Critical Factor uses calculator Value (+0.03 per level → x3.97 at max)', () => {
+    it('Critical Factor wiki Value (+0.03/level to x3.97), same marginal ladder as Damage (99 levels)', () => {
       const cf = attack.items.find((i) => i.name === 'Critical Factor')
       expect(cf).toBeDefined()
       const max = cf!.maxLevel ?? 99
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const damageTable = towerLabs.Damage
+      const cfTable = towerLabs['Critical Factor']
       expect(benefitDisplayForCard(cf!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(cf!, 1, max)).toBe('x1.03')
       expect(benefitDisplayForCard(cf!, 29, max)).toBe('x1.87')
@@ -1195,30 +1432,98 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(cf!, 0, max)).toBe('x1.00 » x1.03')
       expect(benefitLineWithNextUpgrade(cf!, 98, max)).toBe('x3.94 » x3.97')
       expect(benefitLineWithNextUpgrade(cf!, max, max)).toBe('x3.97')
+      expect(cfTable['99'].COST).toBe(damageTable['99'].COST)
+      expect(cfTable['99'].DURATION).toBe(damageTable['99'].DURATION)
+      expect(toolkitMarginalCoinCost('Critical Factor', 0)).toBe(cfTable['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Critical Factor', 0)).toBe(
+        cfTable['1'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(cf!, 0, max)).toBe('0m')
+      expect(toolkitMarginalCoinCost('Critical Factor', 18)).toBe(cfTable['19'].COST)
+      expect(researchTimeForNextUpgrade(cf!, 18, max)).toBe('21h 31m')
+      expect(toolkitMarginalCoinCost('Critical Factor', 58)).toBe(cfTable['59'].COST)
+      expect(researchTimeForNextUpgrade(cf!, 58, max)).toBe('14d 0h 44m')
+      expect(toolkitMarginalCoinCost('Critical Factor', 98)).toBe(cfTable['99'].COST)
+      expect(toolkitUpgradeDurationSeconds('Critical Factor', 98)).toBe(
+        cfTable['99'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(cf!, 98, max)).toBe('49d 0h 57m')
+      expect(toolkitMarginalCoinCost('Critical Factor', 99)).toBeUndefined()
     })
 
-    it('Range uses same calculator Value as Damage (max 80 → x2.60)', () => {
+    it('Range wiki Value (+0.02/level to x2.60), same marginal ladder as Damage (80 levels)', () => {
       const range = attack.items.find((i) => i.name === 'Range')
       expect(range).toBeDefined()
       const max = range!.maxLevel ?? 80
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const damageTable = towerLabs.Damage
+      const rangeTable = towerLabs.Range
       expect(benefitDisplayForCard(range!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(range!, 1, max)).toBe('x1.02')
       expect(benefitDisplayForCard(range!, 80, max)).toBe('x2.60')
       expect(benefitLineWithNextUpgrade(range!, 0, max)).toBe('x1.00 » x1.02')
       expect(benefitLineWithNextUpgrade(range!, 79, max)).toBe('x2.58 » x2.60')
       expect(benefitLineWithNextUpgrade(range!, max, max)).toBe('x2.60')
+      expect(rangeTable['80'].COST).toBe(damageTable['80'].COST)
+      expect(rangeTable['80'].DURATION).toBe(damageTable['80'].DURATION)
+      expect(toolkitMarginalCoinCost('Range', 0)).toBe(rangeTable['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Range', 0)).toBe(rangeTable['1'].DURATION)
+      expect(researchTimeForNextUpgrade(range!, 0, max)).toBe('0m')
+      expect(toolkitMarginalCoinCost('Range', 18)).toBe(rangeTable['19'].COST)
+      expect(researchTimeForNextUpgrade(range!, 18, max)).toBe('21h 31m')
+      expect(toolkitMarginalCoinCost('Range', 58)).toBe(rangeTable['59'].COST)
+      expect(researchTimeForNextUpgrade(range!, 58, max)).toBe('14d 0h 44m')
+      expect(toolkitMarginalCoinCost('Range', 78)).toBe(rangeTable['79'].COST)
+      expect(toolkitUpgradeDurationSeconds('Range', 78)).toBe(rangeTable['79'].DURATION)
+      expect(researchTimeForNextUpgrade(range!, 78, max)).toBe('28d 10h 18m')
+      expect(toolkitMarginalCoinCost('Range', 79)).toBe(rangeTable['80'].COST)
+      expect(toolkitUpgradeDurationSeconds('Range', 79)).toBe(rangeTable['80'].DURATION)
+      expect(researchTimeForNextUpgrade(range!, 79, max)).toBe('29d 7h 22m')
+      expect(toolkitMarginalCoinCost('Range', 80)).toBeUndefined()
     })
 
-    it('Damage / Meter uses same calculator Value as Damage (max 99 → x2.98)', () => {
+    it('Damage / Meter wiki Value (+0.02/level to x2.98), same marginal ladder as Damage (99 levels)', () => {
       const dm = attack.items.find((i) => i.name === 'Damage / Meter')
       expect(dm).toBeDefined()
       const max = dm!.maxLevel ?? 99
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const damageTable = towerLabs.Damage
+      const dmTable = towerLabs['Damage / Meter']
       expect(benefitDisplayForCard(dm!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(dm!, 1, max)).toBe('x1.02')
       expect(benefitDisplayForCard(dm!, 99, max)).toBe('x2.98')
       expect(benefitLineWithNextUpgrade(dm!, 0, max)).toBe('x1.00 » x1.02')
       expect(benefitLineWithNextUpgrade(dm!, 98, max)).toBe('x2.96 » x2.98')
       expect(benefitLineWithNextUpgrade(dm!, max, max)).toBe('x2.98')
+      expect(dmTable['99'].COST).toBe(damageTable['99'].COST)
+      expect(dmTable['99'].DURATION).toBe(damageTable['99'].DURATION)
+      expect(toolkitMarginalCoinCost('Damage / Meter', 0)).toBe(dmTable['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Damage / Meter', 0)).toBe(
+        dmTable['1'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(dm!, 0, max)).toBe('0m')
+      expect(toolkitMarginalCoinCost('Damage / Meter', 4)).toBe(dmTable['5'].COST)
+      expect(dmTable['5'].COST).toBe(damageTable['5'].COST)
+      expect(toolkitMarginalCoinCost('Damage / Meter', 18)).toBe(dmTable['19'].COST)
+      expect(researchTimeForNextUpgrade(dm!, 18, max)).toBe('21h 31m')
+      expect(toolkitMarginalCoinCost('Damage / Meter', 58)).toBe(dmTable['59'].COST)
+      expect(researchTimeForNextUpgrade(dm!, 58, max)).toBe('14d 0h 44m')
+      expect(toolkitMarginalCoinCost('Damage / Meter', 98)).toBe(dmTable['99'].COST)
+      expect(toolkitUpgradeDurationSeconds('Damage / Meter', 98)).toBe(
+        dmTable['99'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(dm!, 98, max)).toBe('49d 0h 57m')
+      expect(toolkitMarginalCoinCost('Damage / Meter', 99)).toBeUndefined()
     })
 
     it('Super Crit Chance uses calculator Value (+0.10% per level, Include %)', () => {
@@ -1235,10 +1540,17 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(scc!, max, max)).toBe('+5.00%')
     })
 
-    it('Super Crit Multi uses calculator Value (+0.02/level multiplier, same curve as Damage)', () => {
+    it('Super Crit Multi wiki Value (+0.02/level to x1.80), cost/time ladder (40 levels)', () => {
       const scm = attack.items.find((i) => i.name === 'Super Crit Multi')
       expect(scm).toBeDefined()
       const max = scm!.maxLevel ?? 40
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const multTable = towerLabs['Super Crit Multi']
       expect(benefitDisplayForCard(scm!, 0, max)).toBe('x1.00')
       expect(benefitDisplayForCard(scm!, 1, max)).toBe('x1.02')
       expect(benefitDisplayForCard(scm!, 29, max)).toBe('x1.58')
@@ -1246,12 +1558,37 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(scm!, 0, max)).toBe('x1.00 » x1.02')
       expect(benefitLineWithNextUpgrade(scm!, 39, max)).toBe('x1.78 » x1.80')
       expect(benefitLineWithNextUpgrade(scm!, max, max)).toBe('x1.80')
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 0)).toBe(multTable['1'].COST)
+      expect(toolkitMarginalCoinCost('Super Crit Mult', 0)).toBe(multTable['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Super Crit Multi', 0)).toBe(
+        multTable['1'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(scm!, 0, max)).toBe('1d 3h 46m')
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 2)).toBe(multTable['3'].COST)
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 9)).toBe(multTable['10'].COST)
+      expect(researchTimeForNextUpgrade(scm!, 9, max)).toBe('11d 16h 21m')
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 29)).toBe(multTable['30'].COST)
+      expect(researchTimeForNextUpgrade(scm!, 29, max)).toBe('1y 225d 23h 14m')
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 38)).toBe(multTable['39'].COST)
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 39)).toBe(multTable['40'].COST)
+      expect(toolkitUpgradeDurationSeconds('Super Crit Multi', 39)).toBe(
+        multTable['40'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(scm!, 39, max)).toBe('5y 73d 1h 1m')
+      expect(toolkitMarginalCoinCost('Super Crit Multi', 40)).toBeUndefined()
     })
 
-    it('Max Rend Armor Multiplier uses calculator Value ((800 + 25 × level) ÷ 100, x + 3 decimals)', () => {
+    it('Max Rend Armor Multiplier wiki Rend Armor Max (x8.000…x15.500), cost/time ladder (30 levels)', () => {
       const mram = attack.items.find((i) => i.name === 'Max Rend Armor Multiplier')
       expect(mram).toBeDefined()
       const max = mram!.maxLevel ?? 30
+      const towerLabs: Record<
+        string,
+        Record<string, { COST: number; DURATION: number }>
+      > = JSON.parse(
+        readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
+      ) as Record<string, Record<string, { COST: number; DURATION: number }>>
+      const table = towerLabs['Max Rend Armor Multiplier']
       expect(benefitDisplayForCard(mram!, 0, max)).toBe('x8.000')
       expect(benefitDisplayForCard(mram!, 1, max)).toBe('x8.250')
       expect(benefitDisplayForCard(mram!, 10, max)).toBe('x10.500')
@@ -1259,6 +1596,21 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(mram!, 0, max)).toBe('x8.000 » x8.250')
       expect(benefitLineWithNextUpgrade(mram!, 29, max)).toBe('x15.250 » x15.500')
       expect(benefitLineWithNextUpgrade(mram!, max, max)).toBe('x15.500')
+      expect(toolkitMarginalCoinCost('Max Rend Armor Multiplier', 0)).toBe(table['1'].COST)
+      expect(toolkitUpgradeDurationSeconds('Max Rend Armor Multiplier', 0)).toBe(
+        table['1'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(mram!, 0, max)).toBe('3d 11h 19m')
+      expect(toolkitMarginalCoinCost('Max Rend Armor Multiplier', 9)).toBe(table['10'].COST)
+      expect(researchTimeForNextUpgrade(mram!, 9, max)).toBe('8d 18h 46m')
+      expect(toolkitMarginalCoinCost('Max Rend Armor Multiplier', 20)).toBe(table['21'].COST)
+      expect(researchTimeForNextUpgrade(mram!, 20, max)).toBe('15d 15h 16m')
+      expect(toolkitMarginalCoinCost('Max Rend Armor Multiplier', 28)).toBe(table['29'].COST)
+      expect(toolkitUpgradeDurationSeconds('Max Rend Armor Multiplier', 29)).toBe(
+        table['30'].DURATION,
+      )
+      expect(researchTimeForNextUpgrade(mram!, 29, max)).toBe('21d 14h 10m')
+      expect(toolkitMarginalCoinCost('Max Rend Armor Multiplier', 30)).toBeUndefined()
     })
 
     it('Light Speed Shots is an unlock lab (single line, no »)', () => {
@@ -1269,6 +1621,17 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitDisplayForCard(lss!, 1, max)).toBe('Unlocked')
       expect(benefitLineWithNextUpgrade(lss!, 0, max)).toBe('Unlock Light Speed Shots')
       expect(benefitLineWithNextUpgrade(lss!, max, max)).toBe('Unlocked')
+    })
+
+    it('Light Speed Shots tower-labs match wiki row 1 (tier 7 wave 10)', () => {
+      const lss = attack.items.find((i) => i.name === 'Light Speed Shots')
+      expect(lss).toBeDefined()
+      const max = lss!.maxLevel ?? 1
+      expect(toolkitMarginalCoinCost('Light Speed Shots', 0)).toBe(3_000_000)
+      expect(toolkitUpgradeDurationSeconds('Light Speed Shots', 0)).toBe(71_940)
+      // Formatter omits a leading "0d " (wiki table shows 0d 19h 59m).
+      expect(researchTimeForNextUpgrade(lss!, 0, max)).toBe('19h 59m')
+      expect(toolkitMarginalCoinCost('Light Speed Shots', 1)).toBeUndefined()
     })
   })
 
@@ -1480,14 +1843,18 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Spotlight Missiles')
       expect(lab).toBeDefined()
       const max = lab!.maxLevel ?? 18
-      expect(benefitDisplayForCard(lab!, 0, max)).toBe('20.00')
-      expect(benefitDisplayForCard(lab!, 1, max)).toBe('19.00')
-      expect(benefitDisplayForCard(lab!, 10, max)).toBe('10.00')
-      expect(benefitDisplayForCard(lab!, 18, max)).toBe('2.00')
-      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('20.00 » 19.00')
-      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('19.00 » 18.00')
-      expect(benefitLineWithNextUpgrade(lab!, 17, max)).toBe('3.00 » 2.00')
-      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('2.00')
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe(
+        'Unlock Spotlight Missiles',
+      )
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('19.00s')
+      expect(benefitDisplayForCard(lab!, 10, max)).toBe('10.00s')
+      expect(benefitDisplayForCard(lab!, 18, max)).toBe('2.00s')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        'Unlock Spotlight Missiles',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('19.00s » 18.00s')
+      expect(benefitLineWithNextUpgrade(lab!, 17, max)).toBe('3.00s » 2.00s')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('2.00s')
     })
 
     it('Spotlight Coin Bonus uses calculator Value (x1.00 + 0.10/level)', () => {
@@ -1533,13 +1900,30 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       const lab = ultimate.items.find((i) => i.name === 'Recharge Missile Barrage')
       expect(lab).toBeDefined()
       const max = lab!.maxLevel ?? 7
-      expect(benefitDisplayForCard(lab!, 0, max)).toBe('1750')
-      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1500')
-      expect(benefitDisplayForCard(lab!, 5, max)).toBe('500')
-      expect(benefitDisplayForCard(lab!, 7, max)).toBe('200')
-      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('1750 » 1500')
-      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe('350 » 200')
-      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('200')
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('1750 waves')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1500 waves')
+      expect(benefitDisplayForCard(lab!, 5, max)).toBe('500 waves')
+      expect(benefitDisplayForCard(lab!, 7, max)).toBe('200 waves')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe(
+        '1750 waves » 1500 waves',
+      )
+      expect(benefitLineWithNextUpgrade(lab!, 6, max)).toBe('350 waves » 200 waves')
+      expect(benefitLineWithNextUpgrade(lab!, max, max)).toBe('200 waves')
+    })
+
+    it('Recharge Missile Barrage tower-labs match Recharge Nuke tier (cost + duration)', () => {
+      expect(toolkitMarginalCoinCost('Recharge Missile Barrage', 0)).toBe(
+        550_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Missile Barrage', 0)).toBe(
+        449940,
+      )
+      expect(toolkitMarginalCoinCost('Recharge Missile Barrage', 6)).toBe(
+        3_600_000_000_000,
+      )
+      expect(toolkitUpgradeDurationSeconds('Recharge Missile Barrage', 6)).toBe(
+        4435860,
+      )
     })
 
     it('Chrono Field Duration uses calculator Value (1.00 per level)', () => {

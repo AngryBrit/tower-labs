@@ -1,19 +1,19 @@
 {
   "Game Speed": {
     "1": {
-      "DURATION": 599,
+      "DURATION": 540,
       "COST": 300
     },
     "2": {
-      "DURATION": 8940,
+      "DURATION": 9000,
       "COST": 2500
     },
     "3": {
-      "DURATION": 35940,
+      "DURATION": 35280,
       "COST": 12000
     },
     "4": {
-      "DURATION": 124980,
+      "DURATION": 122520,
       "COST": 50000
     },
     "5": {
@@ -31,23 +31,23 @@
   },
   "Starting Cash": {
     "1": {
-      "DURATION": 14,
+      "DURATION": 0,
       "COST": 30
     },
     "2": {
-      "DURATION": 384,
+      "DURATION": 360,
       "COST": 71
     },
     "3": {
-      "DURATION": 984,
+      "DURATION": 960,
       "COST": 178
     },
     "4": {
-      "DURATION": 1892,
+      "DURATION": 1860,
       "COST": 398
     },
     "5": {
-      "DURATION": 3165,
+      "DURATION": 3120,
       "COST": 772
     },
     "6": {
@@ -429,23 +429,23 @@
   },
   "Workshop Attack Discount": {
     "1": {
-      "DURATION": 14,
+      "DURATION": 0,
       "COST": 30
     },
     "2": {
-      "DURATION": 384,
+      "DURATION": 360,
       "COST": 71
     },
     "3": {
-      "DURATION": 984,
+      "DURATION": 960,
       "COST": 178
     },
     "4": {
-      "DURATION": 1892,
+      "DURATION": 1860,
       "COST": 398
     },
     "5": {
-      "DURATION": 3165,
+      "DURATION": 3120,
       "COST": 772
     },
     "6": {
@@ -827,23 +827,23 @@
   },
   "Workshop Defense Discount": {
     "1": {
-      "DURATION": 14,
+      "DURATION": 0,
       "COST": 30
     },
     "2": {
-      "DURATION": 384,
+      "DURATION": 360,
       "COST": 71
     },
     "3": {
-      "DURATION": 984,
+      "DURATION": 960,
       "COST": 178
     },
     "4": {
-      "DURATION": 1892,
+      "DURATION": 1860,
       "COST": 398
     },
     "5": {
-      "DURATION": 3165,
+      "DURATION": 3120,
       "COST": 772
     },
     "6": {
@@ -1225,23 +1225,23 @@
   },
   "Workshop Utility Discount": {
     "1": {
-      "DURATION": 14,
+      "DURATION": 0,
       "COST": 30
     },
     "2": {
-      "DURATION": 384,
+      "DURATION": 360,
       "COST": 71
     },
     "3": {
-      "DURATION": 984,
+      "DURATION": 960,
       "COST": 178
     },
     "4": {
-      "DURATION": 1892,
+      "DURATION": 1860,
       "COST": 398
     },
     "5": {
-      "DURATION": 3165,
+      "DURATION": 3120,
       "COST": 772
     },
     "6": {
@@ -1623,19 +1623,19 @@
   },
   "Labs Coin Discount": {
     "1": {
-      "DURATION": 19,
+      "DURATION": 0,
       "COST": 40
     },
     "2": {
-      "DURATION": 589,
+      "DURATION": 540,
       "COST": 83
     },
     "3": {
-      "DURATION": 1429,
+      "DURATION": 1380,
       "COST": 210
     },
     "4": {
-      "DURATION": 2672,
+      "DURATION": 2640,
       "COST": 517
     },
     "5": {
@@ -2021,19 +2021,19 @@
   },
   "Lab Speed": {
     "1": {
-      "DURATION": 24,
+      "DURATION": 0,
       "COST": 40
     },
     "2": {
-      "DURATION": 583,
+      "DURATION": 540,
       "COST": 83
     },
     "3": {
-      "DURATION": 1379,
+      "DURATION": 1320,
       "COST": 211
     },
     "4": {
-      "DURATION": 2526,
+      "DURATION": 2520,
       "COST": 522
     },
     "5": {
@@ -2419,7 +2419,7 @@
   },
   "Buy Multiplier": {
     "1": {
-      "DURATION": 3599,
+      "DURATION": 3540,
       "COST": 2500
     },
     "2": {
@@ -2547,6 +2547,18 @@
     "1": {
       "DURATION": 219960,
       "COST": 3000000
+    }
+  },
+  "Reroll Daily Mission": {
+    "1": {
+      "DURATION": 143940,
+      "COST": 20000000
+    }
+  },
+  "Workshop Enhancements": {
+    "1": {
+      "DURATION": 575940,
+      "COST": 5000000000
     }
   },
   "Damage": {
@@ -4087,227 +4099,227 @@
       "COST": 398
     },
     "5": {
-      "DURATION": 3170,
-      "COST": 782
+      "DURATION": 3165,
+      "COST": 772
     },
     "6": {
       "DURATION": 4800,
-      "COST": 1350
+      "COST": 1340
     },
     "7": {
       "DURATION": 6960,
-      "COST": 2130
+      "COST": 2120
     },
     "8": {
       "DURATION": 9540,
-      "COST": 3180
+      "COST": 3170
     },
     "9": {
       "DURATION": 12660,
-      "COST": 4520
+      "COST": 4510
     },
     "10": {
       "DURATION": 16320,
-      "COST": 6180
+      "COST": 6170
     },
     "11": {
       "DURATION": 20580,
-      "COST": 8180
+      "COST": 8170
     },
     "12": {
       "DURATION": 25380,
-      "COST": 10570
+      "COST": 10560
     },
     "13": {
       "DURATION": 30840,
-      "COST": 13360
+      "COST": 13350
     },
     "14": {
       "DURATION": 36900,
-      "COST": 16590
+      "COST": 16580
     },
     "15": {
       "DURATION": 43620,
-      "COST": 20280
+      "COST": 20270
     },
     "16": {
       "DURATION": 51000,
-      "COST": 24450
+      "COST": 24440
     },
     "17": {
       "DURATION": 59100,
-      "COST": 29140
+      "COST": 29130
     },
     "18": {
       "DURATION": 67920,
-      "COST": 34370
+      "COST": 34360
     },
     "19": {
       "DURATION": 77460,
-      "COST": 40170
+      "COST": 40160
     },
     "20": {
       "DURATION": 87720,
-      "COST": 46550
+      "COST": 46540
     },
     "21": {
-      "DURATION": 98820,
-      "COST": 53540
+      "DURATION": 98760,
+      "COST": 53530
     },
     "22": {
       "DURATION": 110640,
-      "COST": 61170
+      "COST": 61160
     },
     "23": {
       "DURATION": 123240,
-      "COST": 69470
+      "COST": 69460
     },
     "24": {
       "DURATION": 136680,
-      "COST": 78440
+      "COST": 78430
     },
     "25": {
       "DURATION": 150960,
-      "COST": 88130
+      "COST": 88120
     },
     "26": {
       "DURATION": 166020,
-      "COST": 98540
+      "COST": 98530
     },
     "27": {
       "DURATION": 181980,
-      "COST": 109710
+      "COST": 109700
     },
     "28": {
       "DURATION": 198780,
-      "COST": 121660
+      "COST": 121650
     },
     "29": {
       "DURATION": 216480,
-      "COST": 134400
+      "COST": 134390
     },
     "30": {
       "DURATION": 235080,
-      "COST": 147960
+      "COST": 147950
     },
     "31": {
       "DURATION": 254580,
-      "COST": 162360
+      "COST": 162350
     },
     "32": {
       "DURATION": 274980,
-      "COST": 177630
+      "COST": 177620
     },
     "33": {
-      "DURATION": 296340,
-      "COST": 193790
+      "DURATION": 296280,
+      "COST": 193780
     },
     "34": {
       "DURATION": 318600,
-      "COST": 210840
+      "COST": 210830
     },
     "35": {
       "DURATION": 341820,
-      "COST": 228830
+      "COST": 228820
     },
     "36": {
       "DURATION": 366000,
-      "COST": 247770
+      "COST": 247760
     },
     "37": {
       "DURATION": 391200,
-      "COST": 267670
+      "COST": 267660
     },
     "38": {
       "DURATION": 417300,
-      "COST": 288570
+      "COST": 288560
     },
     "39": {
       "DURATION": 444480,
-      "COST": 310480
+      "COST": 310470
     },
     "40": {
       "DURATION": 472620,
-      "COST": 333410
+      "COST": 333400
     },
     "41": {
       "DURATION": 501840,
-      "COST": 357400
+      "COST": 357390
     },
     "42": {
       "DURATION": 532020,
-      "COST": 382460
+      "COST": 382450
     },
     "43": {
       "DURATION": 563280,
-      "COST": 408610
+      "COST": 408600
     },
     "44": {
       "DURATION": 595560,
-      "COST": 435880
+      "COST": 435870
     },
     "45": {
       "DURATION": 628920,
-      "COST": 464270
+      "COST": 464260
     },
     "46": {
-      "DURATION": 663360,
-      "COST": 493820
+      "DURATION": 663300,
+      "COST": 493810
     },
     "47": {
       "DURATION": 698820,
-      "COST": 524540
+      "COST": 524530
     },
     "48": {
       "DURATION": 735420,
-      "COST": 556440
+      "COST": 556430
     },
     "49": {
       "DURATION": 773100,
-      "COST": 589560
+      "COST": 589550
     },
     "50": {
-      "DURATION": 811920,
+      "DURATION": 811860,
       "COST": 623890
     },
     "51": {
       "DURATION": 851820,
-      "COST": 659500
+      "COST": 659490
     },
     "52": {
       "DURATION": 892800,
-      "COST": 696350
+      "COST": 696340
     },
     "53": {
       "DURATION": 934980,
-      "COST": 734500
+      "COST": 734490
     },
     "54": {
       "DURATION": 978300,
-      "COST": 773950
+      "COST": 773940
     },
     "55": {
       "DURATION": 1022760,
-      "COST": 814720
+      "COST": 814710
     },
     "56": {
       "DURATION": 1068360,
-      "COST": 856840
+      "COST": 856830
     },
     "57": {
       "DURATION": 1115160,
-      "COST": 900310
+      "COST": 900300
     },
     "58": {
       "DURATION": 1163100,
       "COST": 945160
     },
     "59": {
-      "DURATION": 1212300,
-      "COST": 991420
+      "DURATION": 1212240,
+      "COST": 991410
     },
     "60": {
-      "DURATION": 1262640,
+      "DURATION": 1262580,
       "COST": 1040000
     },
     "61": {
@@ -4363,7 +4375,7 @@
       "COST": 1800000
     },
     "74": {
-      "DURATION": 2097180,
+      "DURATION": 2097120,
       "COST": 1870000
     },
     "75": {
@@ -4371,7 +4383,7 @@
       "COST": 1940000
     },
     "76": {
-      "DURATION": 2236860,
+      "DURATION": 2236800,
       "COST": 2010000
     },
     "77": {
@@ -4463,7 +4475,7 @@
       "COST": 4070000
     },
     "99": {
-      "DURATION": 4237080,
+      "DURATION": 4237020,
       "COST": 4190000
     }
   },
@@ -4669,7 +4681,7 @@
       "COST": 87900000000
     }
   },
-  "Super Crit Mult": {
+  "Super Crit Multi": {
     "1": {
       "DURATION": 99960,
       "COST": 200000
@@ -12427,6 +12439,36 @@
       "COST": 3600000000000
     }
   },
+  "Recharge Missile Barrage": {
+    "1": {
+      "DURATION": 449940,
+      "COST": 550000000000
+    },
+    "2": {
+      "DURATION": 570060,
+      "COST": 1050000000000
+    },
+    "3": {
+      "DURATION": 694479,
+      "COST": 1550000000000
+    },
+    "4": {
+      "DURATION": 861000,
+      "COST": 2050000000000
+    },
+    "5": {
+      "DURATION": 1216680,
+      "COST": 2560000000000
+    },
+    "6": {
+      "DURATION": 2143740,
+      "COST": 3070000000000
+    },
+    "7": {
+      "DURATION": 4435860,
+      "COST": 3600000000000
+    }
+  },
   "Double Death Ray": {
     "1": {
       "DURATION": 3599,
@@ -14136,6 +14178,108 @@
     }
   },
   "Amplify Bot - Cooldown": {
+    "1": {
+      "DURATION": 139980,
+      "COST": 30000000
+    },
+    "2": {
+      "DURATION": 170040,
+      "COST": 60050000
+    },
+    "3": {
+      "DURATION": 200820,
+      "COST": 91600000
+    },
+    "4": {
+      "DURATION": 233640,
+      "COST": 132150000
+    },
+    "5": {
+      "DURATION": 270240,
+      "COST": 201200000
+    },
+    "6": {
+      "DURATION": 312960,
+      "COST": 336250000
+    },
+    "7": {
+      "DURATION": 364260,
+      "COST": 598800000
+    },
+    "8": {
+      "DURATION": 427140,
+      "COST": 1080000000
+    },
+    "9": {
+      "DURATION": 504780,
+      "COST": 1910000000
+    },
+    "10": {
+      "DURATION": 600660,
+      "COST": 3250000000
+    },
+    "11": {
+      "DURATION": 718620,
+      "COST": 5330000000
+    },
+    "12": {
+      "DURATION": 862740,
+      "COST": 8410000000
+    },
+    "13": {
+      "DURATION": 1037160,
+      "COST": 12830000000
+    },
+    "14": {
+      "DURATION": 1246620,
+      "COST": 18980000000
+    },
+    "15": {
+      "DURATION": 1495740,
+      "COST": 27340000000
+    },
+    "16": {
+      "DURATION": 1789560,
+      "COST": 38450000000
+    },
+    "17": {
+      "DURATION": 2133300,
+      "COST": 52940000000
+    },
+    "18": {
+      "DURATION": 2532360,
+      "COST": 71530000000
+    },
+    "19": {
+      "DURATION": 2992440,
+      "COST": 95050000000
+    },
+    "20": {
+      "DURATION": 3519360,
+      "COST": 124400000000
+    },
+    "21": {
+      "DURATION": 4119120,
+      "COST": 160630000000
+    },
+    "22": {
+      "DURATION": 4797960,
+      "COST": 204870000000
+    },
+    "23": {
+      "DURATION": 5562300,
+      "COST": 258370000000
+    },
+    "24": {
+      "DURATION": 6418740,
+      "COST": 322540000000
+    },
+    "25": {
+      "DURATION": 7374120,
+      "COST": 398880000000
+    }
+  },
+  "Bot Bot - Cooldown": {
     "1": {
       "DURATION": 139980,
       "COST": 30000000
