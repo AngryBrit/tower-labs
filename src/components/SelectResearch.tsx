@@ -737,7 +737,7 @@ export function SelectResearch({ data }: SelectResearchProps) {
         <div className="select-research__brand">
           <img
             className="select-research__logo"
-            src="/tower-site-logo.png"
+            src="/tower-site-logo.webp"
             alt="The Tower"
             width={500}
             height={439}

@@ -195,7 +195,7 @@ export function ResearchCard({
               {nextCost}
               <img
                 className="research-card__costIcon"
-                src={stoneCost ? '/power-stone.png' : '/coin.png'}
+                src={stoneCost ? '/power-stone.webp' : '/coin.webp'}
                 alt=""
                 decoding="async"
                 aria-hidden
