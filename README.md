@@ -7,7 +7,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.3-2ea44f)
+![Version](https://img.shields.io/badge/version-1.0.4-2ea44f)
 
 ---
 
@@ -20,7 +20,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
 - **Persistence** — Section collapse state and locale choice survive reloads (`localStorage`).
 
-For a full list of what shipped in **1.0.3**, see [`CHANGELOG.md`](CHANGELOG.md).
+For a full list of what shipped in **1.0.4**, see [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 

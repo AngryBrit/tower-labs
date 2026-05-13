@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-05-13
+
+### Added
+
+- **Favicon set**: PNG icons at 16×16, 32×32, 180×180 (apple-touch-icon), 192×192, and 512×512, generated from `public/tower-site-logo.webp`. Browser tabs and iOS Home Screen now show a sharp brand icon instead of a downscaled WebP.
+- **Web app manifest**: `public/manifest.webmanifest` declares name, theme/background colours (`#0b1220` = `--sr-bg`), and 192 / 512 / maskable-512 icons, enabling "Add to Home Screen" on Android with a clean adaptive icon.
+- **`theme-color` meta** in `index.html` tints the mobile browser UI to the app's dark background.
+
+### Changed
+
+- Removed the leftover Vite-template `public/favicon.svg` (unrelated purple-lightning artwork) and the `<link rel="icon">` pointing at `tower-site-logo.webp`; `index.html` now declares the full favicon / apple-touch-icon / manifest set.
+
 ## [1.0.3] - 2026-05-13
 
 ### Added
