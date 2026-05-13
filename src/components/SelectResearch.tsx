@@ -18,6 +18,10 @@ import {
   computeSimulatorCoinAggregates,
   formatSimulatorCoinAggregates,
 } from '../labBudgetAggregates'
+import {
+  parseLabLevelOverridesCsv,
+  serializeLabLevelOverridesCsv,
+} from '../labLevelOverridesCsv'
 import { sanitizeLevelOverrides } from '../labLevelOverridesSanitize'
 import {
   buildLabPresetsPayload,
@@ -85,7 +89,7 @@ export function SelectResearch({ data }: SelectResearchProps) {
   const [labCompareOpen, setLabCompareOpen] = useState(false)
   const [presetSaveDialogOpen, setPresetSaveDialogOpen] = useState(false)
   const [presetSaveDraft, setPresetSaveDraft] = useState('')
-  const importFileInputRef = useRef<HTMLInputElement>(null)
+  const importLabCsvFileInputRef = useRef<HTMLInputElement>(null)
   const presetSaveNameInputRef = useRef<HTMLInputElement>(null)
   const bulkAllSectionsToggleRef = useRef<HTMLInputElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -551,14 +555,15 @@ export function SelectResearch({ data }: SelectResearchProps) {
   }, [t])
 
   const handleExportLevels = useCallback(() => {
-    const payload = { v: 1 as const, levelOverrides }
-    const json = JSON.stringify(payload, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
+    const date = new Date().toISOString().slice(0, 10)
+    const csv = serializeLabLevelOverridesCsv(levelOverrides)
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: 'text/csv;charset=utf-8',
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    const date = new Date().toISOString().slice(0, 10)
     a.href = url
-    a.download = `tower-lab-levels-${date}.json`
+    a.download = `tower-lab-levels-${date}.csv`
     a.rel = 'noopener'
     a.click()
     URL.revokeObjectURL(url)
@@ -602,7 +607,7 @@ export function SelectResearch({ data }: SelectResearchProps) {
     }
   }, [levelOverrides, t])
 
-  const handleImportFileChange = useCallback(
+  const handleImportLabCsvFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const input = e.target
       const file = input.files?.[0]
@@ -610,28 +615,12 @@ export function SelectResearch({ data }: SelectResearchProps) {
       if (!file) return
       try {
         const text = await file.text()
-        const parsed: unknown = JSON.parse(text)
-        if (
-          !parsed ||
-          typeof parsed !== 'object' ||
-          !('levelOverrides' in parsed)
-        ) {
-          setImportNotice(t('sr_notice_import_invalid_struct'))
+        const raw = parseLabLevelOverridesCsv(text)
+        if (raw === null) {
+          setImportNotice(t('sr_notice_import_invalid_csv'))
           return
         }
-        const lo = (parsed as { levelOverrides?: unknown }).levelOverrides
-        if (
-          !lo ||
-          typeof lo !== 'object' ||
-          Array.isArray(lo)
-        ) {
-          setImportNotice(t('sr_notice_import_invalid_lo'))
-          return
-        }
-        const sanitized = sanitizeLevelOverrides(
-          data,
-          lo as Record<string, unknown>,
-        )
+        const sanitized = sanitizeLevelOverrides(data, raw)
         setActivePresetId(null)
         setScratchSnapshot(sanitized)
         setLevelOverrides(sanitized)
@@ -846,13 +835,13 @@ export function SelectResearch({ data }: SelectResearchProps) {
         </button>
         <div className="select-research__filter-actions">
           <input
-            ref={importFileInputRef}
+            ref={importLabCsvFileInputRef}
             className="visually-hidden"
             type="file"
-            accept=".json,application/json"
+            accept=".csv,text/csv"
             aria-hidden
             tabIndex={-1}
-            onChange={handleImportFileChange}
+            onChange={handleImportLabCsvFileChange}
           />
           <button
             type="button"
@@ -954,7 +943,7 @@ export function SelectResearch({ data }: SelectResearchProps) {
                 className="glow-btn glow-btn--block"
                 onClick={() => {
                   setLabDataPanelOpen(false)
-                  queueMicrotask(() => importFileInputRef.current?.click())
+                  queueMicrotask(() => importLabCsvFileInputRef.current?.click())
                 }}
               >
                 {t('sr_lab_import_file')}

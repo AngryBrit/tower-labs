@@ -31,18 +31,18 @@ export const STRINGS_EN = {
 
   sr_lab_data_title: 'Lab backup & sharing',
   sr_lab_data_intro:
-    'Import a JSON backup, export your levels, or copy / QR a share link for this device.',
+    'Import or export lab levels as CSV, or copy / QR a share link for this device.',
   sr_lab_data_files: 'Files',
   sr_lab_data_share: 'Share link',
-  sr_lab_import_file: 'Import lab levels from file',
-  sr_lab_export_file: 'Export lab levels to file',
+  sr_lab_import_file: 'Import lab levels from CSV',
+  sr_lab_export_file: 'Export lab levels to CSV',
   sr_compare_launcher: 'Compare builds…',
   sr_compare_title: 'Compare two lab snapshots',
   sr_compare_intro:
-    'Paste a JSON export (with levelOverrides), a page URL that includes ?labs=…, or a raw share payload (starts with u or z). Coin totals match the simulator budget (Card Mastery omitted); each side uses its own Labs Coin Discount level.',
+    'Paste a CSV export from this app (header key,level), a page URL that includes ?labs=…, or a raw share payload (starts with u or z). Coin totals match the simulator budget (Card Mastery omitted); each side uses its own Labs Coin Discount level.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
-  sr_compare_placeholder: 'JSON, URL, or share payload…',
+  sr_compare_placeholder: 'CSV, URL, or share payload…',
   sr_compare_use_current: 'Insert current workspace',
   sr_compare_run: 'Compare',
   sr_compare_busy: 'Comparing…',
@@ -58,8 +58,10 @@ export const STRINGS_EN = {
   sr_compare_table_lv_b: 'Lv. B',
   sr_compare_table_delta: 'ΔLv.',
   sr_compare_parse_empty: 'That side is empty.',
-  sr_compare_parse_invalid_json: 'Could not parse as JSON or share text.',
-  sr_compare_parse_no_data: 'No levelOverrides or v1 share data (o) found.',
+  sr_compare_parse_invalid_csv:
+    'Invalid CSV: use the same key,level format as "Export lab levels to CSV".',
+  sr_compare_parse_invalid_payload:
+    'Could not parse as CSV or share text.',
   sr_compare_parse_share_fail: 'Could not decode the ?labs= / share payload.',
   sr_compare_diff_count_none:
     'No level differences — effective levels match for every lab.',
@@ -109,14 +111,13 @@ export const STRINGS_EN = {
   sr_notice_copy_full_fail:
     'Could not copy link (clipboard blocked or unavailable).',
   sr_notice_qr_fail: 'Could not create QR code.',
-  sr_notice_import_invalid_struct:
-    'Invalid file: expected JSON with a levelOverrides object.',
-  sr_notice_import_invalid_lo:
-    'Invalid file: levelOverrides must be a JSON object (not an array).',
   sr_notice_import_cleared: 'Imported file: all custom levels cleared.',
   sr_notice_import_one: 'Imported 1 lab level.',
   sr_notice_import_many: 'Imported {{count}} lab levels.',
-  sr_notice_import_read_fail: 'Could not read file. Use a valid JSON export.',
+  sr_notice_import_read_fail:
+    'Could not read file. Use a valid CSV export from this app.',
+  sr_notice_import_invalid_csv:
+    'Invalid CSV: use a header row key,level and one row per lab (e.g. 0-3,12).',
   sr_preset_prompt_title: 'Name this lab build (saved in this browser only)',
   sr_preset_name_label: 'Build name',
   sr_preset_dialog_save: 'Save build',
@@ -179,18 +180,18 @@ export const STRINGS_ES = {
 
   sr_lab_data_title: 'Copia de seguridad y compartir',
   sr_lab_data_intro:
-    'Importa un JSON, exporta tus niveles o copia / QR de un enlace para este dispositivo.',
+    'Importa o exporta niveles de lab en CSV, o copia / QR de un enlace para este dispositivo.',
   sr_lab_data_files: 'Archivos',
   sr_lab_data_share: 'Enlace para compartir',
-  sr_lab_import_file: 'Importar niveles desde archivo',
-  sr_lab_export_file: 'Exportar niveles a archivo',
+  sr_lab_import_file: 'Importar niveles desde CSV',
+  sr_lab_export_file: 'Exportar niveles a CSV',
   sr_compare_launcher: 'Comparar builds…',
   sr_compare_title: 'Comparar dos instantáneas de labs',
   sr_compare_intro:
-    'Pega una exportación JSON (con levelOverrides), una URL con ?labs=… o un payload de compartir en crudo (empieza por u o z). Las monedas coinciden con el presupuesto del simulador (sin Card Mastery); cada lado usa su propio nivel de Labs Coin Discount.',
+    'Pega un CSV de esta app (cabecera key,level), una URL con ?labs=… o un payload de compartir en crudo (empieza por u o z). Las monedas coinciden con el presupuesto del simulador (sin Card Mastery); cada lado usa su propio nivel de Labs Coin Discount.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
-  sr_compare_placeholder: 'JSON, URL o payload…',
+  sr_compare_placeholder: 'CSV, URL o payload…',
   sr_compare_use_current: 'Insertar espacio de trabajo actual',
   sr_compare_run: 'Comparar',
   sr_compare_busy: 'Comparando…',
@@ -206,8 +207,10 @@ export const STRINGS_ES = {
   sr_compare_table_lv_b: 'Nv. B',
   sr_compare_table_delta: 'ΔNv.',
   sr_compare_parse_empty: 'Ese lado está vacío.',
-  sr_compare_parse_invalid_json: 'No se pudo interpretar como JSON o texto de compartir.',
-  sr_compare_parse_no_data: 'No hay levelOverrides ni datos v1 (o).',
+  sr_compare_parse_invalid_csv:
+    'CSV no válido: usa el mismo formato key,level que «Exportar niveles a CSV».',
+  sr_compare_parse_invalid_payload:
+    'No se pudo interpretar como CSV o texto de compartir.',
   sr_compare_parse_share_fail: 'No se pudo decodificar ?labs= / el payload.',
   sr_compare_diff_count_none:
     'Sin diferencias de nivel: los niveles efectivos coinciden en todos los labs.',
@@ -258,15 +261,13 @@ export const STRINGS_ES = {
   sr_notice_copy_full_fail:
     'No se pudo copiar el enlace (portapapeles bloqueado o no disponible).',
   sr_notice_qr_fail: 'No se pudo crear el código QR.',
-  sr_notice_import_invalid_struct:
-    'Archivo no válido: se esperaba JSON con un objeto levelOverrides.',
-  sr_notice_import_invalid_lo:
-    'Archivo no válido: levelOverrides debe ser un objeto JSON (no un array).',
   sr_notice_import_cleared: 'Archivo importado: se borraron todos los niveles.',
   sr_notice_import_one: 'Se importó 1 nivel de lab.',
   sr_notice_import_many: 'Se importaron {{count}} niveles de lab.',
   sr_notice_import_read_fail:
-    'No se pudo leer el archivo. Usa una exportación JSON válida.',
+    'No se pudo leer el archivo. Usa una exportación CSV válida de esta app.',
+  sr_notice_import_invalid_csv:
+    'CSV no válido: usa la fila de cabecera key,level y una fila por lab (p. ej. 0-3,12).',
   sr_preset_prompt_title: 'Nombre del build (solo en este navegador)',
   sr_preset_name_label: 'Nombre del build',
   sr_preset_dialog_save: 'Guardar build',

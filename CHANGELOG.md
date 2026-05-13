@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-05-13
+
+### Added
+
+- **CSV lab backup**: import and export custom lab levels as CSV (`key,level` rows, UTF-8 BOM on export for Excel) from the lab backup dialog, with `labLevelOverridesCsv` helpers and Vitest coverage.
+
+### Changed
+
+- **Lab compare**: pasted payloads are **CSV** (same format as file export), a **page URL with `?labs=`**, or a raw **`u`/`z` share string** only; JSON lab exports are no longer accepted. **Insert current workspace** pastes CSV. Parser errors and EN/ES copy updated accordingly (`parseLabLevelsPayload`, `LabCompareDialog`, `dictionary`).
+
 ## [1.0.5] - 2026-05-13
 
 ### Added

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type { I18nFormatters, StringId } from '../i18n/dictionary'
 import { compareLabLevelOverrides, type LabCompareResult } from '../labCompare'
+import { serializeLabLevelOverridesCsv } from '../labLevelOverridesCsv'
 import { parseLabLevelsPayload, type ParseLabLevelsError } from '../parseLabLevelsPayload'
 import type { ResearchData } from '../types/research'
 import { getLevelBounds } from '../types/research'
@@ -11,14 +12,14 @@ function parseErrorMessage(t: TFn, err: ParseLabLevelsError): string {
   switch (err) {
     case 'empty':
       return t('sr_compare_parse_empty')
-    case 'invalid_json':
-      return t('sr_compare_parse_invalid_json')
-    case 'no_level_data':
-      return t('sr_compare_parse_no_data')
+    case 'invalid_csv':
+      return t('sr_compare_parse_invalid_csv')
     case 'share_decode_failed':
       return t('sr_compare_parse_share_fail')
+    case 'invalid_payload':
+      return t('sr_compare_parse_invalid_payload')
     default:
-      return t('sr_compare_parse_invalid_json')
+      return t('sr_compare_parse_invalid_payload')
   }
 }
 
@@ -60,16 +61,12 @@ export function LabCompareDialog({
 
   const fillCurrent = useCallback(
     (side: 'a' | 'b') => {
-      const json = JSON.stringify(
-        { v: 1 as const, levelOverrides: currentOverrides },
-        null,
-        2,
-      )
+      const csv = serializeLabLevelOverridesCsv(currentOverrides)
       if (side === 'a') {
-        setTextA(json)
+        setTextA(csv)
         setErrorA(null)
       } else {
-        setTextB(json)
+        setTextB(csv)
         setErrorB(null)
       }
       setResult(null)
@@ -89,12 +86,10 @@ export function LabCompareDialog({
       ])
       if (!pa.ok) {
         setErrorA(parseErrorMessage(t, pa.error))
-        setBusy(false)
         return
       }
       if (!pb.ok) {
         setErrorB(parseErrorMessage(t, pb.error))
-        setBusy(false)
         return
       }
       setResult(compareLabLevelOverrides(data, pa.overrides, pb.overrides))

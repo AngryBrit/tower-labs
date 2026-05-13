@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { encodeLabsShareQueryValue } from './labsShareCodec'
 import { compareLabLevelOverrides, formatSignedCoinDelta } from './labCompare'
+import { serializeLabLevelOverridesCsv } from './labLevelOverridesCsv'
 import {
   extractLabsShareEncodedFromText,
   parseLabLevelsPayload,
@@ -50,18 +51,6 @@ describe('extractLabsShareEncodedFromText', () => {
 describe('parseLabLevelsPayload', () => {
   const data = loadResearchDataSync()
 
-  it('parses JSON export', async () => {
-    const json = JSON.stringify({ v: 1, levelOverrides: { '0-0': 2 } })
-    const r = await parseLabLevelsPayload(json, data)
-    expect(r.ok && r.overrides['0-0']).toBe(2)
-  })
-
-  it('parses share envelope JSON', async () => {
-    const json = JSON.stringify({ v: 1, o: { '0-0': 1 } })
-    const r = await parseLabLevelsPayload(json, data)
-    expect(r.ok && r.overrides['0-0']).toBe(1)
-  })
-
   it('parses URL with labs param', async () => {
     const enc = await encodeLabsShareQueryValue({ '0-0': 4 })
     const url = `https://host.example/path/page?labs=${enc}`
@@ -79,6 +68,24 @@ describe('parseLabLevelsPayload', () => {
     }
   })
 
+  it('parses CSV export shape', async () => {
+    const csv = serializeLabLevelOverridesCsv({ '0-0': 2 })
+    const r = await parseLabLevelsPayload(csv, data)
+    expect(r.ok && r.overrides['0-0']).toBe(2)
+  })
+
+  it('accepts UTF-8 BOM on CSV', async () => {
+    const csv = `\uFEFF${serializeLabLevelOverridesCsv({ '0-0': 3 })}`
+    const r = await parseLabLevelsPayload(csv, data)
+    expect(r.ok && r.overrides['0-0']).toBe(3)
+  })
+
+  it('parses header-only CSV as empty overrides', async () => {
+    const r = await parseLabLevelsPayload('key,level\n', data)
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(Object.keys(r.overrides).length).toBe(0)
+  })
+
   it('rejects empty', async () => {
     expect(await parseLabLevelsPayload('   ', data)).toEqual({
       ok: false,
@@ -86,10 +93,24 @@ describe('parseLabLevelsPayload', () => {
     })
   })
 
-  it('rejects JSON without level data', async () => {
-    expect(await parseLabLevelsPayload('{"v":1}', data)).toEqual({
+  it('rejects invalid CSV rows when comma present', async () => {
+    expect(await parseLabLevelsPayload('key,level\nbad,1\n', data)).toEqual({
       ok: false,
-      error: 'no_level_data',
+      error: 'invalid_csv',
+    })
+  })
+
+  it('rejects JSON-style text as invalid_csv when commas present', async () => {
+    expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
+      ok: false,
+      error: 'invalid_csv',
+    })
+  })
+
+  it('rejects non-CSV text without comma as invalid_payload', async () => {
+    expect(await parseLabLevelsPayload('hello', data)).toEqual({
+      ok: false,
+      error: 'invalid_payload',
     })
   })
 })
