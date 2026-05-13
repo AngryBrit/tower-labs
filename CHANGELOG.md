@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-05-13
+
+### Added
+
+- **`Bot Bot - Cooldown`** marginal ladder in `tower-labs.json` (25 levels); bots card milestone **T6 90**; toolkit alias **`Bot Bot Cooldown`** → hyphenated key.
+
+### Changed
+
+- **`Super Crit Multi`**: canonical `tower-labs.json` lab key renamed from **Super Crit Mult**; legacy **`Super Crit Mult`** name still resolves via toolkit alias.
+- **Research / labs**: expanded benefit tests and JSDoc; minor updates to research JSON exports, lab aggregates, Spanish benefit strings, and Vite config.
+
 ## [1.0.4] - 2026-05-13
 
 ### Added
