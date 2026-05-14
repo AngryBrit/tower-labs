@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-05-14
+
+### Added
+
+- **Workshop**: dedicated workshop experience with per-stat upgrade tables (damage, defense, attack speed/range, crit and super-crit, multishot, bounce shot, rapid fire, rend armor, utility, etc.), Vitest coverage on key curves, and resource glyphs (coin, power stone).
+- **Workshop tooling**: `towerUnifiedCsv` for unified tower CSV handling; `workshopCompare` and `workshopBudgetAggregates` for comparisons and rollups; integration with the main app navigation and styling.
+
+### Changed
+
+- **Labs & research**: extensions to lab level CSV helpers, share codec, parse payload behaviour, presets storage, research types/cards, lab compare dialog, and i18n strings to align with the larger workshop surface.
+
 ## [1.0.7] - 2026-05-14
 
 ### Changed
