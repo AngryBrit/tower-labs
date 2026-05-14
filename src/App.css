@@ -838,13 +838,19 @@
 
 .research-section__bulk-toggle {
   margin: 0;
-  padding: 0.35rem 0.45rem;
+  /* Keep vertical footprint near section title line-height so the first head row
+     does not add extra gap before the next section (glow-btn default padding is tall). */
+  padding: 0.1rem 0.4rem;
   font-size: 0.68rem;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
 .research-section__bulk-toggle input {
   flex-shrink: 0;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: 0;
 }
 
 .research-section__headTitle {

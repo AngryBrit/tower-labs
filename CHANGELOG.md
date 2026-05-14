@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-05-14
+
+### Changed
+
+- **Research sections**: tighter vertical footprint for the expand/collapse-all control (padding, line-height, smaller checkbox) so the first head row does not add extra gap before the next section.
+
 ## [1.0.6] - 2026-05-13
 
 ### Added
