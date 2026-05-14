@@ -3,6 +3,7 @@
  * Stat **0…70**: log-linear between published milestone **Value** rows; **71…200**: **+0.0002** per level
  * from the L=70 anchor (**0.033**).
  * **Cost**: milestone marginals from the wiki; log-linear between milestones (same pattern as Critical Factor).
+ * Workshop UI shows **`x1 / m`** … **`x1.059 / m`** (baseline **×1** per meter plus the wiki bonus as **1 + Value**).
  */
 
 export const WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL = 200 as const
@@ -70,12 +71,16 @@ export function workshopDamagePerMeterStatMultiplier(completedLevels: number): n
   return Math.round(logLerp(v0, v1, t) * 1_000_000) / 1_000_000
 }
 
-/** Wiki-style `x0.00079` … `x0.059` (lowercase **x**). */
+/**
+ * Workshop card: effective multiplier on damage **per meter** vs baseline (**×1** at Lv.0),
+ * wiki-style **`x1.00079 / m`** … **`x1.059 / m`** (raw bonus `v` is `×(1+v)` here).
+ */
 export function workshopDamagePerMeterStatDisplay(completedLevels: number): string {
   const v = workshopDamagePerMeterStatMultiplier(completedLevels)
-  if (v === 0) return 'x0'
-  const s = v.toFixed(6).replace(/0+$/, '').replace(/\.$/, '')
-  return `x${s}`
+  if (v === 0) return 'x1 / m'
+  const n = 1 + v
+  const s = n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '')
+  return `x${s} / m`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

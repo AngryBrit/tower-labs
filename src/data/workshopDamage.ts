@@ -72,8 +72,14 @@ export function workshopDamageStatAtLevel(completedLevels: number): number {
 }
 
 /** Abbreviated damage number (same style as coin abbreviations in this app). */
-export function workshopDamageStatDisplay(completedLevels: number): string {
-  const v = workshopDamageStatAtLevel(completedLevels)
+export function workshopDamageStatDisplay(
+  completedLevels: number,
+  labMultiplier?: number,
+): string {
+  let v = workshopDamageStatAtLevel(completedLevels)
+  if (labMultiplier !== undefined && Number.isFinite(labMultiplier) && labMultiplier > 0) {
+    v *= labMultiplier
+  }
   return formatCoinAbbrev(v)
 }
 

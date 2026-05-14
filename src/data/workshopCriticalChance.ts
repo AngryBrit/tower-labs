@@ -1,7 +1,8 @@
 /**
  * Workshop **Critical Chance**: **79** upgrades; workshop-only chance **1% → 80%** (+1% per purchase).
  *
- * **Value** in the wiki is the chance as a fraction of 1 (`0.02` … `0.80`). **Cost** is the marginal
+ * **Value** in the wiki is the chance as a fraction of 1 (`0.01` … `0.80`); the workshop card shows the
+ * same value as **`1%` … `80%`**. **Cost** is the marginal
  * coin price for that row (79 entries). **Total Cost** in the wiki is abbreviated (e.g. `1.41M`);
  * sums here use exact marginal integers.
  */
@@ -23,10 +24,9 @@ export function workshopCriticalChancePercent(completedLevels: number): number {
   return 1 + L
 }
 
-/** Two-decimal fraction like the wiki **Value** column (`0.01` … `0.80`). */
+/** Same as wiki **Value**, shown with a **`%`** suffix (`1%` … `80%`). */
 export function workshopCriticalChanceStatDisplay(completedLevels: number): string {
-  const L = Math.min(Math.max(0, completedLevels), WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL)
-  return ((1 + L) / 100).toFixed(2)
+  return `${workshopCriticalChancePercent(completedLevels)}%`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

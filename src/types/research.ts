@@ -299,6 +299,20 @@ export function battleConditionReductionValueDisplay(
 }
 
 /**
+ * Numeric **Damage-style** lab multiplier: **1 + 0.02 × capped level** (Attack **Damage** max **100**→**3.00**).
+ */
+export function damageStyleLabMultiplier(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return 1 + 0.02 * capped
+}
+
+/**
  * Damage-style labs (+0.02/level multiplier): **Damage** (max **100**→x3.00), **Attack Speed** (max **99**→x2.98),
  * **Range** (max **80**→x2.60; wiki **Tier 2 wave 30**), **Damage / Meter** (max **99**→x2.98; wiki **Tier 3 wave 30**),
  * **Super Crit Multi**, **Cash Bonus**, **Cash / Wave**, **Coins / Kill Bonus**, **Coins / Wave**,
@@ -308,12 +322,23 @@ export function damageValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
+  const mult = damageStyleLabMultiplier(effectiveLevel, maxLevelCap)
+  return `x${mult.toFixed(2)}`
+}
+
+/**
+ * Numeric **Health-style** lab multiplier: **1 + 0.03 × capped level** (Defense **Health** /
+ * **Health Regen** max **100**→**4.00**; **Critical Factor** max **99**→**3.97**).
+ */
+export function healthStyleLabMultiplier(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
   const capped =
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const mult = 1 + 0.02 * capped
-  return `x${mult.toFixed(2)}`
+  return 1 + 0.03 * capped
 }
 
 /**
@@ -325,11 +350,7 @@ export function criticalFactorValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
-  const capped =
-    maxLevelCap > 0
-      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
-      : Math.max(0, effectiveLevel)
-  const mult = 1 + 0.03 * capped
+  const mult = healthStyleLabMultiplier(effectiveLevel, maxLevelCap)
   return `x${mult.toFixed(2)}`
 }
 
@@ -540,6 +561,18 @@ export function innerLandMineChronoJumpChargeSecondsDisplay(
   return `${sec}s`
 }
 
+/** Defense % lab bonus in **whole percent points** (Lv.1→**0.2** … same as calculator **Value**). */
+export function defensePercentLabPercentPoints(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return 0.2 * capped
+}
+
 /**
  * Defense % — Tower Lab Calculator **Value** with Include **%**: **+0.20% × lab level**.
  */
@@ -547,11 +580,7 @@ export function defensePercentValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
-  const capped =
-    maxLevelCap > 0
-      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
-      : Math.max(0, effectiveLevel)
-  const pct = 0.2 * capped
+  const pct = defensePercentLabPercentPoints(effectiveLevel, maxLevelCap)
   return `+${pct.toFixed(2)}%`
 }
 
@@ -815,6 +844,18 @@ export function wallFortificationPercentValueDisplay(
   return `+${pct.toFixed(2)}%`
 }
 
+/** Garlic Thorns lab bonus in **whole percent points** (Lv.1→**0.5** … max Lv.10→**5.0**). */
+export function garlicThornsLabPercentPoints(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return 0.5 * capped
+}
+
 /**
  * Garlic Thorns — calculator **Value** with Include **%**: **+0.5% × lab level**, **one** decimal (Lv.1→+0.5% … Lv.10→+5.0%).
  */
@@ -822,11 +863,7 @@ export function garlicThornsPercentValueDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
-  const capped =
-    maxLevelCap > 0
-      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
-      : Math.max(0, effectiveLevel)
-  const pct = 0.5 * capped
+  const pct = garlicThornsLabPercentPoints(effectiveLevel, maxLevelCap)
   return `+${pct.toFixed(1)}%`
 }
 
@@ -2093,6 +2130,95 @@ export function resolveLabsCoinDiscountPercent(
     }
   }
   return 0
+}
+
+/**
+ * Simulated Defense **Health** or **Health Regen** lab as a multiplier for workshop **Value**
+ * (same curve as the lab card). Returns **1** when the row is missing from `data`.
+ */
+export function defenseResearchHealthStyleMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: 'Health' | 'Health Regen',
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    if (data.sections[si].sectionSlug !== 'defense-research') continue
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== labName) continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return healthStyleLabMultiplier(eff, max)
+    }
+  }
+  return 1
+}
+
+/**
+ * Simulated **Garlic Thorns** lab as additive **%** bonus (same curve as the lab card), for workshop **Thorn Damage** display.
+ * Returns **0** when the row is missing from `data`.
+ */
+export function defenseResearchGarlicThornsLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    if (data.sections[si].sectionSlug !== 'defense-research') continue
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== 'Garlic Thorns') continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return garlicThornsLabPercentPoints(eff, max)
+    }
+  }
+  return 0
+}
+
+/**
+ * Simulated **Defense %** lab as additive **%** (percent points) for workshop **Defense %** display.
+ * Returns **0** when the row is missing from `data`.
+ */
+export function defenseResearchDefensePercentLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    if (data.sections[si].sectionSlug !== 'defense-research') continue
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== 'Defense %') continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return defensePercentLabPercentPoints(eff, max)
+    }
+  }
+  return 0
+}
+
+/**
+ * Simulated Attack **Damage** lab as a multiplier for workshop **Damage** display (same curve as the lab card).
+ * Returns **1** when the row is missing from `data`.
+ */
+export function attackResearchDamageLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    if (data.sections[si].sectionSlug !== 'attack-research') continue
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== 'Damage') continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return damageStyleLabMultiplier(eff, max)
+    }
+  }
+  return 1
 }
 
 export interface ResearchSection {

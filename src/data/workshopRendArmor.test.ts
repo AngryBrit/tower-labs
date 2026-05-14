@@ -38,8 +38,9 @@ describe('workshopRendArmor', () => {
     expect(workshopRendArmorChanceStatDisplay(299)).toBe('30.00%')
     expect(workshopRendArmorChancePercent(299)).toBe(30)
 
-    expect(workshopRendArmorMultStatDisplay(0)).toBe('0.0010X')
-    expect(workshopRendArmorMultStatDisplay(299)).toBe('0.3000X')
+    expect(workshopRendArmorMultStatDisplay(0)).toBe('0.001X')
+    expect(workshopRendArmorMultStatDisplay(110)).toBe('0.111X')
+    expect(workshopRendArmorMultStatDisplay(299)).toBe('0.3X')
     expect(workshopRendArmorMultValue(299)).toBe(0.3)
   })
 })

@@ -153,9 +153,11 @@ export function workshopRendArmorMultValue(completedLevels: number): number {
   return Math.round((0.001 + 0.001 * L) * 1_000_000) / 1_000_000
 }
 
-/** Display like wiki (`0.0010X` … `0.3000X`). */
+/** Display like wiki (`0.001X` … `0.3X`); trims redundant trailing **0** after four decimal places. */
 export function workshopRendArmorMultStatDisplay(completedLevels: number): string {
-  return `${workshopRendArmorMultValue(completedLevels).toFixed(4)}X`
+  const v = workshopRendArmorMultValue(completedLevels)
+  const s = v.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')
+  return `${s}X`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

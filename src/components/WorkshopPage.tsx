@@ -90,6 +90,7 @@ import {
   workshopDefenseMaxLevel,
   workshopDefenseNextMarginalCoins,
   workshopDefenseStatDisplay,
+  type WorkshopDefenseStatDisplayOpts,
   type WorkshopDefenseUpgradeKey,
 } from '../data/workshopDefense'
 import {
@@ -108,6 +109,13 @@ import {
 } from '../workshopBudgetAggregates'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
+import {
+  attackResearchDamageLabMultiplier,
+  defenseResearchDefensePercentLabPercentPoints,
+  defenseResearchGarlicThornsLabPercentPoints,
+  defenseResearchHealthStyleMultiplier,
+  type ResearchData,
+} from '../types/research'
 
 type WorkshopCategory = 'attack' | 'defense' | 'utility' | 'ultimate'
 
@@ -388,6 +396,7 @@ function WorkshopDamageCard({
   onBump,
   onCommitDraft,
   bulkStep,
+  damageLabMultiplier,
 }: {
   level: number
   draft: string
@@ -396,11 +405,13 @@ function WorkshopDamageCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
+  /** Simulated Attack **Damage** lab; when set, workshop **Value** is multiplied (coin cost unchanged). */
+  damageLabMultiplier?: number
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_DAMAGE_MAX_LEVEL
   const nextCoins = workshopDamageNextMarginalCoins(level)
-  const statLabel = workshopDamageStatDisplay(level)
+  const statLabel = workshopDamageStatDisplay(level, damageLabMultiplier)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -1958,6 +1969,7 @@ function WorkshopDefenseUpgradeCard({
   onBump,
   onCommitDraft,
   bulkStep,
+  statDisplayOpts,
 }: {
   fieldKey: WorkshopDefenseUpgradeKey
   titleId: StringId
@@ -1967,12 +1979,13 @@ function WorkshopDefenseUpgradeCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
+  statDisplayOpts?: WorkshopDefenseStatDisplayOpts
 }) {
   const { t } = useI18n()
   const max = workshopDefenseMaxLevel(fieldKey)
   const maxed = level >= max
   const nextCoins = workshopDefenseNextMarginalCoins(fieldKey, level)
-  const statLabel = workshopDefenseStatDisplay(fieldKey, level)
+  const statLabel = workshopDefenseStatDisplay(fieldKey, level, statDisplayOpts)
   const stepHint = `×${bulkStep}`
   const statName = t(titleId)
 
@@ -2147,6 +2160,9 @@ type WorkshopPageProps = {
   toolbarMount?: HTMLElement | null
   workshopPersisted: WorkshopPersistedV1
   onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
+  /** When set with {@link labLevelOverrides}, defense **Health** / **Health Regen** workshop values include simulated lab multipliers. */
+  researchData?: ResearchData | null
+  labLevelOverrides?: Record<string, number>
 }
 
 export function WorkshopPage({
@@ -2154,6 +2170,8 @@ export function WorkshopPage({
   toolbarMount = null,
   workshopPersisted,
   onWorkshopPersistedChange,
+  researchData = null,
+  labLevelOverrides = {},
 }: WorkshopPageProps) {
   const { t, fmt } = useI18n()
   const headingId = useId()
@@ -2181,6 +2199,35 @@ export function WorkshopPage({
     rendArmorChanceLevel,
     rendArmorMultLevel,
   } = workshopPersisted
+
+  const defenseStatLabDisplayOpts = useMemo((): WorkshopDefenseStatDisplayOpts | undefined => {
+    if (researchData == null) return undefined
+    return {
+      healthLabMultiplier: defenseResearchHealthStyleMultiplier(
+        researchData,
+        labLevelOverrides,
+        'Health',
+      ),
+      healthRegenLabMultiplier: defenseResearchHealthStyleMultiplier(
+        researchData,
+        labLevelOverrides,
+        'Health Regen',
+      ),
+      thornDamageLabPercentPoints: defenseResearchGarlicThornsLabPercentPoints(
+        researchData,
+        labLevelOverrides,
+      ),
+      defensePercentLabPercentPoints: defenseResearchDefensePercentLabPercentPoints(
+        researchData,
+        labLevelOverrides,
+      ),
+    }
+  }, [researchData, labLevelOverrides])
+
+  const damageLabMultiplier = useMemo(() => {
+    if (researchData == null) return undefined
+    return attackResearchDamageLabMultiplier(researchData, labLevelOverrides)
+  }, [researchData, labLevelOverrides])
 
   const [multiplierOpen, setMultiplierOpen] = useState(false)
   const [damageDraft, setDamageDraft] = useState('0')
@@ -3041,6 +3088,7 @@ export function WorkshopPage({
                 bulkStep={multiplier}
                 onBump={bumpDamage}
                 onCommitDraft={commitDamageDraft}
+                damageLabMultiplier={damageLabMultiplier}
               />
             ) : null}
             {showAttackSpeedCard ? (
@@ -3219,6 +3267,7 @@ export function WorkshopPage({
                       bulkStep={multiplier}
                       onBump={(dir) => bumpDefense(key, dir)}
                       onCommitDraft={() => commitDefenseDraft(key)}
+                      statDisplayOpts={defenseStatLabDisplayOpts}
                     />
                   )
                 })

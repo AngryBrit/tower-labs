@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { APP_VERSION, CHANGELOG_URL } from './appVersion'
 import type { SelectResearchHandle } from './components/SelectResearch'
 import { SelectResearch } from './components/SelectResearch'
@@ -35,6 +35,11 @@ export default function App() {
   const [scratchWorkshopPersisted, setScratchWorkshopPersisted] = useState<WorkshopPersistedV1>(
     () => defaultWorkshopPersisted(),
   )
+  const [labLevelOverrides, setLabLevelOverrides] = useState<Record<string, number>>({})
+
+  const handleLabLevelOverridesChange = useCallback((overrides: Record<string, number>) => {
+    setLabLevelOverrides(overrides)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -179,6 +184,7 @@ export default function App() {
                     scratchWorkshopPersisted={scratchWorkshopPersisted}
                     setWorkshopPersisted={setWorkshopPersisted}
                     setScratchWorkshopPersisted={setScratchWorkshopPersisted}
+                    onLabLevelOverridesChange={handleLabLevelOverridesChange}
                   />
                 </div>
                 <div
@@ -196,6 +202,8 @@ export default function App() {
                     }
                     workshopPersisted={workshopPersisted}
                     onWorkshopPersistedChange={setWorkshopPersisted}
+                    researchData={data}
+                    labLevelOverrides={labLevelOverrides}
                   />
                 </div>
                 <div

@@ -66,6 +66,8 @@ interface SelectResearchProps {
   scratchWorkshopPersisted: WorkshopPersistedV1
   setWorkshopPersisted: (next: WorkshopPersistedV1) => void
   setScratchWorkshopPersisted: (next: WorkshopPersistedV1) => void
+  /** Current simulated lab level map (for sibling UI such as Workshop defense HP). */
+  onLabLevelOverridesChange?: (overrides: Record<string, number>) => void
 }
 
 /** Legacy single-map storage; read once to migrate when `LAB_PRESETS_STORAGE_KEY` is absent. */
@@ -134,6 +136,7 @@ export const SelectResearch = forwardRef<
     scratchWorkshopPersisted,
     setWorkshopPersisted,
     setScratchWorkshopPersisted,
+    onLabLevelOverridesChange,
   },
   ref,
 ) {
@@ -434,6 +437,10 @@ export const SelectResearch = forwardRef<
       cancelled = true
     }
   }, [data, fmt])
+
+  useEffect(() => {
+    onLabLevelOverridesChange?.(levelOverrides)
+  }, [levelOverrides, onLabLevelOverridesChange])
 
   useEffect(() => {
     if (!hydrated) return

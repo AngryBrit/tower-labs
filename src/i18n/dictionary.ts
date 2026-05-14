@@ -42,7 +42,7 @@ export const STRINGS_EN = {
   ws_reset_demo: 'Reset Workshop',
   ws_reset_confirm_title: 'Reset all workshop levels?',
   ws_reset_confirm_body:
-    'This restores default workshop levels stored in this browser. The lab and other tools are not affected. Note your workshop setup first if you want to keep it.',
+    'This restores default workshop levels stored in this browser. The lab and other tools are not affected. Export or copy a share link first if you want to keep these levels.',
   ws_damage_level_down_aria: 'Decrease workshop damage level',
   ws_damage_level_up_aria: 'Increase workshop damage level',
   ws_damage_level_input_aria: 'Workshop damage level (type a number, Enter or blur to apply)',
@@ -366,7 +366,7 @@ export const STRINGS_ES = {
   ws_reset_demo: 'Restablecer taller',
   ws_reset_confirm_title: '¿Restablecer todos los niveles del taller?',
   ws_reset_confirm_body:
-    'Esto restablece los niveles del taller guardados en este navegador. El laboratorio y las demás herramientas no cambian. Anota la configuración del taller antes si quieres conservarla.',
+    'Esto restablece los niveles predeterminados del taller guardados en este navegador. El laboratorio y las demás herramientas no se ven afectados. Exporta o copia un enlace para compartir antes si quieres conservar estos niveles.',
   ws_damage_level_down_aria: 'Bajar el nivel de daño del taller',
   ws_damage_level_up_aria: 'Subir el nivel de daño del taller',
   ws_damage_level_input_aria:
