@@ -1,11 +1,16 @@
 import {
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
+import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { LabPresetsRow } from './LabPresetsRow'
 import { APP_VERSION, CHANGELOG_URL } from '../appVersion'
 import { buildLabDomIdTables, getLabSlugFromUrl } from '../labSlug'
 import {
@@ -42,8 +47,17 @@ import { useI18n, type AppLocale } from '../i18n'
 /** Survives React Strict Mode remount so initial `?lab=` / `#` runs once per full load. */
 let initialLabUrlNavigationConsumed = false
 
+export type SelectResearchHandle = {
+  openLabDataPanel: () => void
+  openCompareDialog: () => void
+}
+
 interface SelectResearchProps {
   data: ResearchData
+  /** When true, omit outer panel chrome and site footer (parent provides shell + footer). */
+  embeddedInPanel?: boolean
+  /** In-panel: render BUILD row into this node so it stays visible on Workshop tab. */
+  embeddedPresetsMount?: HTMLElement | null
 }
 
 /** Legacy single-map storage; read once to migrate when `LAB_PRESETS_STORAGE_KEY` is absent. */
@@ -51,6 +65,41 @@ const LEVEL_OVERRIDES_STORAGE_KEY = 'tower-export-level-overrides-v1'
 const LAB_PRESETS_STORAGE_KEY = 'tower-export-lab-presets-v1'
 const SECTION_COLLAPSED_STORAGE_KEY = 'tower-export-section-collapsed-v1'
 const BULK_SECTIONS_TOGGLE_ID = 'tower-bulk-sections-collapsed-toggle'
+
+function labOverlayPortal(node: ReactNode) {
+  return createPortal(node, document.body)
+}
+
+function LabToolbarQuick({
+  hideCompleted,
+  setHideCompleted,
+  onResetLevels,
+}: {
+  hideCompleted: boolean
+  setHideCompleted: (v: boolean) => void
+  onResetLevels: () => void
+}) {
+  const { t } = useI18n()
+  return (
+    <div className="select-research__toolbar-quick">
+      <label className="glow-btn glow-btn--toggle">
+        <input
+          type="checkbox"
+          checked={hideCompleted}
+          onChange={(e) => setHideCompleted(e.target.checked)}
+        />
+        {t('sr_hide_completed')}
+      </label>
+      <button
+        type="button"
+        className="glow-btn glow-btn--danger glow-btn--block"
+        onClick={onResetLevels}
+      >
+        {t('sr_reset_lab_levels')}
+      </button>
+    </div>
+  )
+}
 
 function sanitizeSectionCollapsed(
   sectionCount: number,
@@ -65,7 +114,17 @@ function sanitizeSectionCollapsed(
   return out
 }
 
-export function SelectResearch({ data }: SelectResearchProps) {
+export const SelectResearch = forwardRef<
+  SelectResearchHandle,
+  SelectResearchProps
+>(function SelectResearch(
+  {
+    data,
+    embeddedInPanel = false,
+    embeddedPresetsMount = null,
+  },
+  ref,
+) {
   const { t, fmt, locale, setLocale } = useI18n()
   const [search, setSearch] = useState('')
   const [hideCompleted, setHideCompleted] = useState(false)
@@ -714,46 +773,86 @@ export function SelectResearch({ data }: SelectResearchProps) {
     setImportNotice(t('sr_notice_preset_deleted'))
   }, [fmt, presets, t])
 
+  const openResetLevelsConfirm = useCallback(() => {
+    setShareQr(null)
+    setLabDataPanelOpen(false)
+    setLabCompareOpen(false)
+    setResetLevelsConfirmOpen(true)
+  }, [])
+
   const searchFieldId = 'select-research-search'
   const searchSlashHintId = 'select-research-search-slash-hint'
 
+  const presetsBarInline =
+    !embeddedInPanel || embeddedPresetsMount === null
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openLabDataPanel: () => {
+        if (!hydrated) return
+        setShareQr(null)
+        setLabCompareOpen(false)
+        setLabDataPanelOpen(true)
+      },
+      openCompareDialog: () => {
+        if (!hydrated) return
+        setShareQr(null)
+        setLabDataPanelOpen(false)
+        setLabCompareOpen(true)
+      },
+    }),
+    [hydrated],
+  )
+
+  const PanelRoot = embeddedInPanel ? 'div' : 'section'
+  const panelRootClass = embeddedInPanel
+    ? 'select-research-embed'
+    : 'select-research'
+
   return (
-    <section
-      className="select-research"
-      aria-labelledby="select-research-title"
+    <PanelRoot
+      className={panelRootClass}
+      aria-label={t('sr_title')}
     >
-      <header className="select-research__header">
-        <div className="select-research__brand">
-          <img
-            className="select-research__logo"
-            src="/tower-site-logo.webp"
-            alt="The Tower"
-            width={500}
-            height={439}
-            decoding="async"
-          />
-          <h1 className="select-research__title" id="select-research-title">
-            {t('sr_title')}
-          </h1>
-        </div>
-        <div className="select-research__header-locale">
-          <label htmlFor="locale-select-field" className="visually-hidden">
-            {t('sr_locale_aria')}
-          </label>
-          <select
-            id="locale-select-field"
-            className="select-research__header-locale-select"
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as AppLocale)}
-            aria-label={t('sr_locale_aria')}
-          >
-            <option value="en">{t('sr_locale_option_en')}</option>
-            <option value="es">{t('sr_locale_option_es')}</option>
-          </select>
-        </div>
-      </header>
+      {!embeddedInPanel ? (
+        <header className="select-research__header">
+          <div className="select-research__header-locale">
+            <label htmlFor="locale-select-field" className="visually-hidden">
+              {t('sr_locale_aria')}
+            </label>
+            <select
+              id="locale-select-field"
+              className="select-research__header-locale-select"
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as AppLocale)}
+              aria-label={t('sr_locale_aria')}
+            >
+              <option value="en">{t('sr_locale_option_en')}</option>
+              <option value="es">{t('sr_locale_option_es')}</option>
+            </select>
+          </div>
+        </header>
+      ) : null}
 
       <nav className="select-research__toolbar" aria-label={t('sr_toolbar_aria')}>
+        {presetsBarInline ? (
+          <LabPresetsRow
+            hydrated={hydrated}
+            presets={presets}
+            activePresetId={activePresetId}
+            onPresetSelect={handlePresetSelect}
+            onSaveAs={openPresetSaveDialog}
+            onDeleteBuild={handleDeleteActivePreset}
+          />
+        ) : null}
+
+        <LabToolbarQuick
+          hideCompleted={hideCompleted}
+          setHideCompleted={setHideCompleted}
+          onResetLevels={openResetLevelsConfirm}
+        />
+
         <label className="visually-hidden" htmlFor={searchFieldId}>
           {t('sr_search_label_hidden')}
         </label>
@@ -772,68 +871,13 @@ export function SelectResearch({ data }: SelectResearchProps) {
           {t('sr_search_slash_hint')}
         </p>
 
-        <div className="select-research__filters">
-          <div className="select-research__presets-row">
-            <label
-              className="select-research__presets-label"
-              htmlFor="preset-select-field"
-            >
-              {t('sr_presets_build_label')}
-            </label>
-            <select
-              id="preset-select-field"
-              className="select-research__presets-select glow-input"
-              value={activePresetId ?? ''}
-              onChange={handlePresetSelect}
-              disabled={!hydrated}
-              aria-label={t('sr_preset_select_aria')}
-            >
-              <option value="">{t('sr_preset_scratch_option')}</option>
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="glow-btn glow-btn--block select-research__presets-btn"
-              disabled={!hydrated}
-              onClick={openPresetSaveDialog}
-            >
-              {t('sr_preset_save_as')}
-            </button>
-            <button
-              type="button"
-              className="glow-btn glow-btn--danger glow-btn--block select-research__presets-btn"
-              disabled={!hydrated || !activePresetId}
-              onClick={handleDeleteActivePreset}
-              aria-label={t('sr_preset_delete_aria')}
-            >
-              {t('sr_preset_delete_build')}
-            </button>
-          </div>
-        <label className="glow-btn glow-btn--toggle">
-          <input
-            type="checkbox"
-            checked={hideCompleted}
-            onChange={(e) => setHideCompleted(e.target.checked)}
-          />
-          {t('sr_hide_completed')}
-        </label>
-        <button
-          type="button"
-          className="glow-btn glow-btn--danger glow-btn--block"
-          onClick={() => {
-            setShareQr(null)
-            setLabDataPanelOpen(false)
-            setLabCompareOpen(false)
-            setResetLevelsConfirmOpen(true)
-          }}
+        <div
+          className={
+            embeddedInPanel
+              ? 'select-research__filters select-research__filters--embedded'
+              : 'select-research__filters'
+          }
         >
-          {t('sr_reset_lab_levels')}
-        </button>
-        <div className="select-research__filter-actions">
           <input
             ref={importLabCsvFileInputRef}
             className="visually-hidden"
@@ -843,37 +887,40 @@ export function SelectResearch({ data }: SelectResearchProps) {
             tabIndex={-1}
             onChange={handleImportLabCsvFileChange}
           />
-          <button
-            type="button"
-            className="glow-btn glow-btn--block select-research__filter-actions-launcher"
-            onClick={() => {
-              setShareQr(null)
-              setLabCompareOpen(false)
-              setLabDataPanelOpen(true)
-            }}
-            disabled={!hydrated}
-            aria-haspopup="dialog"
-            aria-expanded={labDataPanelOpen}
-            aria-controls="lab-data-panel"
-          >
-            {t('sr_import_export_launcher')}
-          </button>
-          <button
-            type="button"
-            className="glow-btn glow-btn--block select-research__filter-actions-launcher"
-            onClick={() => {
-              setShareQr(null)
-              setLabDataPanelOpen(false)
-              setLabCompareOpen(true)
-            }}
-            disabled={!hydrated}
-            aria-haspopup="dialog"
-            aria-expanded={labCompareOpen}
-            aria-controls="lab-compare-dialog"
-          >
-            {t('sr_compare_launcher')}
-          </button>
-        </div>
+          {!embeddedInPanel ? (
+            <div className="select-research__filter-actions">
+              <button
+                type="button"
+                className="glow-btn glow-btn--block select-research__filter-actions-launcher"
+                onClick={() => {
+                  setShareQr(null)
+                  setLabCompareOpen(false)
+                  setLabDataPanelOpen(true)
+                }}
+                disabled={!hydrated}
+                aria-haspopup="dialog"
+                aria-expanded={labDataPanelOpen}
+                aria-controls="lab-data-panel"
+              >
+                {t('sr_import_export_launcher')}
+              </button>
+              <button
+                type="button"
+                className="glow-btn glow-btn--block select-research__filter-actions-launcher"
+                onClick={() => {
+                  setShareQr(null)
+                  setLabDataPanelOpen(false)
+                  setLabCompareOpen(true)
+                }}
+                disabled={!hydrated}
+                aria-haspopup="dialog"
+                aria-expanded={labCompareOpen}
+                aria-controls="lab-compare-dialog"
+              >
+                {t('sr_compare_launcher')}
+              </button>
+            </div>
+          ) : null}
         {importNotice ? (
           <p className="select-research__import-notice" role="status">
             {importNotice}
@@ -881,6 +928,20 @@ export function SelectResearch({ data }: SelectResearchProps) {
         ) : null}
       </div>
       </nav>
+
+      {embeddedInPanel && embeddedPresetsMount
+        ? createPortal(
+            <LabPresetsRow
+              hydrated={hydrated}
+              presets={presets}
+              activePresetId={activePresetId}
+              onPresetSelect={handlePresetSelect}
+              onSaveAs={openPresetSaveDialog}
+              onDeleteBuild={handleDeleteActivePreset}
+            />,
+            embeddedPresetsMount,
+          )
+        : null}
 
       <div
         className="select-research__budget"
@@ -916,160 +977,166 @@ export function SelectResearch({ data }: SelectResearchProps) {
         </p>
       </div>
 
-      {labDataPanelOpen ? (
-        <div
-          className="select-research__lab-data-backdrop"
-          role="presentation"
-          onClick={() => setLabDataPanelOpen(false)}
-        >
-          <div
-            id="lab-data-panel"
-            className="select-research__lab-data-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="lab-data-panel-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="lab-data-panel-title" className="select-research__lab-data-title">
-              {t('sr_lab_data_title')}
-            </h2>
-            <p className="select-research__lab-data-intro">
-              {t('sr_lab_data_intro')}
-            </p>
-            <p className="select-research__lab-data-section-label">{t('sr_lab_data_files')}</p>
-            <div className="select-research__lab-data-actions">
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={() => {
-                  setLabDataPanelOpen(false)
-                  queueMicrotask(() => importLabCsvFileInputRef.current?.click())
-                }}
-              >
-                {t('sr_lab_import_file')}
-              </button>
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={() => {
-                  handleExportLevels()
-                  setLabDataPanelOpen(false)
-                }}
-              >
-                {t('sr_lab_export_file')}
-              </button>
-            </div>
-            <p className="select-research__lab-data-section-label">{t('sr_lab_data_share')}</p>
-            <div className="select-research__lab-data-actions">
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={async () => {
-                  await handleCopyCleanShareLink()
-                  setLabDataPanelOpen(false)
-                }}
-              >
-                {t('sr_copy_short_link')}
-              </button>
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={async () => {
-                  await handleCopyFullShareLink()
-                  setLabDataPanelOpen(false)
-                }}
-              >
-                {t('sr_copy_full_url')}
-              </button>
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={() => {
-                  setLabDataPanelOpen(false)
-                  void handleShowShareQr()
-                }}
-              >
-                {t('sr_qr_share')}
-              </button>
-            </div>
-            <button
-              type="button"
-              className="glow-btn glow-btn--block select-research__lab-data-close"
+      {labDataPanelOpen
+        ? labOverlayPortal(
+            <div
+              className="select-research__lab-data-backdrop"
+              role="presentation"
               onClick={() => setLabDataPanelOpen(false)}
             >
-              {t('sr_close')}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      <LabCompareDialog
-        data={data}
-        open={labCompareOpen}
-        onClose={() => setLabCompareOpen(false)}
-        currentOverrides={levelOverrides}
-        t={t}
-        fmt={fmt}
-      />
-
-      {presetSaveDialogOpen ? (
-        <div
-          className="select-research__preset-save-backdrop"
-          role="presentation"
-          onClick={closePresetSaveDialog}
-        >
-          <div
-            className="select-research__preset-save-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="preset-save-dialog-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2
-              id="preset-save-dialog-title"
-              className="select-research__preset-save-title"
-            >
-              {t('sr_preset_prompt_title')}
-            </h2>
-            <form
-              className="select-research__preset-save-form"
-              onSubmit={(e) => {
-                e.preventDefault()
-                commitSavePresetFromDialog()
-              }}
-            >
-              <label
-                className="select-research__preset-save-label"
-                htmlFor="preset-save-name-field"
+              <div
+                id="lab-data-panel"
+                className="select-research__lab-data-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="lab-data-panel-title"
+                onClick={(e) => e.stopPropagation()}
               >
-                {t('sr_preset_name_label')}
-              </label>
-              <input
-                ref={presetSaveNameInputRef}
-                id="preset-save-name-field"
-                className="select-research__preset-save-input glow-input"
-                type="text"
-                value={presetSaveDraft}
-                onChange={(e) => setPresetSaveDraft(e.target.value)}
-                autoComplete="off"
-                maxLength={120}
-              />
-              <div className="select-research__preset-save-actions">
+                <h2 id="lab-data-panel-title" className="select-research__lab-data-title">
+                  {t('sr_lab_data_title')}
+                </h2>
+                <p className="select-research__lab-data-intro">
+                  {t('sr_lab_data_intro')}
+                </p>
+                <p className="select-research__lab-data-section-label">{t('sr_lab_data_files')}</p>
+                <div className="select-research__lab-data-actions">
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => {
+                      setLabDataPanelOpen(false)
+                      queueMicrotask(() => importLabCsvFileInputRef.current?.click())
+                    }}
+                  >
+                    {t('sr_lab_import_file')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => {
+                      handleExportLevels()
+                      setLabDataPanelOpen(false)
+                    }}
+                  >
+                    {t('sr_lab_export_file')}
+                  </button>
+                </div>
+                <p className="select-research__lab-data-section-label">{t('sr_lab_data_share')}</p>
+                <div className="select-research__lab-data-actions">
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={async () => {
+                      await handleCopyCleanShareLink()
+                      setLabDataPanelOpen(false)
+                    }}
+                  >
+                    {t('sr_copy_short_link')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={async () => {
+                      await handleCopyFullShareLink()
+                      setLabDataPanelOpen(false)
+                    }}
+                  >
+                    {t('sr_copy_full_url')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => {
+                      setLabDataPanelOpen(false)
+                      void handleShowShareQr()
+                    }}
+                  >
+                    {t('sr_qr_share')}
+                  </button>
+                </div>
                 <button
                   type="button"
-                  className="glow-btn glow-btn--block"
-                  onClick={closePresetSaveDialog}
+                  className="glow-btn glow-btn--block select-research__lab-data-close"
+                  onClick={() => setLabDataPanelOpen(false)}
                 >
-                  {t('sr_cancel')}
-                </button>
-                <button type="submit" className="glow-btn glow-btn--block">
-                  {t('sr_preset_dialog_save')}
+                  {t('sr_close')}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+          )
+        : null}
+
+      {labOverlayPortal(
+        <LabCompareDialog
+          data={data}
+          open={labCompareOpen}
+          onClose={() => setLabCompareOpen(false)}
+          currentOverrides={levelOverrides}
+          t={t}
+          fmt={fmt}
+        />,
+      )}
+
+      {presetSaveDialogOpen
+        ? labOverlayPortal(
+            <div
+              className="select-research__preset-save-backdrop"
+              role="presentation"
+              onClick={closePresetSaveDialog}
+            >
+              <div
+                className="select-research__preset-save-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="preset-save-dialog-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2
+                  id="preset-save-dialog-title"
+                  className="select-research__preset-save-title"
+                >
+                  {t('sr_preset_prompt_title')}
+                </h2>
+                <form
+                  className="select-research__preset-save-form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    commitSavePresetFromDialog()
+                  }}
+                >
+                  <label
+                    className="select-research__preset-save-label"
+                    htmlFor="preset-save-name-field"
+                  >
+                    {t('sr_preset_name_label')}
+                  </label>
+                  <input
+                    ref={presetSaveNameInputRef}
+                    id="preset-save-name-field"
+                    className="select-research__preset-save-input glow-input"
+                    type="text"
+                    value={presetSaveDraft}
+                    onChange={(e) => setPresetSaveDraft(e.target.value)}
+                    autoComplete="off"
+                    maxLength={120}
+                  />
+                  <div className="select-research__preset-save-actions">
+                    <button
+                      type="button"
+                      className="glow-btn glow-btn--block"
+                      onClick={closePresetSaveDialog}
+                    >
+                      {t('sr_cancel')}
+                    </button>
+                    <button type="submit" className="glow-btn glow-btn--block">
+                      {t('sr_preset_dialog_save')}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>,
+          )
+        : null}
 
       <div
         className="select-research__sections"
@@ -1114,100 +1181,105 @@ export function SelectResearch({ data }: SelectResearchProps) {
         ))}
       </div>
 
-      {shareQr ? (
-        <div
-          className="select-research__qr-backdrop"
-          role="presentation"
-          onClick={() => setShareQr(null)}
-        >
-          <div
-            className="select-research__qr-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="share-qr-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="share-qr-title" className="select-research__qr-title">
-              {t('sr_qr_dialog_title')}
-            </h2>
-            <img
-              className="select-research__qr-img"
-              src={shareQr.dataUrl}
-              width={220}
-              height={220}
-              alt={t('sr_qr_image_alt')}
-              decoding="async"
-            />
-            <p className="select-research__qr-hint">
-              {t('sr_qr_hint')}
-            </p>
-            <div className="select-research__qr-actions">
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(shareQr.url)
-                    setImportNotice(t('sr_notice_qr_link_copied'))
-                  } catch {
-                    setImportNotice(t('sr_notice_copy_fail_short'))
-                  }
-                }}
+      {shareQr
+        ? labOverlayPortal(
+            <div
+              className="select-research__qr-backdrop"
+              role="presentation"
+              onClick={() => setShareQr(null)}
+            >
+              <div
+                className="select-research__qr-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="share-qr-title"
+                onClick={(e) => e.stopPropagation()}
               >
-                {t('sr_qr_copy_link')}
-              </button>
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={() => setShareQr(null)}
-              >
-                {t('sr_close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+                <h2 id="share-qr-title" className="select-research__qr-title">
+                  {t('sr_qr_dialog_title')}
+                </h2>
+                <img
+                  className="select-research__qr-img"
+                  src={shareQr.dataUrl}
+                  width={220}
+                  height={220}
+                  alt={t('sr_qr_image_alt')}
+                  decoding="async"
+                />
+                <p className="select-research__qr-hint">
+                  {t('sr_qr_hint')}
+                </p>
+                <div className="select-research__qr-actions">
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(shareQr.url)
+                        setImportNotice(t('sr_notice_qr_link_copied'))
+                      } catch {
+                        setImportNotice(t('sr_notice_copy_fail_short'))
+                      }
+                    }}
+                  >
+                    {t('sr_qr_copy_link')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => setShareQr(null)}
+                  >
+                    {t('sr_close')}
+                  </button>
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
 
-      {resetLevelsConfirmOpen ? (
-        <div
-          className="select-research__reset-confirm-backdrop"
-          role="presentation"
-          onClick={() => setResetLevelsConfirmOpen(false)}
-        >
-          <div
-            className="select-research__reset-confirm-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="reset-levels-confirm-title"
-            aria-describedby="reset-levels-confirm-desc"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="reset-levels-confirm-title" className="select-research__reset-confirm-title">
-              {t('sr_reset_confirm_title')}
-            </h2>
-            <p id="reset-levels-confirm-desc" className="select-research__reset-confirm-desc">
-              {t('sr_reset_confirm_body')}
-            </p>
-            <div className="select-research__reset-confirm-actions">
-              <button
-                type="button"
-                className="glow-btn glow-btn--block"
-                onClick={() => setResetLevelsConfirmOpen(false)}
+      {resetLevelsConfirmOpen
+        ? labOverlayPortal(
+            <div
+              className="select-research__reset-confirm-backdrop"
+              role="presentation"
+              onClick={() => setResetLevelsConfirmOpen(false)}
+            >
+              <div
+                className="select-research__reset-confirm-dialog"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="reset-levels-confirm-title"
+                aria-describedby="reset-levels-confirm-desc"
+                onClick={(e) => e.stopPropagation()}
               >
-                {t('sr_cancel')}
-              </button>
-              <button
-                type="button"
-                className="glow-btn glow-btn--danger glow-btn--block"
-                onClick={performResetLevels}
-              >
-                {t('sr_reset_all')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+                <h2 id="reset-levels-confirm-title" className="select-research__reset-confirm-title">
+                  {t('sr_reset_confirm_title')}
+                </h2>
+                <p id="reset-levels-confirm-desc" className="select-research__reset-confirm-desc">
+                  {t('sr_reset_confirm_body')}
+                </p>
+                <div className="select-research__reset-confirm-actions">
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => setResetLevelsConfirmOpen(false)}
+                  >
+                    {t('sr_cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--danger glow-btn--block"
+                    onClick={performResetLevels}
+                  >
+                    {t('sr_reset_all')}
+                  </button>
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
 
+      {!embeddedInPanel ? (
       <footer className="select-research__site-footer">
         <nav
           className="select-research__version-badge"
@@ -1230,6 +1302,9 @@ export function SelectResearch({ data }: SelectResearchProps) {
           </a>
         </nav>
       </footer>
-    </section>
+      ) : null}
+    </PanelRoot>
   )
-}
+})
+
+SelectResearch.displayName = 'SelectResearch'
