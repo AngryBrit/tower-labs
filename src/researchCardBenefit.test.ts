@@ -2807,14 +2807,31 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(h!, max, max)).toBe('x4.00')
     })
 
-    it('Health Regen and Defense Absolute match Health calculator Value', () => {
+    it('Health Regen matches Health wiki ladder (100 levels; same marginal cost/time)', () => {
       const regen = defense.items.find((i) => i.name === 'Health Regen')
       const abs = defense.items.find((i) => i.name === 'Defense Absolute')
       expect(regen).toBeDefined()
       expect(abs).toBeDefined()
       const maxR = regen!.maxLevel ?? 100
       const maxA = abs!.maxLevel ?? 100
+      expect(benefitDisplayForCard(regen!, 0, maxR)).toBe('x1.00')
       expect(benefitDisplayForCard(regen!, 1, maxR)).toBe('x1.03')
+      expect(benefitDisplayForCard(regen!, 29, maxR)).toBe('x1.87')
+      expect(benefitDisplayForCard(regen!, 100, maxR)).toBe('x4.00')
+      expect(benefitLineWithNextUpgrade(regen!, 0, maxR)).toBe('x1.00 » x1.03')
+      expect(benefitLineWithNextUpgrade(regen!, maxR, maxR)).toBe('x4.00')
+      expect(toolkitMarginalCoinCost('Health Regen', 0)).toBe(30)
+      expect(toolkitMarginalCoinCost('Health Regen', 99)).toBe(4_310_000)
+      expect(toolkitUpgradeDurationSeconds('Health Regen', 0)).toBe(14)
+      expect(toolkitUpgradeDurationSeconds('Health Regen', 99)).toBe(4_341_120)
+      for (const level of [17, 59, 98]) {
+        expect(toolkitMarginalCoinCost('Health Regen', level)).toBe(
+          toolkitMarginalCoinCost('Health', level),
+        )
+        expect(toolkitUpgradeDurationSeconds('Health Regen', level)).toBe(
+          toolkitUpgradeDurationSeconds('Health', level),
+        )
+      }
       expect(benefitDisplayForCard(abs!, 100, maxA)).toBe('x4.00')
     })
 

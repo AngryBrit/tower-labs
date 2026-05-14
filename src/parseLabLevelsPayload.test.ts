@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { encodeLabsShareQueryValue } from './labsShareCodec'
 import { compareLabLevelOverrides, formatSignedCoinDelta } from './labCompare'
+import { defaultWorkshopPersisted } from './labPresetsStorage'
 import { serializeLabLevelOverridesCsv } from './labLevelOverridesCsv'
 import {
   extractLabsShareEncodedFromText,
@@ -14,6 +15,7 @@ import {
   parseResearchSection,
   type ResearchData,
 } from './types/research'
+import { serializeTowerUnifiedCsv, TOWER_UNIFIED_CSV_MAGIC } from './towerUnifiedCsv'
 
 const srcDir = dirname(fileURLToPath(import.meta.url))
 
@@ -100,11 +102,52 @@ describe('parseLabLevelsPayload', () => {
     })
   })
 
-  it('rejects JSON-style text as invalid_csv when commas present', async () => {
-    expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
+  it('parses tower unified CSV via parseLabLevelsPayload', async () => {
+    const ws = { ...defaultWorkshopPersisted(), damageLevel: 4 }
+    const csv = serializeTowerUnifiedCsv({ '0-0': 1 }, ws)
+    const r = await parseLabLevelsPayload(csv, data)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.overrides['0-0']).toBe(1)
+      expect(r.workshop?.damageLevel).toBe(4)
+    }
+  })
+
+  it('rejects malformed tower CSV as invalid_csv', async () => {
+    const bad = `${TOWER_UNIFIED_CSV_MAGIC}\ntype,key,value\nlab,bad-key,1\n`
+    expect(await parseLabLevelsPayload(bad, data)).toEqual({
       ok: false,
       error: 'invalid_csv',
     })
+  })
+
+  it('accepts inline labs share JSON with empty overrides', async () => {
+    expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
+      ok: true,
+      overrides: {},
+    })
+  })
+
+  it('parses inline v2 JSON with workshop snapshot', async () => {
+    const w = {
+      hideMaxed: true,
+      mainTab: 'upgrade' as const,
+      category: 'defense' as const,
+      multiplier: 5 as const,
+      damageLevel: 3,
+      attackSpeedLevel: 0,
+      critChanceLevel: 0,
+      critFactorLevel: 0,
+    }
+    const raw = JSON.stringify({ v: 2, o: { '0-0': 2 }, w })
+    const r = await parseLabLevelsPayload(raw, data)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.overrides['0-0']).toBe(2)
+      expect(r.workshop).toBeDefined()
+      expect(r.workshop?.damageLevel).toBe(3)
+      expect(r.workshop?.hideMaxed).toBe(true)
+    }
   })
 
   it('rejects non-CSV text without comma as invalid_payload', async () => {

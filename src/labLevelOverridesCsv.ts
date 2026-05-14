@@ -2,7 +2,7 @@
 
 export const LAB_LEVEL_OVERRIDES_CSV_HEADER = 'key,level'
 
-function parseCsvLine(line: string): string[] {
+export function parseCsvLine(line: string): string[] {
   const result: string[] = []
   let cur = ''
   let inQuotes = false
@@ -21,12 +21,12 @@ function parseCsvLine(line: string): string[] {
   return result
 }
 
-function escapeCsvCell(s: string): string {
+export function escapeCsvCell(s: string): string {
   if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
   return s
 }
 
-function sortOverrideKeys(keys: string[]): string[] {
+export function sortOverrideKeys(keys: string[]): string[] {
   return [...keys].sort((a, b) => {
     const pa = a.split('-')
     const pb = b.split('-')

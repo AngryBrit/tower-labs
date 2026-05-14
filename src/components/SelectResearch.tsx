@@ -25,14 +25,17 @@ import {
 } from '../labBudgetAggregates'
 import {
   parseLabLevelOverridesCsv,
-  serializeLabLevelOverridesCsv,
 } from '../labLevelOverridesCsv'
+import { serializeTowerUnifiedCsv, parseTowerUnifiedCsv } from '../towerUnifiedCsv'
 import { sanitizeLevelOverrides } from '../labLevelOverridesSanitize'
 import {
   buildLabPresetsPayload,
+  defaultWorkshopPersisted,
   newPresetId,
   parseLabPresetsFile,
+  sanitizeWorkshopPersisted,
   type LabPreset,
+  type WorkshopPersistedV1,
 } from '../labPresetsStorage'
 import type { ResearchData } from '../types/research'
 import {
@@ -58,6 +61,11 @@ interface SelectResearchProps {
   embeddedInPanel?: boolean
   /** In-panel: render BUILD row into this node so it stays visible on Workshop tab. */
   embeddedPresetsMount?: HTMLElement | null
+  /** Workshop snapshot persisted with lab builds (parent owns state). */
+  workshopPersisted: WorkshopPersistedV1
+  scratchWorkshopPersisted: WorkshopPersistedV1
+  setWorkshopPersisted: (next: WorkshopPersistedV1) => void
+  setScratchWorkshopPersisted: (next: WorkshopPersistedV1) => void
 }
 
 /** Legacy single-map storage; read once to migrate when `LAB_PRESETS_STORAGE_KEY` is absent. */
@@ -122,6 +130,10 @@ export const SelectResearch = forwardRef<
     data,
     embeddedInPanel = false,
     embeddedPresetsMount = null,
+    workshopPersisted,
+    scratchWorkshopPersisted,
+    setWorkshopPersisted,
+    setScratchWorkshopPersisted,
   },
   ref,
 ) {
@@ -158,11 +170,21 @@ export const SelectResearch = forwardRef<
   const levelOverridesRef = useRef(levelOverrides)
   const scratchSnapshotRef = useRef(scratchSnapshot)
   const activePresetIdRef = useRef(activePresetId)
+  const workshopPersistedRef = useRef(workshopPersisted)
+  const scratchWorkshopPersistedRef = useRef(scratchWorkshopPersisted)
   useLayoutEffect(() => {
     levelOverridesRef.current = levelOverrides
     scratchSnapshotRef.current = scratchSnapshot
     activePresetIdRef.current = activePresetId
-  }, [levelOverrides, scratchSnapshot, activePresetId])
+    workshopPersistedRef.current = workshopPersisted
+    scratchWorkshopPersistedRef.current = scratchWorkshopPersisted
+  }, [
+    levelOverrides,
+    scratchSnapshot,
+    activePresetId,
+    workshopPersisted,
+    scratchWorkshopPersisted,
+  ])
 
   useEffect(() => {
     if (!importNotice) return
@@ -234,12 +256,16 @@ export const SelectResearch = forwardRef<
         activePresetId: string | null
         scratchSnapshot: Record<string, number>
         levelOverrides: Record<string, number>
+        workshopPersisted: WorkshopPersistedV1
+        scratchWorkshopPersisted: WorkshopPersistedV1
       } => {
         const empty = {
           presets: [] as LabPreset[],
           activePresetId: null as string | null,
           scratchSnapshot: {} as Record<string, number>,
           levelOverrides: {} as Record<string, number>,
+          workshopPersisted: defaultWorkshopPersisted(),
+          scratchWorkshopPersisted: defaultWorkshopPersisted(),
         }
         try {
           const rawNew = localStorage.getItem(LAB_PRESETS_STORAGE_KEY)
@@ -270,11 +296,19 @@ export const SelectResearch = forwardRef<
               const levelOverrides = activePreset
                 ? { ...activePreset.levelOverrides }
                 : { ...scratchSnapshot }
+              const scratchWorkshopPersisted = sanitizeWorkshopPersisted(
+                parsed.scratchWorkshop,
+              )
+              const workshopPersisted = activePreset
+                ? sanitizeWorkshopPersisted(activePreset.workshop)
+                : scratchWorkshopPersisted
               return {
                 presets,
                 activePresetId,
                 scratchSnapshot,
                 levelOverrides,
+                workshopPersisted,
+                scratchWorkshopPersisted,
               }
             }
           }
@@ -301,6 +335,8 @@ export const SelectResearch = forwardRef<
                   activePresetId: null,
                   scratchSnapshot: { ...levelOverrides },
                   levelOverrides,
+                  workshopPersisted: defaultWorkshopPersisted(),
+                  scratchWorkshopPersisted: defaultWorkshopPersisted(),
                 }
               }
             }
@@ -350,16 +386,27 @@ export const SelectResearch = forwardRef<
               data,
               payload.o as Record<string, unknown>,
             )
+            const workshopFromLink =
+              payload.v === 2 && payload.w !== undefined
+            let nextWorkshop = persistedLabs.workshopPersisted
+            let nextScratchWorkshop = persistedLabs.scratchWorkshopPersisted
+            if (workshopFromLink) {
+              const ws = sanitizeWorkshopPersisted(payload.w)
+              nextWorkshop = ws
+              nextScratchWorkshop = ws
+            }
             setPresets(persistedLabs.presets)
             setActivePresetId(null)
             setScratchSnapshot(sanitized)
             setLevelOverrides(sanitized)
+            setWorkshopPersisted(nextWorkshop)
+            setScratchWorkshopPersisted(nextScratchWorkshop)
             applySectionCollapsedFromStorage()
             const url = new URL(window.location.href)
             url.searchParams.delete(LABS_SHARE_SEARCH_PARAM)
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
             const n = Object.keys(sanitized).length
-            setImportNotice(fmt.shareOpenedLevels(n))
+            setImportNotice(fmt.shareOpenedLevels(n, workshopFromLink))
             setHydrated(true)
             return
           }
@@ -373,6 +420,8 @@ export const SelectResearch = forwardRef<
         setActivePresetId(persistedLabs.activePresetId)
         setScratchSnapshot(persistedLabs.scratchSnapshot)
         setLevelOverrides(persistedLabs.levelOverrides)
+        setWorkshopPersisted(persistedLabs.workshopPersisted)
+        setScratchWorkshopPersisted(persistedLabs.scratchWorkshopPersisted)
       }
 
       applySectionCollapsedFromStorage()
@@ -394,6 +443,8 @@ export const SelectResearch = forwardRef<
         presets,
         levelOverrides,
         scratchSnapshot,
+        workshopPersisted,
+        scratchWorkshopPersisted,
       )
       localStorage.setItem(
         LAB_PRESETS_STORAGE_KEY,
@@ -408,6 +459,8 @@ export const SelectResearch = forwardRef<
     presets,
     levelOverrides,
     scratchSnapshot,
+    workshopPersisted,
+    scratchWorkshopPersisted,
   ])
 
   useEffect(() => {
@@ -608,51 +661,65 @@ export const SelectResearch = forwardRef<
     setScratchSnapshot({})
     setActivePresetId(null)
     setPresets((prev) =>
-      prev.map((p) => ({ ...p, levelOverrides: {} })),
+      prev.map((p) => ({
+        ...p,
+        levelOverrides: {},
+        workshop: defaultWorkshopPersisted(),
+      })),
     )
+    setScratchWorkshopPersisted(defaultWorkshopPersisted())
     setImportNotice(t('sr_notice_reset_all'))
-  }, [t])
+  }, [setScratchWorkshopPersisted, t])
 
   const handleExportLevels = useCallback(() => {
     const date = new Date().toISOString().slice(0, 10)
-    const csv = serializeLabLevelOverridesCsv(levelOverrides)
+    const csv = serializeTowerUnifiedCsv(levelOverrides, workshopPersisted)
     const blob = new Blob([`\uFEFF${csv}`], {
       type: 'text/csv;charset=utf-8',
     })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `tower-lab-levels-${date}.csv`
+    a.download = `tower-export-${date}.csv`
     a.rel = 'noopener'
     a.click()
     URL.revokeObjectURL(url)
-  }, [levelOverrides])
+  }, [levelOverrides, workshopPersisted])
 
   const handleCopyCleanShareLink = useCallback(async () => {
     try {
-      const encoded = await encodeLabsShareQueryValue(levelOverrides)
+      const encoded = await encodeLabsShareQueryValue(
+        levelOverrides,
+        workshopPersisted,
+      )
       const { clean } = buildLabsShareUrls(encoded, window.location.href)
       await navigator.clipboard.writeText(clean)
       setImportNotice(t('sr_notice_copy_short_ok'))
     } catch {
       setImportNotice(t('sr_notice_copy_short_fail'))
     }
-  }, [levelOverrides, t])
+  }, [levelOverrides, workshopPersisted, t])
 
   const handleCopyFullShareLink = useCallback(async () => {
     try {
-      const encoded = await encodeLabsShareQueryValue(levelOverrides)
+      const encoded = await encodeLabsShareQueryValue(
+        levelOverrides,
+        workshopPersisted,
+      )
       const { full } = buildLabsShareUrls(encoded, window.location.href)
       await navigator.clipboard.writeText(full)
       setImportNotice(t('sr_notice_copy_full_ok'))
     } catch {
       setImportNotice(t('sr_notice_copy_full_fail'))
     }
-  }, [levelOverrides, t])
+  }, [levelOverrides, workshopPersisted, t])
 
   const handleShowShareQr = useCallback(async () => {
     try {
-      const encoded = await encodeLabsShareQueryValue(levelOverrides)
+      const encoded = await encodeLabsShareQueryValue(
+        levelOverrides,
+        workshopPersisted,
+      )
       const { clean } = buildLabsShareUrls(encoded, window.location.href)
       const QRCode = (await import('qrcode')).default
       const dataUrl = await QRCode.toDataURL(clean, {
@@ -664,7 +731,7 @@ export const SelectResearch = forwardRef<
     } catch {
       setImportNotice(t('sr_notice_qr_fail'))
     }
-  }, [levelOverrides, t])
+  }, [levelOverrides, workshopPersisted, t])
 
   const handleImportLabCsvFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -674,6 +741,24 @@ export const SelectResearch = forwardRef<
       if (!file) return
       try {
         const text = await file.text()
+        const tower = parseTowerUnifiedCsv(text)
+        if (tower.tag === 'invalid') {
+          setImportNotice(t('sr_notice_import_invalid_tower_csv'))
+          return
+        }
+        if (tower.tag === 'ok') {
+          const sanitized = sanitizeLevelOverrides(
+            data,
+            tower.overrides as Record<string, unknown>,
+          )
+          setActivePresetId(null)
+          setScratchSnapshot(sanitized)
+          setLevelOverrides(sanitized)
+          setWorkshopPersisted(tower.workshop)
+          setScratchWorkshopPersisted(tower.workshop)
+          setImportNotice(t('sr_notice_import_tower_ok'))
+          return
+        }
         const raw = parseLabLevelOverridesCsv(text)
         if (raw === null) {
           setImportNotice(t('sr_notice_import_invalid_csv'))
@@ -689,7 +774,7 @@ export const SelectResearch = forwardRef<
         setImportNotice(t('sr_notice_import_read_fail'))
       }
     },
-    [data, fmt, t],
+    [data, fmt, setScratchWorkshopPersisted, setWorkshopPersisted, t],
   )
 
   const handlePresetSelect = useCallback(
@@ -698,10 +783,13 @@ export const SelectResearch = forwardRef<
       const prevActive = activePresetIdRef.current
       const currentLevels = levelOverridesRef.current
       const scratch = scratchSnapshotRef.current
+      const wsLive = workshopPersistedRef.current
+      const swScratch = scratchWorkshopPersistedRef.current
 
       if (nextId === null) {
         if (prevActive !== null) {
           setLevelOverrides({ ...scratch })
+          setWorkshopPersisted({ ...swScratch })
         }
         setActivePresetId(null)
         return
@@ -709,14 +797,16 @@ export const SelectResearch = forwardRef<
 
       if (prevActive === null) {
         setScratchSnapshot({ ...currentLevels })
+        setScratchWorkshopPersisted({ ...wsLive })
       }
 
       const target = presets.find((p) => p.id === nextId)
       if (!target) return
       setLevelOverrides({ ...target.levelOverrides })
+      setWorkshopPersisted(sanitizeWorkshopPersisted(target.workshop))
       setActivePresetId(nextId)
     },
-    [presets],
+    [presets, setScratchWorkshopPersisted, setWorkshopPersisted],
   )
 
   const openPresetSaveDialog = useCallback(() => {
@@ -736,17 +826,19 @@ export const SelectResearch = forwardRef<
     }
     const id = newPresetId()
     const levels = { ...levelOverridesRef.current }
+    const ws = { ...workshopPersistedRef.current }
     const wasScratch = activePresetIdRef.current === null
-    setPresets((prev) => [...prev, { id, name: trimmed, levelOverrides: levels }])
+    setPresets((prev) => [...prev, { id, name: trimmed, levelOverrides: levels, workshop: ws }])
     if (wasScratch) {
       setScratchSnapshot({ ...levels })
+      setScratchWorkshopPersisted({ ...ws })
     }
     setLevelOverrides(levels)
     setActivePresetId(id)
     setImportNotice(fmt.savedPreset(trimmed))
     setPresetSaveDialogOpen(false)
     setPresetSaveDraft('')
-  }, [fmt, presetSaveDraft, t])
+  }, [fmt, presetSaveDraft, setScratchWorkshopPersisted, t])
 
   useLayoutEffect(() => {
     if (!presetSaveDialogOpen) return
@@ -770,8 +862,9 @@ export const SelectResearch = forwardRef<
     setPresets((prev) => prev.filter((p) => p.id !== id))
     setActivePresetId(null)
     setLevelOverrides({ ...scratchSnapshotRef.current })
+    setWorkshopPersisted({ ...scratchWorkshopPersistedRef.current })
     setImportNotice(t('sr_notice_preset_deleted'))
-  }, [fmt, presets, t])
+  }, [fmt, presets, setWorkshopPersisted, t])
 
   const openResetLevelsConfirm = useCallback(() => {
     setShareQr(null)
@@ -1072,6 +1165,7 @@ export const SelectResearch = forwardRef<
           open={labCompareOpen}
           onClose={() => setLabCompareOpen(false)}
           currentOverrides={levelOverrides}
+          currentWorkshop={workshopPersisted}
           t={t}
           fmt={fmt}
         />,

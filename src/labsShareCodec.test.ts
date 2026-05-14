@@ -5,6 +5,7 @@ import {
   encodeLabsShareQueryValue,
   LABS_SHARE_SEARCH_PARAM,
 } from './labsShareCodec'
+import { defaultWorkshopPersisted } from './labPresetsStorage'
 
 describe('labsShareCodec', () => {
   it('roundtrips empty overrides', async () => {
@@ -19,6 +20,17 @@ describe('labsShareCodec', () => {
     const enc = await encodeLabsShareQueryValue(o)
     const dec = await decodeLabsShareQueryValue(enc)
     expect(dec).toEqual({ v: 1, o })
+  })
+
+  it('roundtrips v2 with workshop when not default snapshot', async () => {
+    const ws = { ...defaultWorkshopPersisted(), damageLevel: 4, category: 'utility' as const }
+    const enc = await encodeLabsShareQueryValue({ '0-0': 1 }, ws)
+    const dec = await decodeLabsShareQueryValue(enc)
+    expect(dec?.v).toBe(2)
+    if (dec && dec.v === 2) {
+      expect(dec.o['0-0']).toBe(1)
+      expect(dec.w).toEqual(ws)
+    }
   })
 
   it('returns null for garbage', async () => {

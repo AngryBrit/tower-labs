@@ -1,5 +1,11 @@
+import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
+
 /** Query param name for encoded lab level overrides (`?labs=…`). */
 export const LABS_SHARE_SEARCH_PARAM = 'labs'
+
+export type LabsShareFileV1 = { v: 1; o: Record<string, number> }
+export type LabsShareFileV2 = { v: 2; o: Record<string, number>; w?: unknown }
+export type LabsShareFile = LabsShareFileV1 | LabsShareFileV2
 
 /**
  * Builds share URLs for the current `labs` payload.
@@ -17,7 +23,20 @@ export function buildLabsShareUrls(
   return { clean: clean.toString(), full: full.toString() }
 }
 
-type LabsShareFile = { v: 1; o: Record<string, number> }
+export function isLabsShareFile(x: unknown): x is LabsShareFile {
+  if (!x || typeof x !== 'object') return false
+  const v = (x as { v?: unknown }).v
+  const o = (x as { o?: unknown }).o
+  if (v !== 1 && v !== 2) return false
+  if (o === null || typeof o !== 'object' || Array.isArray(o)) return false
+  if (v === 2 && 'w' in x) {
+    const w = (x as { w?: unknown }).w
+    if (w !== undefined && (w === null || typeof w !== 'object' || Array.isArray(w))) {
+      return false
+    }
+  }
+  return true
+}
 
 /** Satisfies `Blob` constructor typing for `Uint8Array` views on shared buffers. */
 function uint8ToBlobPart(u8: Uint8Array): BlobPart {
@@ -42,21 +61,21 @@ function fromBase64Url(s: string): Uint8Array {
   return out
 }
 
-function isLabsShareFile(x: unknown): x is LabsShareFile {
-  if (!x || typeof x !== 'object') return false
-  const o = (x as { v?: unknown; o?: unknown }).v
-  const payload = (x as { o?: unknown }).o
-  return o === 1 && payload !== null && typeof payload === 'object' && !Array.isArray(payload)
-}
-
 /**
  * Encodes lab overrides for use in `?labs=`. Uses raw DEFLATE when supported,
  * otherwise base64url JSON with an `u` prefix.
+ * When `workshop` differs from defaults, uses **v:2** and embeds `w` so links restore workshop too.
  */
 export async function encodeLabsShareQueryValue(
   levelOverrides: Record<string, number>,
+  workshop?: WorkshopPersistedV1,
 ): Promise<string> {
-  const file: LabsShareFile = { v: 1, o: levelOverrides }
+  const def = defaultWorkshopPersisted()
+  const includeWorkshop =
+    workshop != null && JSON.stringify(workshop) !== JSON.stringify(def)
+  const file: LabsShareFile = includeWorkshop
+    ? { v: 2, o: levelOverrides, w: workshop }
+    : { v: 1, o: levelOverrides }
   const json = JSON.stringify(file)
   const bytes = new TextEncoder().encode(json)
 
@@ -96,7 +115,7 @@ export async function decodeLabsShareQueryValue(
     }
     const parsed: unknown = JSON.parse(json)
     if (!isLabsShareFile(parsed)) return null
-    return parsed
+    return parsed as LabsShareFile
   } catch {
     return null
   }

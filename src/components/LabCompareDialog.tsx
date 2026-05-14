@@ -1,10 +1,16 @@
 import { useCallback, useState } from 'react'
 import type { I18nFormatters, StringId } from '../i18n/dictionary'
 import { compareLabLevelOverrides, type LabCompareResult } from '../labCompare'
-import { serializeLabLevelOverridesCsv } from '../labLevelOverridesCsv'
+import { serializeTowerUnifiedCsv } from '../towerUnifiedCsv'
+import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
 import { parseLabLevelsPayload, type ParseLabLevelsError } from '../parseLabLevelsPayload'
 import type { ResearchData } from '../types/research'
 import { getLevelBounds } from '../types/research'
+import {
+  compareWorkshopPersisted,
+  workshopDiffCount,
+  type WorkshopCompareRow,
+} from '../workshopCompare'
 
 type TFn = (id: StringId) => string
 
@@ -37,11 +43,128 @@ function levelCell(
   return String(n)
 }
 
+function workshopFieldLabel(field: WorkshopCompareRow['field'], t: TFn): string {
+  switch (field) {
+    case 'damageLevel':
+      return t('ws_stat_damage')
+    case 'attackSpeedLevel':
+      return t('ws_stat_attackSpeed')
+    case 'critChanceLevel':
+      return t('ws_stat_critChance')
+    case 'critFactorLevel':
+      return t('ws_stat_critFactor')
+    case 'attackRangeLevel':
+      return t('ws_stat_attackRange')
+    case 'damagePerMeterLevel':
+      return t('ws_stat_damagePerMeter')
+    case 'multishotChanceLevel':
+      return t('ws_stat_multishotChance')
+    case 'multishotTargetsLevel':
+      return t('ws_stat_multishotTargets')
+    case 'rapidFireChanceLevel':
+      return t('ws_stat_rapidFireChance')
+    case 'rapidFireDurationLevel':
+      return t('ws_stat_rapidFireDuration')
+    case 'bounceShotChanceLevel':
+      return t('ws_stat_bounceChance')
+    case 'bounceShotTargetsLevel':
+      return t('ws_stat_bounceTargets')
+    case 'bounceShotRangeLevel':
+      return t('ws_stat_bounceShotRange')
+    case 'superCritChanceLevel':
+      return t('ws_stat_superCritChance')
+    case 'superCritMultLevel':
+      return t('ws_stat_superCritMult')
+    case 'rendArmorChanceLevel':
+      return t('ws_stat_rendArmorChance')
+    case 'rendArmorMultLevel':
+      return t('ws_stat_rendArmorMult')
+    case 'healthLevel':
+      return t('ws_stat_defHealth')
+    case 'healthRegenLevel':
+      return t('ws_stat_defHealthRegen')
+    case 'defensePercentLevel':
+      return t('ws_stat_defDefensePct')
+    case 'defenseAbsoluteLevel':
+      return t('ws_stat_defDefenseAbs')
+    case 'thornDamageLevel':
+      return t('ws_stat_defThornDamage')
+    case 'lifestealLevel':
+      return t('ws_stat_defLifesteal')
+    case 'knockbackChanceLevel':
+      return t('ws_stat_defKnockbackChance')
+    case 'knockbackForceLevel':
+      return t('ws_stat_defKnockbackForce')
+    case 'orbSpeedLevel':
+      return t('ws_stat_defOrbSpeed')
+    case 'orbsLevel':
+      return t('ws_stat_defOrbs')
+    case 'shockwaveSizeLevel':
+      return t('ws_stat_defShockwaveSize')
+    case 'shockwaveFrequencyLevel':
+      return t('ws_stat_defShockwaveFreq')
+    case 'landMineChanceLevel':
+      return t('ws_stat_defLandMineChance')
+    case 'landMineDamageLevel':
+      return t('ws_stat_defLandMineDamage')
+    case 'landMineRadiusLevel':
+      return t('ws_stat_defLandMineRadius')
+    case 'deathDefyLevel':
+      return t('ws_stat_defDeathDefy')
+    case 'wallHealthLevel':
+      return t('ws_stat_defWallHealth')
+    case 'wallRebuildLevel':
+      return t('ws_stat_defWallRebuild')
+    case 'cashBonusLevel':
+      return t('ws_stat_utilCashBonus')
+    case 'cashPerWaveLevel':
+      return t('ws_stat_utilCashPerWave')
+    case 'coinsKillBonusLevel':
+      return t('ws_stat_utilCoinsKillBonus')
+    case 'coinsWaveLevel':
+      return t('ws_stat_utilCoinsWave')
+    case 'freeAttackUpgradeLevel':
+      return t('ws_stat_utilFreeAttackUpgrade')
+    case 'freeDefenseUpgradeLevel':
+      return t('ws_stat_utilFreeDefenseUpgrade')
+    case 'freeUtilityUpgradeLevel':
+      return t('ws_stat_utilFreeUtilityUpgrade')
+    case 'interestPerWaveLevel':
+      return t('ws_stat_utilInterestPerWave')
+    case 'recoveryAmountLevel':
+      return t('ws_stat_utilRecoveryAmount')
+    case 'maxRecoveryLevel':
+      return t('ws_stat_utilMaxRecovery')
+    case 'packageChanceLevel':
+      return t('ws_stat_utilPackageChance')
+    case 'enemyAttackLevelSkipLevel':
+      return t('ws_stat_utilEnemyAttackLevelSkip')
+    case 'enemyHealthLevelSkipLevel':
+      return t('ws_stat_utilEnemyHealthLevelSkip')
+    case 'hideMaxed':
+      return t('sr_ws_field_hide_maxed')
+    case 'mainTab':
+      return t('sr_ws_field_main_tab')
+    case 'category':
+      return t('sr_ws_field_category')
+    case 'multiplier':
+      return t('sr_ws_field_multiplier')
+    default:
+      return field
+  }
+}
+
+type CompareOutcome = {
+  lab: LabCompareResult
+  workshopRows: WorkshopCompareRow[]
+}
+
 export function LabCompareDialog({
   data,
   open,
   onClose,
   currentOverrides,
+  currentWorkshop,
   t,
   fmt,
 }: {
@@ -49,6 +172,7 @@ export function LabCompareDialog({
   open: boolean
   onClose: () => void
   currentOverrides: Record<string, number>
+  currentWorkshop: WorkshopPersistedV1
   t: TFn
   fmt: I18nFormatters
 }) {
@@ -57,11 +181,11 @@ export function LabCompareDialog({
   const [busy, setBusy] = useState(false)
   const [errorA, setErrorA] = useState<string | null>(null)
   const [errorB, setErrorB] = useState<string | null>(null)
-  const [result, setResult] = useState<LabCompareResult | null>(null)
+  const [outcome, setOutcome] = useState<CompareOutcome | null>(null)
 
-  const fillCurrent = useCallback(
+  const fillCurrentCsv = useCallback(
     (side: 'a' | 'b') => {
-      const csv = serializeLabLevelOverridesCsv(currentOverrides)
+      const csv = serializeTowerUnifiedCsv(currentOverrides, currentWorkshop)
       if (side === 'a') {
         setTextA(csv)
         setErrorA(null)
@@ -69,13 +193,13 @@ export function LabCompareDialog({
         setTextB(csv)
         setErrorB(null)
       }
-      setResult(null)
+      setOutcome(null)
     },
-    [currentOverrides],
+    [currentOverrides, currentWorkshop],
   )
 
   const runCompare = useCallback(async () => {
-    setResult(null)
+    setOutcome(null)
     setErrorA(null)
     setErrorB(null)
     setBusy(true)
@@ -92,7 +216,11 @@ export function LabCompareDialog({
         setErrorB(parseErrorMessage(t, pb.error))
         return
       }
-      setResult(compareLabLevelOverrides(data, pa.overrides, pb.overrides))
+      const lab = compareLabLevelOverrides(data, pa.overrides, pb.overrides)
+      const wsA = pa.workshop ?? defaultWorkshopPersisted()
+      const wsB = pb.workshop ?? defaultWorkshopPersisted()
+      const workshopRows = compareWorkshopPersisted(wsA, wsB)
+      setOutcome({ lab, workshopRows })
     } finally {
       setBusy(false)
     }
@@ -103,10 +231,14 @@ export function LabCompareDialog({
     setTextB('')
     setErrorA(null)
     setErrorB(null)
-    setResult(null)
+    setOutcome(null)
   }, [])
 
   if (!open) return null
+
+  const result = outcome?.lab
+  const workshopRows = outcome?.workshopRows
+  const wsDiffering = workshopRows ? workshopDiffCount(workshopRows) : 0
 
   return (
     <div
@@ -136,7 +268,7 @@ export function LabCompareDialog({
               onChange={(e) => {
                 setTextA(e.target.value)
                 setErrorA(null)
-                setResult(null)
+                setOutcome(null)
               }}
               spellCheck={false}
               autoComplete="off"
@@ -153,7 +285,7 @@ export function LabCompareDialog({
             <button
               type="button"
               className="glow-btn glow-btn--block select-research__compare-insert"
-              onClick={() => fillCurrent('a')}
+              onClick={() => fillCurrentCsv('a')}
             >
               {t('sr_compare_use_current')}
             </button>
@@ -166,7 +298,7 @@ export function LabCompareDialog({
               onChange={(e) => {
                 setTextB(e.target.value)
                 setErrorB(null)
-                setResult(null)
+                setOutcome(null)
               }}
               spellCheck={false}
               autoComplete="off"
@@ -183,7 +315,7 @@ export function LabCompareDialog({
             <button
               type="button"
               className="glow-btn glow-btn--block select-research__compare-insert"
-              onClick={() => fillCurrent('b')}
+              onClick={() => fillCurrentCsv('b')}
             >
               {t('sr_compare_use_current')}
             </button>
@@ -204,7 +336,7 @@ export function LabCompareDialog({
           </button>
         </div>
 
-        {result ? (
+        {result && workshopRows ? (
           <div className="select-research__compare-result" role="region" aria-live="polite">
             <dl className="select-research__compare-summary">
               <div className="select-research__compare-summary-row">
@@ -249,6 +381,38 @@ export function LabCompareDialog({
                         </tr>
                       )
                     })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+            <p className="select-research__compare-diff-head select-research__compare-diff-head--spaced">
+              {t('sr_compare_ws_title')}
+            </p>
+            <p className="select-research__compare-ws-summary">
+              {wsDiffering === 0
+                ? t('sr_compare_ws_identical')
+                : fmt.compareDifferingWorkshopFields(wsDiffering)}
+            </p>
+            {wsDiffering > 0 ? (
+              <div className="select-research__compare-table-wrap">
+                <table className="select-research__compare-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t('sr_compare_ws_col_field')}</th>
+                      <th scope="col">{t('sr_compare_table_lv_a')}</th>
+                      <th scope="col">{t('sr_compare_table_lv_b')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {workshopRows
+                      .filter((r) => r.differs)
+                      .map((row) => (
+                        <tr key={row.field}>
+                          <td>{workshopFieldLabel(row.field, t)}</td>
+                          <td>{row.valueA}</td>
+                          <td>{row.valueB}</td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

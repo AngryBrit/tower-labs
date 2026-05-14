@@ -5,6 +5,7 @@ import { SelectResearch } from './components/SelectResearch'
 import { SettingsPage } from './components/SettingsPage'
 import { ToolsPage } from './components/ToolsPage'
 import { WorkshopPage } from './components/WorkshopPage'
+import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
 import { useI18n } from './i18n'
 import { loadResearchData } from './loadResearchData'
 import type { ResearchData } from './types/research'
@@ -28,6 +29,12 @@ export default function App() {
   const [data, setData] = useState<ResearchData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [workshopPersisted, setWorkshopPersisted] = useState<WorkshopPersistedV1>(() =>
+    defaultWorkshopPersisted(),
+  )
+  const [scratchWorkshopPersisted, setScratchWorkshopPersisted] = useState<WorkshopPersistedV1>(
+    () => defaultWorkshopPersisted(),
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -168,6 +175,10 @@ export default function App() {
                     data={data}
                     embeddedInPanel
                     embeddedPresetsMount={inpanelPresetsMount}
+                    workshopPersisted={workshopPersisted}
+                    scratchWorkshopPersisted={scratchWorkshopPersisted}
+                    setWorkshopPersisted={setWorkshopPersisted}
+                    setScratchWorkshopPersisted={setScratchWorkshopPersisted}
                   />
                 </div>
                 <div
@@ -183,6 +194,8 @@ export default function App() {
                         ? inpanelWorkshopToolbarMount
                         : null
                     }
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
                   />
                 </div>
                 <div

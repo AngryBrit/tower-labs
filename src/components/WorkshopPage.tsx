@@ -1,5 +1,111 @@
+import type { ReactNode } from 'react'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { CoinGlyph } from './CoinGlyph'
+import { PowerStoneGlyph } from './PowerStoneGlyph'
+import {
+  WORKSHOP_ATTACK_RANGE_MAX_LEVEL,
+  workshopAttackRangeNextMarginalCoins,
+  workshopAttackRangeStatDisplay,
+} from '../data/workshopAttackRange'
+import {
+  WORKSHOP_ATTACK_SPEED_MAX_LEVEL,
+  workshopAttackSpeedNextMarginalCoins,
+  workshopAttackSpeedStatDisplay,
+} from '../data/workshopAttackSpeed'
+import {
+  WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL,
+  workshopCriticalChanceNextMarginalCoins,
+  workshopCriticalChanceStatDisplay,
+} from '../data/workshopCriticalChance'
+import {
+  WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL,
+  workshopCriticalFactorNextMarginalCoins,
+  workshopCriticalFactorStatDisplay,
+} from '../data/workshopCriticalFactor'
+import {
+  WORKSHOP_DAMAGE_MAX_LEVEL,
+  workshopDamageNextMarginalCoins,
+  workshopDamageStatDisplay,
+} from '../data/workshopDamage'
+import {
+  WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL,
+  workshopDamagePerMeterNextMarginalCoins,
+  workshopDamagePerMeterStatDisplay,
+} from '../data/workshopDamagePerMeter'
+import {
+  WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL,
+  workshopMultishotChanceNextMarginalCoins,
+  workshopMultishotChanceStatDisplay,
+} from '../data/workshopMultishotChance'
+import {
+  WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL,
+  workshopMultishotTargetsNextMarginalCoins,
+  workshopMultishotTargetsStatDisplay,
+} from '../data/workshopMultishotTargets'
+import {
+  WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL,
+  WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL,
+  workshopRapidFireChanceNextMarginalCoins,
+  workshopRapidFireChanceStatDisplay,
+  workshopRapidFireDurationNextMarginalCoins,
+  workshopRapidFireDurationStatDisplay,
+} from '../data/workshopRapidFire'
+import {
+  WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL,
+  workshopBounceShotChanceNextMarginalCoins,
+  workshopBounceShotChanceStatDisplay,
+} from '../data/workshopBounceShotChance'
+import {
+  WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL,
+  workshopBounceShotRangeNextMarginalCoins,
+  workshopBounceShotRangeStatDisplay,
+} from '../data/workshopBounceShotRange'
+import {
+  WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL,
+  workshopBounceShotTargetsNextMarginalCoins,
+  workshopBounceShotTargetsStatDisplay,
+} from '../data/workshopBounceShotTargets'
+import {
+  WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL,
+  workshopSuperCritChanceNextMarginalCoins,
+  workshopSuperCritChanceStatDisplay,
+} from '../data/workshopSuperCritChance'
+import {
+  WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL,
+  workshopSuperCritMultNextMarginalCoins,
+  workshopSuperCritMultStatDisplay,
+} from '../data/workshopSuperCritMult'
+import {
+  WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL,
+  WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL,
+  workshopRendArmorChanceNextMarginalCoins,
+  workshopRendArmorChanceStatDisplay,
+  workshopRendArmorMultNextMarginalCoins,
+  workshopRendArmorMultStatDisplay,
+} from '../data/workshopRendArmor'
+import {
+  WORKSHOP_DEFENSE_UPGRADE_ORDER,
+  workshopDefenseClampLevel,
+  workshopDefenseMaxLevel,
+  workshopDefenseNextMarginalCoins,
+  workshopDefenseStatDisplay,
+  type WorkshopDefenseUpgradeKey,
+} from '../data/workshopDefense'
+import {
+  WORKSHOP_UTILITY_UPGRADE_ORDER,
+  workshopUtilityClampLevel,
+  workshopUtilityMaxLevel,
+  workshopUtilityNextMarginalCoins,
+  workshopUtilityStatDisplay,
+  type WorkshopUtilityUpgradeKey,
+} from '../data/workshopUtility'
+import { formatCoinAbbrev } from '../labCosts'
+import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
+import {
+  computeWorkshopCoinAggregates,
+  formatWorkshopCoinAggregates,
+} from '../workshopBudgetAggregates'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 
@@ -19,53 +125,145 @@ const CATEGORY_ARIA: Record<WorkshopCategory, StringId> = {
   ultimate: 'ws_cat_ultimate_aria',
 }
 
-const BULK_MULTIPLIERS = [10, 5, 1] as const
+const WORKSHOP_CATEGORY_ORDER: readonly WorkshopCategory[] = [
+  'attack',
+  'defense',
+  'utility',
+  'ultimate',
+]
+
+const WORKSHOP_ATTACK_SWORD_OUTLINE_D =
+  'M12 4.5 L13.6 7 L13.2 12.8 L15.8 13.1 L15.6 14.7 L13.1 15 L12 17.8 L10.9 15 L8.4 14.7 L8.2 13.1 L10.8 12.8 L10.4 7 Z'
+
+/** Blade fuller (local coords; group is rotated ~46° for upper-right sword). */
+const WORKSHOP_ATTACK_SWORD_FULLER_D = 'M12 6.2 L12 11.8'
+
+const WORKSHOP_DEFENSE_SHIELD_D =
+  'M12 3 L19 5.5 V12 C19 16 15.5 19.2 12 21 C8.5 19.2 5 16 5 12 V5.5 Z'
+
+const WORKSHOP_UTILITY_STAR_D =
+  'M12 4 L14.5 10.5 L21 11 L16 15 L17.5 21.5 L12 18 L6.5 21.5 L8 15 L3 11 L9.5 10.5 Z'
+
+/** Matches `PowerStoneGlyph` inner rim (`strokeWidth` 3.2 in viewBox 108) scaled to these icons’ viewBox 24. */
+const WORKSHOP_CAT_ICON_STROKE_WIDTH = (3.2 * 24) / 108
+
+/** Matches `PowerStoneGlyph` outer glow strokes (`strokeWidth` 10 in viewBox 108) scaled to viewBox 24. */
+const WORKSHOP_CAT_POWERSTONE_STYLE_THICK = (10 * 24) / 108
+
+/**
+ * PowerStoneGlyph uses `stdDeviation` 2.6 / 5.2 in viewBox 108 user units.
+ * Scale by 24/108 so Gaussian blur matches the same on-screen glow in 24×24 workshop icons.
+ */
+const WORKSHOP_CAT_GLOW_BLUR_SIGMA_1 = (2.6 * 24) / 108
+const WORKSHOP_CAT_GLOW_BLUR_SIGMA_2 = (5.2 * 24) / 108
+
+const WORKSHOP_UTILITY_STAR_GOLD = '#f5d000'
+const WORKSHOP_UTILITY_STAR_RIM = '#fffbeb'
+const WORKSHOP_DEFENSE_SHIELD_RED = '#ff3030'
+const WORKSHOP_DEFENSE_SHIELD_RIM = '#ffe4e6'
+
+/** Same filter, blur scaling, thick-stroke / thin-rim layering as `PowerStoneGlyph` (24×24 viewBox). */
+function WorkshopPowerstoneStyleCategoryGlyph({
+  pathD,
+  thickStroke,
+  rimStroke,
+  className,
+  wrapTransform,
+  extraRimD,
+}: {
+  pathD: string
+  thickStroke: string
+  rimStroke: string
+  className: string
+  /** Optional SVG transform for the stroked artwork (e.g. attack sword tilt). */
+  wrapTransform?: string
+  /** Optional extra open path drawn with rim stroke only (e.g. blade fuller). */
+  extraRimD?: string
+}) {
+  const uid = useId().replace(/:/g, '')
+  const filterGlow = `workshop-cat-ps-style-glow-${uid}`
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      aria-hidden
+      className={className}
+    >
+      <defs>
+        <filter
+          id={filterGlow}
+          x="-40%"
+          y="-40%"
+          width="180%"
+          height="180%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feGaussianBlur in="SourceGraphic" stdDeviation={WORKSHOP_CAT_GLOW_BLUR_SIGMA_1} result="b" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation={WORKSHOP_CAT_GLOW_BLUR_SIGMA_2} result="b2" />
+          <feMerge>
+            <feMergeNode in="b2" />
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g transform={wrapTransform}>
+        <g filter={`url(#${filterGlow})`}>
+          <path
+            d={pathD}
+            fill="none"
+            stroke={thickStroke}
+            strokeWidth={WORKSHOP_CAT_POWERSTONE_STYLE_THICK}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            opacity="0.95"
+          />
+        </g>
+        <path
+          d={pathD}
+          fill="none"
+          stroke={rimStroke}
+          strokeWidth={WORKSHOP_CAT_ICON_STROKE_WIDTH}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {extraRimD ? (
+          <path
+            d={extraRimD}
+            fill="none"
+            stroke={rimStroke}
+            strokeWidth={WORKSHOP_CAT_ICON_STROKE_WIDTH}
+            strokeLinecap="round"
+          />
+        ) : null}
+      </g>
+    </svg>
+  )
+}
+
+const BULK_MULTIPLIERS = [100, 10, 5, 1] as const
 type WorkshopMultiplier = (typeof BULK_MULTIPLIERS)[number]
 
-const DEMO_ROWS: readonly {
+type DemoRow = {
   labelId: StringId
   value: string
   cost: string | null
   maxed: boolean
-}[] = [
-  { labelId: 'ws_stat_damage', value: '10.07B', cost: '2.84T', maxed: false },
-  { labelId: 'ws_stat_attackSpeed', value: '38.11', cost: '1.12T', maxed: false },
-  { labelId: 'ws_stat_critChance', value: '92.5%', cost: '890B', maxed: false },
-  { labelId: 'ws_stat_critFactor', value: '24.2', cost: '5.01T', maxed: true },
-  { labelId: 'ws_stat_attackRange', value: '156.0', cost: '12.4B', maxed: false },
-  {
-    labelId: 'ws_stat_damagePerMeter',
-    value: '3.40M',
-    cost: '4.20T',
-    maxed: false,
-  },
-  { labelId: 'ws_stat_multishotChance', value: '18.0%', cost: null, maxed: true },
-  { labelId: 'ws_stat_multishotTargets', value: '6', cost: '220B', maxed: false },
-  {
-    labelId: 'ws_stat_rapidFireChance',
-    value: '12.5%',
-    cost: '1.90T',
-    maxed: false,
-  },
-  {
-    labelId: 'ws_stat_rapidFireDuration',
-    value: '4.2s',
-    cost: '780B',
-    maxed: false,
-  },
-  {
-    labelId: 'ws_stat_bounceChance',
-    value: '8.0%',
-    cost: '3.10T',
-    maxed: false,
-  },
-  {
-    labelId: 'ws_stat_bounceTargets',
-    value: '4',
-    cost: '450B',
-    maxed: false,
-  },
-]
+}
+
+const DEMO_ROWS: readonly DemoRow[] = []
+
+const DEMO_ROWS_BY_CATEGORY: Record<WorkshopCategory, readonly DemoRow[]> = {
+  attack: DEMO_ROWS,
+  defense: DEMO_ROWS,
+  utility: DEMO_ROWS,
+  ultimate: DEMO_ROWS,
+}
+
+function workshopOverlayPortal(node: ReactNode) {
+  return createPortal(node, document.body)
+}
 
 function WorkshopDemoToolbar({
   hideMaxed,
@@ -98,23 +296,1848 @@ function WorkshopDemoToolbar({
   )
 }
 
-function CoinGlyph({ className }: { className?: string }) {
+function clampWorkshopDamageLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_DAMAGE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopAttackSpeedLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_ATTACK_SPEED_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopCriticalChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopCriticalFactorLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopAttackRangeLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_ATTACK_RANGE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopDamagePerMeterLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopMultishotChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopMultishotTargetsLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopRapidFireChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopRapidFireDurationLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopBounceShotChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopBounceShotTargetsLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopBounceShotRangeLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopSuperCritChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopSuperCritMultLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopRendArmorChanceLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL, Math.trunc(n)))
+}
+
+function clampWorkshopRendArmorMultLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL, Math.trunc(n)))
+}
+
+function WorkshopDamageCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  /** Direction only; parent applies `bulkStep` from the workshop multiplier. */
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_DAMAGE_MAX_LEVEL
+  const nextCoins = workshopDamageNextMarginalCoins(level)
+  const statLabel = workshopDamageStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
   return (
-    <span className={className} aria-hidden>
-      <svg viewBox="0 0 20 20" width="16" height="16" className="workshop-coin-svg">
-        <circle cx="10" cy="10" r="8.5" fill="#ca8a04" stroke="#facc15" strokeWidth="1.2" />
-        <text
-          x="10"
-          y="13.5"
-          textAnchor="middle"
-          fontSize="9"
-          fontWeight="700"
-          fill="#422006"
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_damage')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_damage_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
         >
-          C
-        </text>
-      </svg>
-    </span>
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_damage_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_damage_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_DAMAGE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_DAMAGE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopAttackSpeedCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_ATTACK_SPEED_MAX_LEVEL
+  const nextCoins = workshopAttackSpeedNextMarginalCoins(level)
+  const statLabel = workshopAttackSpeedStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_attackSpeed')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_attack_speed_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_attack_speed_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_attack_speed_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_ATTACK_SPEED_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_ATTACK_SPEED_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopCriticalChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL
+  const nextCoins = workshopCriticalChanceNextMarginalCoins(level)
+  const statLabel = workshopCriticalChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_critChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_crit_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_crit_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_crit_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopCriticalFactorCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL
+  const nextCoins = workshopCriticalFactorNextMarginalCoins(level)
+  const statLabel = workshopCriticalFactorStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_critFactor')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_crit_factor_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_crit_factor_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_crit_factor_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopAttackRangeCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_ATTACK_RANGE_MAX_LEVEL
+  const nextCoins = workshopAttackRangeNextMarginalCoins(level)
+  const statLabel = workshopAttackRangeStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_attackRange')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_attack_range_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_attack_range_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_attack_range_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_ATTACK_RANGE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_ATTACK_RANGE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopDamagePerMeterCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL
+  const nextCoins = workshopDamagePerMeterNextMarginalCoins(level)
+  const statLabel = workshopDamagePerMeterStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_damagePerMeter')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_damage_per_meter_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_damage_per_meter_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_damage_per_meter_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopMultishotChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL
+  const nextCoins = workshopMultishotChanceNextMarginalCoins(level)
+  const statLabel = workshopMultishotChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_multishotChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_multishot_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_multishot_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_multishot_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopMultishotTargetsCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL
+  const nextCoins = workshopMultishotTargetsNextMarginalCoins(level)
+  const statLabel = workshopMultishotTargetsStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_multishotTargets')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_multishot_targets_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_multishot_targets_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_multishot_targets_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopRapidFireChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL
+  const nextCoins = workshopRapidFireChanceNextMarginalCoins(level)
+  const statLabel = workshopRapidFireChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_rapidFireChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rapid_fire_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_rapid_fire_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rapid_fire_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopRapidFireDurationCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL
+  const nextCoins = workshopRapidFireDurationNextMarginalCoins(level)
+  const statLabel = workshopRapidFireDurationStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_rapidFireDuration')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rapid_fire_duration_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_rapid_fire_duration_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rapid_fire_duration_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopBounceShotChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL
+  const nextCoins = workshopBounceShotChanceNextMarginalCoins(level)
+  const statLabel = workshopBounceShotChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_bounceChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_bounce_shot_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopBounceShotTargetsCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL
+  const nextCoins = workshopBounceShotTargetsNextMarginalCoins(level)
+  const statLabel = workshopBounceShotTargetsStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_bounceTargets')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_targets_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_bounce_shot_targets_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_targets_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopBounceShotRangeCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL
+  const nextCoins = workshopBounceShotRangeNextMarginalCoins(level)
+  const statLabel = workshopBounceShotRangeStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_bounceShotRange')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_range_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_bounce_shot_range_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_bounce_shot_range_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopSuperCritChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL
+  const nextCoins = workshopSuperCritChanceNextMarginalCoins(level)
+  const statLabel = workshopSuperCritChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_superCritChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_super_crit_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_super_crit_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_super_crit_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopSuperCritMultCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL
+  const nextCoins = workshopSuperCritMultNextMarginalCoins(level)
+  const statLabel = workshopSuperCritMultStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_superCritMult')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_super_crit_mult_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_super_crit_mult_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_super_crit_mult_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopRendArmorChanceCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL
+  const nextCoins = workshopRendArmorChanceNextMarginalCoins(level)
+  const statLabel = workshopRendArmorChanceStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_rendArmorChance')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rend_armor_chance_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_rend_armor_chance_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rend_armor_chance_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopRendArmorMultCard({
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const maxed = level >= WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL
+  const nextCoins = workshopRendArmorMultNextMarginalCoins(level)
+  const statLabel = workshopRendArmorMultStatDisplay(level)
+  const stepHint = `×${bulkStep}`
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{t('ws_stat_rendArmorMult')}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rend_armor_mult_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={t('ws_rend_armor_mult_level_input_aria')}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${t('ws_rend_armor_mult_level_up_aria')} (${stepHint})`}
+          disabled={level >= WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+const DEFENSE_CARD_TITLE: Record<WorkshopDefenseUpgradeKey, StringId> = {
+  healthLevel: 'ws_stat_defHealth',
+  healthRegenLevel: 'ws_stat_defHealthRegen',
+  defensePercentLevel: 'ws_stat_defDefensePct',
+  defenseAbsoluteLevel: 'ws_stat_defDefenseAbs',
+  thornDamageLevel: 'ws_stat_defThornDamage',
+  lifestealLevel: 'ws_stat_defLifesteal',
+  knockbackChanceLevel: 'ws_stat_defKnockbackChance',
+  knockbackForceLevel: 'ws_stat_defKnockbackForce',
+  orbSpeedLevel: 'ws_stat_defOrbSpeed',
+  orbsLevel: 'ws_stat_defOrbs',
+  shockwaveSizeLevel: 'ws_stat_defShockwaveSize',
+  shockwaveFrequencyLevel: 'ws_stat_defShockwaveFreq',
+  landMineChanceLevel: 'ws_stat_defLandMineChance',
+  landMineDamageLevel: 'ws_stat_defLandMineDamage',
+  landMineRadiusLevel: 'ws_stat_defLandMineRadius',
+  deathDefyLevel: 'ws_stat_defDeathDefy',
+  wallHealthLevel: 'ws_stat_defWallHealth',
+  wallRebuildLevel: 'ws_stat_defWallRebuild',
+}
+
+const UTILITY_CARD_TITLE: Record<WorkshopUtilityUpgradeKey, StringId> = {
+  cashBonusLevel: 'ws_stat_utilCashBonus',
+  cashPerWaveLevel: 'ws_stat_utilCashPerWave',
+  coinsKillBonusLevel: 'ws_stat_utilCoinsKillBonus',
+  coinsWaveLevel: 'ws_stat_utilCoinsWave',
+  freeAttackUpgradeLevel: 'ws_stat_utilFreeAttackUpgrade',
+  freeDefenseUpgradeLevel: 'ws_stat_utilFreeDefenseUpgrade',
+  freeUtilityUpgradeLevel: 'ws_stat_utilFreeUtilityUpgrade',
+  interestPerWaveLevel: 'ws_stat_utilInterestPerWave',
+  recoveryAmountLevel: 'ws_stat_utilRecoveryAmount',
+  maxRecoveryLevel: 'ws_stat_utilMaxRecovery',
+  packageChanceLevel: 'ws_stat_utilPackageChance',
+  enemyAttackLevelSkipLevel: 'ws_stat_utilEnemyAttackLevelSkip',
+  enemyHealthLevelSkipLevel: 'ws_stat_utilEnemyHealthLevelSkip',
+}
+
+function WorkshopDefenseUpgradeCard({
+  fieldKey,
+  titleId,
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  fieldKey: WorkshopDefenseUpgradeKey
+  titleId: StringId
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const max = workshopDefenseMaxLevel(fieldKey)
+  const maxed = level >= max
+  const nextCoins = workshopDefenseNextMarginalCoins(fieldKey, level)
+  const statLabel = workshopDefenseStatDisplay(fieldKey, level)
+  const stepHint = `×${bulkStep}`
+  const statName = t(titleId)
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{statName}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${statName} — ${t('ws_defense_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={`${statName} — ${t('ws_defense_level_input_aria')}`}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${statName} — ${t('ws_defense_level_up_aria')} (${stepHint})`}
+          disabled={level >= max}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {max}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function WorkshopUtilityUpgradeCard({
+  fieldKey,
+  titleId,
+  level,
+  draft,
+  setDraft,
+  onBump,
+  onCommitDraft,
+  bulkStep,
+}: {
+  fieldKey: WorkshopUtilityUpgradeKey
+  titleId: StringId
+  level: number
+  draft: string
+  setDraft: (s: string) => void
+  onBump: (direction: -1 | 1) => void
+  onCommitDraft: () => void
+  bulkStep: WorkshopMultiplier
+}) {
+  const { t } = useI18n()
+  const max = workshopUtilityMaxLevel(fieldKey)
+  const maxed = level >= max
+  const nextCoins = workshopUtilityNextMarginalCoins(fieldKey, level)
+  const statLabel = workshopUtilityStatDisplay(fieldKey, level)
+  const stepHint = `×${bulkStep}`
+  const statName = t(titleId)
+
+  return (
+    <li
+      className={maxed ? 'workshop__card workshop__card--max' : 'workshop__card workshop__card--active'}
+    >
+      <div className="workshop__card-damage-head">
+        <span className="workshop__card-name">{statName}</span>
+        <span className="workshop__card-value">{statLabel}</span>
+      </div>
+      <div className="workshop__card-level-row">
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${statName} — ${t('ws_defense_level_down_aria')} (${stepHint})`}
+          disabled={level <= 0}
+          onClick={() => onBump(-1)}
+        >
+          −
+        </button>
+        <div className="workshop__level-field">
+          <input
+            className="workshop__level-input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label={`${statName} — ${t('ws_defense_level_input_aria')}`}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => onCommitDraft()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onCommitDraft()
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="workshop__level-step"
+          aria-label={`${statName} — ${t('ws_defense_level_up_aria')} (${stepHint})`}
+          disabled={level >= max}
+          onClick={() => onBump(1)}
+        >
+          +
+        </button>
+      </div>
+      <div className="workshop__card-damage-footer">
+        <span className="workshop__damage-max-caps">
+          {t('ws_damage_max_label')} {max}
+        </span>
+        <div className="workshop__card-damage-cost">
+          {maxed || nextCoins == null ? (
+            <span className="workshop__card-cost workshop__card-cost--max">
+              {t('ws_max')}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          ) : (
+            <span className="workshop__card-cost" title={t('researchCard_cost_coins_title')}>
+              {formatCoinAbbrev(nextCoins)}
+              <CoinGlyph className="workshop__card-coin" />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
   )
 }
 
@@ -122,35 +2145,696 @@ type WorkshopPageProps = {
   embeddedInPanel?: boolean
   /** In-panel: mount node between app tabs and workshop panel (shared chrome). */
   toolbarMount?: HTMLElement | null
+  workshopPersisted: WorkshopPersistedV1
+  onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
 }
 
 export function WorkshopPage({
   embeddedInPanel = false,
   toolbarMount = null,
+  workshopPersisted,
+  onWorkshopPersistedChange,
 }: WorkshopPageProps) {
-  const { t } = useI18n()
+  const { t, fmt } = useI18n()
   const headingId = useId()
-  const [mainTab, setMainTab] = useState<'upgrade' | 'enhance'>('upgrade')
-  const [category, setCategory] = useState<WorkshopCategory>('attack')
+  const workshopBudgetTitleId = useId().replace(/:/g, '')
+  const {
+    hideMaxed,
+    mainTab,
+    category,
+    multiplier,
+    damageLevel,
+    attackSpeedLevel,
+    critChanceLevel,
+    critFactorLevel,
+    attackRangeLevel,
+    damagePerMeterLevel,
+    multishotChanceLevel,
+    multishotTargetsLevel,
+    rapidFireChanceLevel,
+    rapidFireDurationLevel,
+    bounceShotChanceLevel,
+    bounceShotTargetsLevel,
+    bounceShotRangeLevel,
+    superCritChanceLevel,
+    superCritMultLevel,
+    rendArmorChanceLevel,
+    rendArmorMultLevel,
+  } = workshopPersisted
+
   const [multiplierOpen, setMultiplierOpen] = useState(false)
-  const [multiplier, setMultiplier] = useState<WorkshopMultiplier>(10)
-  const [hideMaxed, setHideMaxed] = useState(false)
+  const [damageDraft, setDamageDraft] = useState('0')
+  const [attackSpeedDraft, setAttackSpeedDraft] = useState('0')
+  const [critChanceDraft, setCritChanceDraft] = useState('0')
+  const [critFactorDraft, setCritFactorDraft] = useState('0')
+  const [attackRangeDraft, setAttackRangeDraft] = useState('0')
+  const [damagePerMeterDraft, setDamagePerMeterDraft] = useState('0')
+  const [multishotChanceDraft, setMultishotChanceDraft] = useState('0')
+  const [multishotTargetsDraft, setMultishotTargetsDraft] = useState('0')
+  const [rapidFireChanceDraft, setRapidFireChanceDraft] = useState('0')
+  const [rapidFireDurationDraft, setRapidFireDurationDraft] = useState('0')
+  const [bounceShotChanceDraft, setBounceShotChanceDraft] = useState('0')
+  const [bounceShotTargetsDraft, setBounceShotTargetsDraft] = useState('0')
+  const [bounceShotRangeDraft, setBounceShotRangeDraft] = useState('0')
+  const [superCritChanceDraft, setSuperCritChanceDraft] = useState('0')
+  const [superCritMultDraft, setSuperCritMultDraft] = useState('0')
+  const [rendArmorChanceDraft, setRendArmorChanceDraft] = useState('0')
+  const [rendArmorMultDraft, setRendArmorMultDraft] = useState('0')
+  const [defenseDrafts, setDefenseDrafts] = useState<Record<WorkshopDefenseUpgradeKey, string>>(
+    () =>
+      Object.fromEntries(WORKSHOP_DEFENSE_UPGRADE_ORDER.map((k) => [k, '0'])) as Record<
+        WorkshopDefenseUpgradeKey,
+        string
+      >,
+  )
+  const [utilityDrafts, setUtilityDrafts] = useState<Record<WorkshopUtilityUpgradeKey, string>>(
+    () =>
+      Object.fromEntries(WORKSHOP_UTILITY_UPGRADE_ORDER.map((k) => [k, '0'])) as Record<
+        WorkshopUtilityUpgradeKey,
+        string
+      >,
+  )
+  const [resetWorkshopConfirmOpen, setResetWorkshopConfirmOpen] = useState(false)
   const multRailRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- keep numeric draft inputs aligned with persisted workshop snapshot (presets, import, reset, steppers). */
+    setDamageDraft(String(workshopPersisted.damageLevel))
+    setAttackSpeedDraft(String(workshopPersisted.attackSpeedLevel))
+    setCritChanceDraft(String(workshopPersisted.critChanceLevel))
+    setCritFactorDraft(String(workshopPersisted.critFactorLevel))
+    setAttackRangeDraft(String(workshopPersisted.attackRangeLevel))
+    setDamagePerMeterDraft(String(workshopPersisted.damagePerMeterLevel))
+    setMultishotChanceDraft(String(workshopPersisted.multishotChanceLevel))
+    setMultishotTargetsDraft(String(workshopPersisted.multishotTargetsLevel))
+    setRapidFireChanceDraft(String(workshopPersisted.rapidFireChanceLevel))
+    setRapidFireDurationDraft(String(workshopPersisted.rapidFireDurationLevel))
+    setBounceShotChanceDraft(String(workshopPersisted.bounceShotChanceLevel))
+    setBounceShotTargetsDraft(String(workshopPersisted.bounceShotTargetsLevel))
+    setBounceShotRangeDraft(String(workshopPersisted.bounceShotRangeLevel))
+    setSuperCritChanceDraft(String(workshopPersisted.superCritChanceLevel))
+    setSuperCritMultDraft(String(workshopPersisted.superCritMultLevel))
+    setRendArmorChanceDraft(String(workshopPersisted.rendArmorChanceLevel))
+    setRendArmorMultDraft(String(workshopPersisted.rendArmorMultLevel))
+    setDefenseDrafts(
+      Object.fromEntries(
+        WORKSHOP_DEFENSE_UPGRADE_ORDER.map((k) => [k, String(workshopPersisted[k])]),
+      ) as Record<WorkshopDefenseUpgradeKey, string>,
+    )
+    setUtilityDrafts(
+      Object.fromEntries(
+        WORKSHOP_UTILITY_UPGRADE_ORDER.map((k) => [k, String(workshopPersisted[k])]),
+      ) as Record<WorkshopUtilityUpgradeKey, string>,
+    )
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- list only level fields; workshop object identity may change without level edits
+  }, [
+    workshopPersisted.damageLevel,
+    workshopPersisted.attackSpeedLevel,
+    workshopPersisted.critChanceLevel,
+    workshopPersisted.critFactorLevel,
+    workshopPersisted.attackRangeLevel,
+    workshopPersisted.damagePerMeterLevel,
+    workshopPersisted.multishotChanceLevel,
+    workshopPersisted.multishotTargetsLevel,
+    workshopPersisted.rapidFireChanceLevel,
+    workshopPersisted.rapidFireDurationLevel,
+    workshopPersisted.bounceShotChanceLevel,
+    workshopPersisted.bounceShotTargetsLevel,
+    workshopPersisted.bounceShotRangeLevel,
+    workshopPersisted.superCritChanceLevel,
+    workshopPersisted.superCritMultLevel,
+    workshopPersisted.rendArmorChanceLevel,
+    workshopPersisted.rendArmorMultLevel,
+    workshopPersisted.healthLevel,
+    workshopPersisted.healthRegenLevel,
+    workshopPersisted.defensePercentLevel,
+    workshopPersisted.defenseAbsoluteLevel,
+    workshopPersisted.thornDamageLevel,
+    workshopPersisted.lifestealLevel,
+    workshopPersisted.knockbackChanceLevel,
+    workshopPersisted.knockbackForceLevel,
+    workshopPersisted.orbSpeedLevel,
+    workshopPersisted.orbsLevel,
+    workshopPersisted.shockwaveSizeLevel,
+    workshopPersisted.shockwaveFrequencyLevel,
+    workshopPersisted.landMineChanceLevel,
+    workshopPersisted.landMineDamageLevel,
+    workshopPersisted.landMineRadiusLevel,
+    workshopPersisted.deathDefyLevel,
+    workshopPersisted.wallHealthLevel,
+    workshopPersisted.wallRebuildLevel,
+    workshopPersisted.cashBonusLevel,
+    workshopPersisted.cashPerWaveLevel,
+    workshopPersisted.coinsKillBonusLevel,
+    workshopPersisted.coinsWaveLevel,
+    workshopPersisted.freeAttackUpgradeLevel,
+    workshopPersisted.freeDefenseUpgradeLevel,
+    workshopPersisted.freeUtilityUpgradeLevel,
+    workshopPersisted.interestPerWaveLevel,
+    workshopPersisted.recoveryAmountLevel,
+    workshopPersisted.maxRecoveryLevel,
+    workshopPersisted.packageChanceLevel,
+    workshopPersisted.enemyAttackLevelSkipLevel,
+    workshopPersisted.enemyHealthLevelSkipLevel,
+  ])
 
   const sectionTitleId = SECTION_TITLE[category]
 
-  const visibleDemoRows = useMemo(
-    () => (hideMaxed ? DEMO_ROWS.filter((r) => !r.maxed) : [...DEMO_ROWS]),
-    [hideMaxed],
+  const commitDamageDraft = useCallback(() => {
+    const raw = damageDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setDamageDraft(String(damageLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setDamageDraft(String(damageLevel))
+      return
+    }
+    const c = clampWorkshopDamageLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, damageLevel: c })
+  }, [damageDraft, damageLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpDamage = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopDamageLevel(damageLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, damageLevel: nv })
+    },
+    [damageLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
   )
 
-  const resetWorkshopDemo = useCallback(() => {
-    setHideMaxed(false)
-    setMultiplier(10)
-    setCategory('attack')
-    setMainTab('upgrade')
+  const commitAttackSpeedDraft = useCallback(() => {
+    const raw = attackSpeedDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setAttackSpeedDraft(String(attackSpeedLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setAttackSpeedDraft(String(attackSpeedLevel))
+      return
+    }
+    const c = clampWorkshopAttackSpeedLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, attackSpeedLevel: c })
+  }, [attackSpeedDraft, attackSpeedLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpAttackSpeed = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopAttackSpeedLevel(attackSpeedLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, attackSpeedLevel: nv })
+    },
+    [attackSpeedLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitCritChanceDraft = useCallback(() => {
+    const raw = critChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setCritChanceDraft(String(critChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setCritChanceDraft(String(critChanceLevel))
+      return
+    }
+    const c = clampWorkshopCriticalChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, critChanceLevel: c })
+  }, [critChanceDraft, critChanceLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpCritChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopCriticalChanceLevel(critChanceLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, critChanceLevel: nv })
+    },
+    [critChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitCritFactorDraft = useCallback(() => {
+    const raw = critFactorDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setCritFactorDraft(String(critFactorLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setCritFactorDraft(String(critFactorLevel))
+      return
+    }
+    const c = clampWorkshopCriticalFactorLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, critFactorLevel: c })
+  }, [critFactorDraft, critFactorLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpCritFactor = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopCriticalFactorLevel(critFactorLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, critFactorLevel: nv })
+    },
+    [critFactorLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitAttackRangeDraft = useCallback(() => {
+    const raw = attackRangeDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setAttackRangeDraft(String(attackRangeLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setAttackRangeDraft(String(attackRangeLevel))
+      return
+    }
+    const c = clampWorkshopAttackRangeLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, attackRangeLevel: c })
+  }, [attackRangeDraft, attackRangeLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpAttackRange = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopAttackRangeLevel(attackRangeLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, attackRangeLevel: nv })
+    },
+    [attackRangeLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitDamagePerMeterDraft = useCallback(() => {
+    const raw = damagePerMeterDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setDamagePerMeterDraft(String(damagePerMeterLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setDamagePerMeterDraft(String(damagePerMeterLevel))
+      return
+    }
+    const c = clampWorkshopDamagePerMeterLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, damagePerMeterLevel: c })
+  }, [damagePerMeterDraft, damagePerMeterLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpDamagePerMeter = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopDamagePerMeterLevel(damagePerMeterLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, damagePerMeterLevel: nv })
+    },
+    [damagePerMeterLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitMultishotChanceDraft = useCallback(() => {
+    const raw = multishotChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setMultishotChanceDraft(String(multishotChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setMultishotChanceDraft(String(multishotChanceLevel))
+      return
+    }
+    const c = clampWorkshopMultishotChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, multishotChanceLevel: c })
+  }, [multishotChanceDraft, multishotChanceLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpMultishotChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopMultishotChanceLevel(multishotChanceLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, multishotChanceLevel: nv })
+    },
+    [multishotChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitMultishotTargetsDraft = useCallback(() => {
+    const raw = multishotTargetsDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setMultishotTargetsDraft(String(multishotTargetsLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setMultishotTargetsDraft(String(multishotTargetsLevel))
+      return
+    }
+    const c = clampWorkshopMultishotTargetsLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, multishotTargetsLevel: c })
+  }, [multishotTargetsDraft, multishotTargetsLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpMultishotTargets = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopMultishotTargetsLevel(multishotTargetsLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, multishotTargetsLevel: nv })
+    },
+    [multishotTargetsLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitRapidFireChanceDraft = useCallback(() => {
+    const raw = rapidFireChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setRapidFireChanceDraft(String(rapidFireChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setRapidFireChanceDraft(String(rapidFireChanceLevel))
+      return
+    }
+    const c = clampWorkshopRapidFireChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, rapidFireChanceLevel: c })
+  }, [rapidFireChanceDraft, rapidFireChanceLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpRapidFireChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopRapidFireChanceLevel(rapidFireChanceLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, rapidFireChanceLevel: nv })
+    },
+    [rapidFireChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitRapidFireDurationDraft = useCallback(() => {
+    const raw = rapidFireDurationDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setRapidFireDurationDraft(String(rapidFireDurationLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setRapidFireDurationDraft(String(rapidFireDurationLevel))
+      return
+    }
+    const c = clampWorkshopRapidFireDurationLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, rapidFireDurationLevel: c })
+  }, [rapidFireDurationDraft, rapidFireDurationLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpRapidFireDuration = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopRapidFireDurationLevel(rapidFireDurationLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, rapidFireDurationLevel: nv })
+    },
+    [rapidFireDurationLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitBounceShotChanceDraft = useCallback(() => {
+    const raw = bounceShotChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setBounceShotChanceDraft(String(bounceShotChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setBounceShotChanceDraft(String(bounceShotChanceLevel))
+      return
+    }
+    const c = clampWorkshopBounceShotChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, bounceShotChanceLevel: c })
+  }, [bounceShotChanceDraft, bounceShotChanceLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpBounceShotChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopBounceShotChanceLevel(bounceShotChanceLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, bounceShotChanceLevel: nv })
+    },
+    [bounceShotChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitBounceShotTargetsDraft = useCallback(() => {
+    const raw = bounceShotTargetsDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setBounceShotTargetsDraft(String(bounceShotTargetsLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setBounceShotTargetsDraft(String(bounceShotTargetsLevel))
+      return
+    }
+    const c = clampWorkshopBounceShotTargetsLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, bounceShotTargetsLevel: c })
+  }, [bounceShotTargetsDraft, bounceShotTargetsLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpBounceShotTargets = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopBounceShotTargetsLevel(bounceShotTargetsLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, bounceShotTargetsLevel: nv })
+    },
+    [bounceShotTargetsLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitBounceShotRangeDraft = useCallback(() => {
+    const raw = bounceShotRangeDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setBounceShotRangeDraft(String(bounceShotRangeLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setBounceShotRangeDraft(String(bounceShotRangeLevel))
+      return
+    }
+    const c = clampWorkshopBounceShotRangeLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, bounceShotRangeLevel: c })
+  }, [bounceShotRangeDraft, bounceShotRangeLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpBounceShotRange = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopBounceShotRangeLevel(bounceShotRangeLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, bounceShotRangeLevel: nv })
+    },
+    [bounceShotRangeLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitSuperCritChanceDraft = useCallback(() => {
+    const raw = superCritChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setSuperCritChanceDraft(String(superCritChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setSuperCritChanceDraft(String(superCritChanceLevel))
+      return
+    }
+    const c = clampWorkshopSuperCritChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, superCritChanceLevel: c })
+  }, [superCritChanceDraft, superCritChanceLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpSuperCritChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopSuperCritChanceLevel(superCritChanceLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, superCritChanceLevel: nv })
+    },
+    [superCritChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitSuperCritMultDraft = useCallback(() => {
+    const raw = superCritMultDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setSuperCritMultDraft(String(superCritMultLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setSuperCritMultDraft(String(superCritMultLevel))
+      return
+    }
+    const c = clampWorkshopSuperCritMultLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, superCritMultLevel: c })
+  }, [superCritMultDraft, superCritMultLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpSuperCritMult = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopSuperCritMultLevel(superCritMultLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, superCritMultLevel: nv })
+    },
+    [superCritMultLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitRendArmorChanceDraft = useCallback(() => {
+    const raw = rendArmorChanceDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setRendArmorChanceDraft(String(rendArmorChanceLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setRendArmorChanceDraft(String(rendArmorChanceLevel))
+      return
+    }
+    const c = clampWorkshopRendArmorChanceLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, rendArmorChanceLevel: c })
+  }, [
+    rendArmorChanceDraft,
+    rendArmorChanceLevel,
+    onWorkshopPersistedChange,
+    workshopPersisted,
+  ])
+
+  const bumpRendArmorChance = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopRendArmorChanceLevel(
+        rendArmorChanceLevel + direction * multiplier,
+      )
+      onWorkshopPersistedChange({ ...workshopPersisted, rendArmorChanceLevel: nv })
+    },
+    [rendArmorChanceLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitRendArmorMultDraft = useCallback(() => {
+    const raw = rendArmorMultDraft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setRendArmorMultDraft(String(rendArmorMultLevel))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setRendArmorMultDraft(String(rendArmorMultLevel))
+      return
+    }
+    const c = clampWorkshopRendArmorMultLevel(n)
+    onWorkshopPersistedChange({ ...workshopPersisted, rendArmorMultLevel: c })
+  }, [rendArmorMultDraft, rendArmorMultLevel, onWorkshopPersistedChange, workshopPersisted])
+
+  const bumpRendArmorMult = useCallback(
+    (direction: -1 | 1) => {
+      const nv = clampWorkshopRendArmorMultLevel(rendArmorMultLevel + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, rendArmorMultLevel: nv })
+    },
+    [rendArmorMultLevel, multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const bumpDefense = useCallback(
+    (key: WorkshopDefenseUpgradeKey, direction: -1 | 1) => {
+      const cur = workshopPersisted[key]
+      const nv = workshopDefenseClampLevel(key, cur + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
+    },
+    [multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitDefenseDraft = useCallback(
+    (key: WorkshopDefenseUpgradeKey) => {
+      const raw = defenseDrafts[key].trim().replace(/,/g, '')
+      if (raw === '') {
+        setDefenseDrafts((d) => ({ ...d, [key]: String(workshopPersisted[key]) }))
+        return
+      }
+      const n = Number(raw)
+      if (!Number.isFinite(n)) {
+        setDefenseDrafts((d) => ({ ...d, [key]: String(workshopPersisted[key]) }))
+        return
+      }
+      const c = workshopDefenseClampLevel(key, n)
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: c })
+    },
+    [defenseDrafts, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const bumpUtility = useCallback(
+    (key: WorkshopUtilityUpgradeKey, direction: -1 | 1) => {
+      const cur = workshopPersisted[key]
+      const nv = workshopUtilityClampLevel(key, cur + direction * multiplier)
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
+    },
+    [multiplier, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const commitUtilityDraft = useCallback(
+    (key: WorkshopUtilityUpgradeKey) => {
+      const raw = utilityDrafts[key].trim().replace(/,/g, '')
+      if (raw === '') {
+        setUtilityDrafts((d) => ({ ...d, [key]: String(workshopPersisted[key]) }))
+        return
+      }
+      const n = Number(raw)
+      if (!Number.isFinite(n)) {
+        setUtilityDrafts((d) => ({ ...d, [key]: String(workshopPersisted[key]) }))
+        return
+      }
+      const c = workshopUtilityClampLevel(key, n)
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: c })
+    },
+    [utilityDrafts, onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const visibleDemoRows = useMemo(() => {
+    const base = DEMO_ROWS_BY_CATEGORY[category]
+    return hideMaxed ? base.filter((r) => !r.maxed) : [...base]
+  }, [category, hideMaxed])
+
+  const showDamageCard =
+    category === 'attack' &&
+    (!hideMaxed || damageLevel < WORKSHOP_DAMAGE_MAX_LEVEL)
+  const showAttackSpeedCard =
+    category === 'attack' &&
+    (!hideMaxed || attackSpeedLevel < WORKSHOP_ATTACK_SPEED_MAX_LEVEL)
+  const showCritChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || critChanceLevel < WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL)
+  const showCritFactorCard =
+    category === 'attack' &&
+    (!hideMaxed || critFactorLevel < WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL)
+  const showAttackRangeCard =
+    category === 'attack' &&
+    (!hideMaxed || attackRangeLevel < WORKSHOP_ATTACK_RANGE_MAX_LEVEL)
+  const showDamagePerMeterCard =
+    category === 'attack' &&
+    (!hideMaxed || damagePerMeterLevel < WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL)
+  const showMultishotChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || multishotChanceLevel < WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL)
+  const showMultishotTargetsCard =
+    category === 'attack' &&
+    (!hideMaxed || multishotTargetsLevel < WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL)
+  const showRapidFireChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || rapidFireChanceLevel < WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL)
+  const showRapidFireDurationCard =
+    category === 'attack' &&
+    (!hideMaxed || rapidFireDurationLevel < WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL)
+  const showBounceShotChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || bounceShotChanceLevel < WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL)
+  const showBounceShotTargetsCard =
+    category === 'attack' &&
+    (!hideMaxed || bounceShotTargetsLevel < WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL)
+  const showBounceShotRangeCard =
+    category === 'attack' &&
+    (!hideMaxed || bounceShotRangeLevel < WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL)
+  const showSuperCritChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || superCritChanceLevel < WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL)
+  const showSuperCritMultCard =
+    category === 'attack' &&
+    (!hideMaxed || superCritMultLevel < WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL)
+  const showRendArmorChanceCard =
+    category === 'attack' &&
+    (!hideMaxed || rendArmorChanceLevel < WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL)
+  const showRendArmorMultCard =
+    category === 'attack' &&
+    (!hideMaxed || rendArmorMultLevel < WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL)
+
+  const performResetWorkshopDemo = useCallback(() => {
+    setResetWorkshopConfirmOpen(false)
+    onWorkshopPersistedChange(defaultWorkshopPersisted())
     setMultiplierOpen(false)
+  }, [onWorkshopPersistedChange])
+
+  const openResetWorkshopConfirm = useCallback(() => {
+    setMultiplierOpen(false)
+    setResetWorkshopConfirmOpen(true)
   }, [])
+
+  useEffect(() => {
+    if (!resetWorkshopConfirmOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setResetWorkshopConfirmOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [resetWorkshopConfirmOpen])
 
   useEffect(() => {
     if (!multiplierOpen) return
@@ -168,6 +2852,20 @@ export function WorkshopPage({
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [multiplierOpen])
+
+  const setHideMaxed = useCallback(
+    (v: boolean) => onWorkshopPersistedChange({ ...workshopPersisted, hideMaxed: v }),
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const workshopCoinAggregates = useMemo(
+    () => computeWorkshopCoinAggregates(workshopPersisted),
+    [workshopPersisted],
+  )
+  const workshopCoinLabels = useMemo(
+    () => formatWorkshopCoinAggregates(workshopCoinAggregates),
+    [workshopCoinAggregates],
+  )
 
   return (
     <div
@@ -194,7 +2892,7 @@ export function WorkshopPage({
             <WorkshopDemoToolbar
               hideMaxed={hideMaxed}
               setHideMaxed={setHideMaxed}
-              onResetDemo={resetWorkshopDemo}
+              onResetDemo={openResetWorkshopConfirm}
             />,
             toolbarMount,
           )
@@ -205,7 +2903,7 @@ export function WorkshopPage({
           <WorkshopDemoToolbar
             hideMaxed={hideMaxed}
             setHideMaxed={setHideMaxed}
-            onResetDemo={resetWorkshopDemo}
+            onResetDemo={openResetWorkshopConfirm}
           />
         </div>
       ) : null}
@@ -218,7 +2916,9 @@ export function WorkshopPage({
           className={
             mainTab === 'upgrade' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
           }
-          onClick={() => setMainTab('upgrade')}
+          onClick={() =>
+            onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'upgrade' })
+          }
         >
           {t('ws_tab_upgrade')}
         </button>
@@ -229,17 +2929,50 @@ export function WorkshopPage({
           className={
             mainTab === 'enhance' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
           }
-          onClick={() => setMainTab('enhance')}
+          onClick={() =>
+            onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'enhance' })
+          }
         >
           {t('ws_tab_enhance')}
         </button>
+      </div>
+
+      <div
+        className="select-research__budget"
+        role="region"
+        aria-labelledby={workshopBudgetTitleId}
+      >
+        <h2 id={workshopBudgetTitleId} className="select-research__budget-title">
+          {t('ws_budget_title')}
+        </h2>
+        <p className="visually-hidden" aria-live="polite" aria-atomic="true">
+          {fmt.workshopBudgetAria(
+            workshopCoinLabels.spentLabel,
+            workshopCoinLabels.toMaxLabel,
+            workshopCoinLabels.nextVisibleLabel,
+          )}
+        </p>
+        <dl className="select-research__budget-stats">
+          <div className="select-research__budget-row">
+            <dt>{t('ws_budget_spent_dt')}</dt>
+            <dd>{workshopCoinLabels.spentLabel}</dd>
+          </div>
+          <div className="select-research__budget-row">
+            <dt>{t('ws_budget_to_max_dt')}</dt>
+            <dd>{workshopCoinLabels.toMaxLabel}</dd>
+          </div>
+          <div className="select-research__budget-row">
+            <dt>{t('ws_budget_next_dt')}</dt>
+            <dd>{workshopCoinLabels.nextVisibleLabel}</dd>
+          </div>
+        </dl>
+        <p className="select-research__budget-footnote">{t('ws_budget_footnote')}</p>
       </div>
 
       <div className="workshop__body">
       {mainTab === 'enhance' ? (
         <div className="workshop__enhance-placeholder">
           <p>{t('ws_enhance_empty')}</p>
-          <p className="workshop__footnote">{t('ws_disclaimer')}</p>
         </div>
       ) : (
         <>
@@ -270,7 +3003,10 @@ export function WorkshopPage({
                         tabIndex={multiplierOpen ? 0 : -1}
                         aria-pressed={multiplier === m}
                         onClick={() => {
-                          setMultiplier(m)
+                          onWorkshopPersistedChange({
+                            ...workshopPersisted,
+                            multiplier: m,
+                          })
                           setMultiplierOpen(false)
                         }}
                       >
@@ -297,6 +3033,216 @@ export function WorkshopPage({
           </div>
 
           <ul className="workshop__grid">
+            {showDamageCard ? (
+              <WorkshopDamageCard
+                level={damageLevel}
+                draft={damageDraft}
+                setDraft={setDamageDraft}
+                bulkStep={multiplier}
+                onBump={bumpDamage}
+                onCommitDraft={commitDamageDraft}
+              />
+            ) : null}
+            {showAttackSpeedCard ? (
+              <WorkshopAttackSpeedCard
+                level={attackSpeedLevel}
+                draft={attackSpeedDraft}
+                setDraft={setAttackSpeedDraft}
+                bulkStep={multiplier}
+                onBump={bumpAttackSpeed}
+                onCommitDraft={commitAttackSpeedDraft}
+              />
+            ) : null}
+            {showCritChanceCard ? (
+              <WorkshopCriticalChanceCard
+                level={critChanceLevel}
+                draft={critChanceDraft}
+                setDraft={setCritChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpCritChance}
+                onCommitDraft={commitCritChanceDraft}
+              />
+            ) : null}
+            {showCritFactorCard ? (
+              <WorkshopCriticalFactorCard
+                level={critFactorLevel}
+                draft={critFactorDraft}
+                setDraft={setCritFactorDraft}
+                bulkStep={multiplier}
+                onBump={bumpCritFactor}
+                onCommitDraft={commitCritFactorDraft}
+              />
+            ) : null}
+            {showAttackRangeCard ? (
+              <WorkshopAttackRangeCard
+                level={attackRangeLevel}
+                draft={attackRangeDraft}
+                setDraft={setAttackRangeDraft}
+                bulkStep={multiplier}
+                onBump={bumpAttackRange}
+                onCommitDraft={commitAttackRangeDraft}
+              />
+            ) : null}
+            {showDamagePerMeterCard ? (
+              <WorkshopDamagePerMeterCard
+                level={damagePerMeterLevel}
+                draft={damagePerMeterDraft}
+                setDraft={setDamagePerMeterDraft}
+                bulkStep={multiplier}
+                onBump={bumpDamagePerMeter}
+                onCommitDraft={commitDamagePerMeterDraft}
+              />
+            ) : null}
+            {showMultishotChanceCard ? (
+              <WorkshopMultishotChanceCard
+                level={multishotChanceLevel}
+                draft={multishotChanceDraft}
+                setDraft={setMultishotChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpMultishotChance}
+                onCommitDraft={commitMultishotChanceDraft}
+              />
+            ) : null}
+            {showMultishotTargetsCard ? (
+              <WorkshopMultishotTargetsCard
+                level={multishotTargetsLevel}
+                draft={multishotTargetsDraft}
+                setDraft={setMultishotTargetsDraft}
+                bulkStep={multiplier}
+                onBump={bumpMultishotTargets}
+                onCommitDraft={commitMultishotTargetsDraft}
+              />
+            ) : null}
+            {showRapidFireChanceCard ? (
+              <WorkshopRapidFireChanceCard
+                level={rapidFireChanceLevel}
+                draft={rapidFireChanceDraft}
+                setDraft={setRapidFireChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpRapidFireChance}
+                onCommitDraft={commitRapidFireChanceDraft}
+              />
+            ) : null}
+            {showRapidFireDurationCard ? (
+              <WorkshopRapidFireDurationCard
+                level={rapidFireDurationLevel}
+                draft={rapidFireDurationDraft}
+                setDraft={setRapidFireDurationDraft}
+                bulkStep={multiplier}
+                onBump={bumpRapidFireDuration}
+                onCommitDraft={commitRapidFireDurationDraft}
+              />
+            ) : null}
+            {showBounceShotChanceCard ? (
+              <WorkshopBounceShotChanceCard
+                level={bounceShotChanceLevel}
+                draft={bounceShotChanceDraft}
+                setDraft={setBounceShotChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpBounceShotChance}
+                onCommitDraft={commitBounceShotChanceDraft}
+              />
+            ) : null}
+            {showBounceShotTargetsCard ? (
+              <WorkshopBounceShotTargetsCard
+                level={bounceShotTargetsLevel}
+                draft={bounceShotTargetsDraft}
+                setDraft={setBounceShotTargetsDraft}
+                bulkStep={multiplier}
+                onBump={bumpBounceShotTargets}
+                onCommitDraft={commitBounceShotTargetsDraft}
+              />
+            ) : null}
+            {showBounceShotRangeCard ? (
+              <WorkshopBounceShotRangeCard
+                level={bounceShotRangeLevel}
+                draft={bounceShotRangeDraft}
+                setDraft={setBounceShotRangeDraft}
+                bulkStep={multiplier}
+                onBump={bumpBounceShotRange}
+                onCommitDraft={commitBounceShotRangeDraft}
+              />
+            ) : null}
+            {showSuperCritChanceCard ? (
+              <WorkshopSuperCritChanceCard
+                level={superCritChanceLevel}
+                draft={superCritChanceDraft}
+                setDraft={setSuperCritChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpSuperCritChance}
+                onCommitDraft={commitSuperCritChanceDraft}
+              />
+            ) : null}
+            {showSuperCritMultCard ? (
+              <WorkshopSuperCritMultCard
+                level={superCritMultLevel}
+                draft={superCritMultDraft}
+                setDraft={setSuperCritMultDraft}
+                bulkStep={multiplier}
+                onBump={bumpSuperCritMult}
+                onCommitDraft={commitSuperCritMultDraft}
+              />
+            ) : null}
+            {showRendArmorChanceCard ? (
+              <WorkshopRendArmorChanceCard
+                level={rendArmorChanceLevel}
+                draft={rendArmorChanceDraft}
+                setDraft={setRendArmorChanceDraft}
+                bulkStep={multiplier}
+                onBump={bumpRendArmorChance}
+                onCommitDraft={commitRendArmorChanceDraft}
+              />
+            ) : null}
+            {showRendArmorMultCard ? (
+              <WorkshopRendArmorMultCard
+                level={rendArmorMultLevel}
+                draft={rendArmorMultDraft}
+                setDraft={setRendArmorMultDraft}
+                bulkStep={multiplier}
+                onBump={bumpRendArmorMult}
+                onCommitDraft={commitRendArmorMultDraft}
+              />
+            ) : null}
+            {category === 'defense'
+              ? WORKSHOP_DEFENSE_UPGRADE_ORDER.map((key) => {
+                  const max = workshopDefenseMaxLevel(key)
+                  const level = workshopPersisted[key]
+                  if (hideMaxed && level >= max) return null
+                  return (
+                    <WorkshopDefenseUpgradeCard
+                      key={key}
+                      fieldKey={key}
+                      titleId={DEFENSE_CARD_TITLE[key]}
+                      level={level}
+                      draft={defenseDrafts[key]}
+                      setDraft={(s) => setDefenseDrafts((prev) => ({ ...prev, [key]: s }))}
+                      bulkStep={multiplier}
+                      onBump={(dir) => bumpDefense(key, dir)}
+                      onCommitDraft={() => commitDefenseDraft(key)}
+                    />
+                  )
+                })
+              : null}
+            {category === 'utility'
+              ? WORKSHOP_UTILITY_UPGRADE_ORDER.map((key) => {
+                  const max = workshopUtilityMaxLevel(key)
+                  const level = workshopPersisted[key]
+                  if (hideMaxed && level >= max) return null
+                  return (
+                    <WorkshopUtilityUpgradeCard
+                      key={key}
+                      fieldKey={key}
+                      titleId={UTILITY_CARD_TITLE[key]}
+                      level={level}
+                      draft={utilityDrafts[key]}
+                      setDraft={(s) => setUtilityDrafts((prev) => ({ ...prev, [key]: s }))}
+                      bulkStep={multiplier}
+                      onBump={(dir) => bumpUtility(key, dir)}
+                      onCommitDraft={() => commitUtilityDraft(key)}
+                    />
+                  )
+                })
+              : null}
             {visibleDemoRows.map((row) => (
               <li
                 key={row.labelId}
@@ -306,53 +3252,38 @@ export function WorkshopPage({
                     : 'workshop__card workshop__card--active'
                 }
               >
-                <span className="workshop__card-name">{t(row.labelId)}</span>
-                <div className="workshop__card-tr">
+                <div className="workshop__card-damage-head">
+                  <span className="workshop__card-name">{t(row.labelId)}</span>
                   <span className="workshop__card-value">{row.value}</span>
                 </div>
-                <div className="workshop__card-br">
-                  {row.maxed || row.cost === null ? (
-                    <span className="workshop__card-cost workshop__card-cost--max">
-                      <CoinGlyph className="workshop__card-coin" />
-                      {t('ws_max')}
-                    </span>
-                  ) : (
-                    <span className="workshop__card-cost">
-                      <CoinGlyph className="workshop__card-coin" />
-                      {row.cost}
-                    </span>
-                  )}
+                <div className="workshop__card-level-row workshop__card-level-row--empty" aria-hidden />
+                <div className="workshop__card-damage-footer workshop__card-damage-footer--simple">
+                  <div className="workshop__card-damage-cost">
+                    {row.maxed || row.cost === null ? (
+                      <span className="workshop__card-cost workshop__card-cost--max">
+                        {t('ws_max')}
+                        <CoinGlyph className="workshop__card-coin" />
+                      </span>
+                    ) : (
+                      <span
+                        className="workshop__card-cost"
+                        title={t('researchCard_cost_coins_title')}
+                      >
+                        {row.cost}
+                        <CoinGlyph className="workshop__card-coin" />
+                      </span>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
           </ul>
-
-          <p className="workshop__footnote">{t('ws_disclaimer')}</p>
         </>
       )}
       </div>
 
       <div className="workshop__categories" role="toolbar" aria-label={t('ws_title')}>
-        {(
-          [
-            [
-              'attack',
-              'M11 3h2v9l4 10h-2.2L12 14.2 9.2 22H7l4-10V3z',
-            ] as const,
-            [
-              'defense',
-              'M12 3 L19 5.5 V12 C19 16 15.5 19.2 12 21 C8.5 19.2 5 16 5 12 V5.5 Z',
-            ] as const,
-            [
-              'utility',
-              'M12 4 L14.5 10.5 L21 11 L16 15 L17.5 21.5 L12 18 L6.5 21.5 L8 15 L3 11 L9.5 10.5 Z',
-            ] as const,
-            [
-              'ultimate',
-              'M12 5.5 L18.5 18.5 H5.5 Z M12 9 v5.5 M9.25 12.25 h5.5',
-            ] as const,
-          ] as const
-        ).map(([key, d]) => (
+        {WORKSHOP_CATEGORY_ORDER.map((key) => (
           <button
             key={key}
             type="button"
@@ -361,23 +3292,92 @@ export function WorkshopPage({
                 ? `workshop__cat workshop__cat--${key}`
                 : `workshop__cat workshop__cat--idle workshop__cat--${key}`
             }
-            onClick={() => setCategory(key)}
+            onClick={() =>
+              onWorkshopPersistedChange({
+                ...workshopPersisted,
+                category: key,
+              })
+            }
             aria-label={t(CATEGORY_ARIA[key])}
             aria-pressed={category === key}
           >
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-              <path
-                d={d}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
+            {key === 'ultimate' ? (
+              <PowerStoneGlyph className="workshop__cat-power-stone" />
+            ) : key === 'utility' ? (
+              <WorkshopPowerstoneStyleCategoryGlyph
+                pathD={WORKSHOP_UTILITY_STAR_D}
+                thickStroke={WORKSHOP_UTILITY_STAR_GOLD}
+                rimStroke={WORKSHOP_UTILITY_STAR_RIM}
+                className="workshop__cat-utility-star"
               />
-            </svg>
+            ) : key === 'defense' ? (
+              <WorkshopPowerstoneStyleCategoryGlyph
+                pathD={WORKSHOP_DEFENSE_SHIELD_D}
+                thickStroke={WORKSHOP_DEFENSE_SHIELD_RED}
+                rimStroke={WORKSHOP_DEFENSE_SHIELD_RIM}
+                className="workshop__cat-defense-shield"
+              />
+            ) : (
+              <WorkshopPowerstoneStyleCategoryGlyph
+                pathD={WORKSHOP_ATTACK_SWORD_OUTLINE_D}
+                thickStroke="currentColor"
+                rimStroke="currentColor"
+                className="workshop__cat-attack-sword"
+                wrapTransform="rotate(46 12 12)"
+                extraRimD={WORKSHOP_ATTACK_SWORD_FULLER_D}
+              />
+            )}
           </button>
         ))}
       </div>
+
+      {resetWorkshopConfirmOpen
+        ? workshopOverlayPortal(
+            <div
+              className="select-research__reset-confirm-backdrop"
+              role="presentation"
+              onClick={() => setResetWorkshopConfirmOpen(false)}
+            >
+              <div
+                className="select-research__reset-confirm-dialog"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="reset-workshop-confirm-title"
+                aria-describedby="reset-workshop-confirm-desc"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2
+                  id="reset-workshop-confirm-title"
+                  className="select-research__reset-confirm-title"
+                >
+                  {t('ws_reset_confirm_title')}
+                </h2>
+                <p
+                  id="reset-workshop-confirm-desc"
+                  className="select-research__reset-confirm-desc"
+                >
+                  {t('ws_reset_confirm_body')}
+                </p>
+                <div className="select-research__reset-confirm-actions">
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--block"
+                    onClick={() => setResetWorkshopConfirmOpen(false)}
+                  >
+                    {t('sr_cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="glow-btn glow-btn--danger glow-btn--block"
+                    onClick={performResetWorkshopDemo}
+                  >
+                    {t('ws_reset_demo')}
+                  </button>
+                </div>
+              </div>
+            </div>,
+          )
+        : null}
     </div>
   )
 }

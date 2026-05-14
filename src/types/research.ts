@@ -687,7 +687,7 @@ export function flameBotBurnStackMaxDisplay(
  *
  * Used by Recovery Package labs, **Enemy Attack Level Skip**, **Enemy Health Level Skip**, etc.
  */
-function includePercentTimesLabLevelDisplay(
+export function includePercentTimesLabLevelDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
   pctPerLevel: number,
