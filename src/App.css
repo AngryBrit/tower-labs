@@ -124,6 +124,8 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
   margin: 0 0 0.65rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(34, 211, 238, 0.25);
 }
 
 .select-research__inpanel-tab {
@@ -164,6 +166,12 @@
   margin: 0 0 0.35rem;
 }
 
+.select-research__inpanel-workshop-toolbar-slot .select-research__toolbar-quick {
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(34, 211, 238, 0.25);
+}
+
 .select-research-embed {
   width: 100%;
 }
@@ -185,6 +193,25 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   align-items: stretch;
+}
+
+.select-research__toolbar .select-research__toolbar-quick {
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(34, 211, 238, 0.25);
+}
+
+/* Match embedded lab search offset to workshop tabs (after in-panel quick toolbar). */
+.select-research-embed .select-research__toolbar .select-research__toolbar-quick {
+  margin-bottom: 0.5rem;
+}
+
+.select-research-embed .select-research__toolbar {
+  gap: 0.4rem;
+}
+
+.select-research-embed .select-research__toolbar .select-research__search {
+  margin-top: -0.3rem;
 }
 
 .select-research__budget {
