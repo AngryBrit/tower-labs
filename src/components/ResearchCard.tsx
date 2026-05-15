@@ -22,6 +22,8 @@ interface ResearchCardProps {
   maxLevelCap: number
   /** Total Labs Coin Discount % (simulated Labs Coin Discount lab). */
   labsCoinDiscountPercent: number
+  /** Labs Speed multiplier from simulated Labs Speed level (applied to research times). */
+  labsSpeedMultiplier: number
   onLevelDelta: (delta: number) => void
   onLevelSet: (level: number) => void
 }
@@ -35,6 +37,7 @@ export function ResearchCard({
   effectiveLevel,
   maxLevelCap,
   labsCoinDiscountPercent,
+  labsSpeedMultiplier,
   onLevelDelta,
   onLevelSet,
 }: ResearchCardProps) {
@@ -75,6 +78,7 @@ export function ResearchCard({
     item,
     effectiveLevel,
     maxLevelCap,
+    labsSpeedMultiplier,
   )
 
   function commitLevelDraft(raw: string) {

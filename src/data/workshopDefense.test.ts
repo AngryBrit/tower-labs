@@ -35,6 +35,34 @@ import {
   WORKSHOP_KNOCKBACK_FORCE_MAX_LEVEL,
   workshopKnockbackForceNextMarginalCoins,
 } from './workshopKnockbackForce'
+import {
+  WORKSHOP_ORB_SPEED_MAX_LEVEL,
+  workshopOrbSpeedNextMarginalCoins,
+} from './workshopOrbSpeed'
+import { WORKSHOP_ORBS_MAX_LEVEL, workshopOrbsNextMarginalCoins } from './workshopOrbs'
+import {
+  WORKSHOP_SHOCKWAVE_SIZE_MAX_LEVEL,
+  workshopShockwaveSizeNextMarginalCoins,
+} from './workshopShockwaveSize'
+import {
+  WORKSHOP_SHOCKWAVE_FREQUENCY_MAX_LEVEL,
+  workshopShockwaveFrequencyNextMarginalCoins,
+} from './workshopShockwaveFrequency'
+import {
+  WORKSHOP_LAND_MINE_CHANCE_MAX_LEVEL,
+  workshopLandMineChanceNextMarginalCoins,
+} from './workshopLandMineChance'
+import {
+  WORKSHOP_LAND_MINE_DAMAGE_MAX_LEVEL,
+  workshopLandMineDamageNextMarginalCoins,
+} from './workshopLandMineDamage'
+import {
+  WORKSHOP_LAND_MINE_RADIUS_MAX_LEVEL,
+  workshopLandMineRadiusNextMarginalCoins,
+} from './workshopLandMineRadius'
+import { WORKSHOP_DEATH_DEFY_MAX_LEVEL, workshopDeathDefyNextMarginalCoins } from './workshopDeathDefy'
+import { WORKSHOP_WALL_HEALTH_MAX_LEVEL, workshopWallHealthNextMarginalCoins } from './workshopWallHealth'
+import { WORKSHOP_WALL_REBUILD_MAX_LEVEL, workshopWallRebuildNextMarginalCoins } from './workshopWallRebuild'
 
 describe('workshopDefenseNextMarginalCoins', () => {
   it('Health uses workshop wiki ladder', () => {
@@ -126,6 +154,116 @@ describe('workshopDefenseNextMarginalCoins', () => {
     expect(workshopDefenseStatDisplay('knockbackForceLevel', 40)).toBe('6.08')
   })
 
+  it('Orb Speed uses workshop wiki ladder (38 levels)', () => {
+    expect(workshopDefenseMaxLevel('orbSpeedLevel')).toBe(WORKSHOP_ORB_SPEED_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('orbSpeedLevel', 0)).toBe(125)
+    expect(workshopDefenseNextMarginalCoins('orbSpeedLevel', 37)).toBe(29_730)
+    expect(workshopDefenseNextMarginalCoins('orbSpeedLevel', 37)).toBe(
+      workshopOrbSpeedNextMarginalCoins(37),
+    )
+    expect(workshopDefenseStatDisplay('orbSpeedLevel', 0)).toBe('0.00')
+    expect(workshopDefenseStatDisplay('orbSpeedLevel', 38)).toBe('6.10')
+  })
+
+  it('Orbs uses workshop wiki ladder (4 levels)', () => {
+    expect(workshopDefenseMaxLevel('orbsLevel')).toBe(WORKSHOP_ORBS_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('orbsLevel', 0)).toBe(3_000)
+    expect(workshopDefenseNextMarginalCoins('orbsLevel', 3)).toBe(350_000)
+    expect(workshopDefenseNextMarginalCoins('orbsLevel', 3)).toBe(workshopOrbsNextMarginalCoins(3))
+    expect(workshopDefenseStatDisplay('orbsLevel', 0)).toBe('0')
+    expect(workshopDefenseStatDisplay('orbsLevel', 4)).toBe('4')
+  })
+
+  it('Shockwave Size uses workshop wiki ladder (35 levels)', () => {
+    expect(workshopDefenseMaxLevel('shockwaveSizeLevel')).toBe(WORKSHOP_SHOCKWAVE_SIZE_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('shockwaveSizeLevel', 0)).toBe(250)
+    expect(workshopDefenseNextMarginalCoins('shockwaveSizeLevel', 34)).toBe(59_600)
+    expect(workshopDefenseNextMarginalCoins('shockwaveSizeLevel', 34)).toBe(
+      workshopShockwaveSizeNextMarginalCoins(34),
+    )
+    expect(workshopDefenseStatDisplay('shockwaveSizeLevel', 0)).toBe('0.00')
+    expect(workshopDefenseStatDisplay('shockwaveSizeLevel', 35)).toBe('2.35')
+  })
+
+  it('Shockwave Frequency uses workshop wiki ladder (40 levels)', () => {
+    expect(workshopDefenseMaxLevel('shockwaveFrequencyLevel')).toBe(
+      WORKSHOP_SHOCKWAVE_FREQUENCY_MAX_LEVEL,
+    )
+    expect(workshopDefenseNextMarginalCoins('shockwaveFrequencyLevel', 0)).toBe(250)
+    expect(workshopDefenseNextMarginalCoins('shockwaveFrequencyLevel', 39)).toBe(85_600)
+    expect(workshopDefenseNextMarginalCoins('shockwaveFrequencyLevel', 39)).toBe(
+      workshopShockwaveFrequencyNextMarginalCoins(39),
+    )
+    expect(workshopDefenseStatDisplay('shockwaveFrequencyLevel', 0)).toBe('0.00s')
+    expect(workshopDefenseStatDisplay('shockwaveFrequencyLevel', 40)).toBe('14.00s')
+  })
+
+  it('Land Mine Chance uses workshop wiki ladder (50 levels)', () => {
+    expect(workshopDefenseMaxLevel('landMineChanceLevel')).toBe(WORKSHOP_LAND_MINE_CHANCE_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('landMineChanceLevel', 0)).toBe(500)
+    expect(workshopDefenseNextMarginalCoins('landMineChanceLevel', 49)).toBe(1_260_000)
+    expect(workshopDefenseNextMarginalCoins('landMineChanceLevel', 49)).toBe(
+      workshopLandMineChanceNextMarginalCoins(49),
+    )
+    expect(workshopDefenseStatDisplay('landMineChanceLevel', 0)).toBe('+0.00%')
+    expect(workshopDefenseStatDisplay('landMineChanceLevel', 50)).toBe('+30.00%')
+  })
+
+  it('Land Mine Damage uses workshop wiki ladder (200 levels)', () => {
+    expect(workshopDefenseMaxLevel('landMineDamageLevel')).toBe(WORKSHOP_LAND_MINE_DAMAGE_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('landMineDamageLevel', 0)).toBe(500)
+    expect(workshopDefenseNextMarginalCoins('landMineDamageLevel', 199)).toBe(217.61e12)
+    expect(workshopDefenseNextMarginalCoins('landMineDamageLevel', 199)).toBe(
+      workshopLandMineDamageNextMarginalCoins(199),
+    )
+    expect(workshopDefenseStatDisplay('landMineDamageLevel', 0)).toBe('+0.00%')
+    expect(workshopDefenseStatDisplay('landMineDamageLevel', 200)).toBe('+2100.00%')
+  })
+
+  it('Land Mine Radius uses workshop wiki ladder (50 levels)', () => {
+    expect(workshopDefenseMaxLevel('landMineRadiusLevel')).toBe(WORKSHOP_LAND_MINE_RADIUS_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('landMineRadiusLevel', 0)).toBe(500)
+    expect(workshopDefenseNextMarginalCoins('landMineRadiusLevel', 49)).toBe(19_820_000_000)
+    expect(workshopDefenseNextMarginalCoins('landMineRadiusLevel', 49)).toBe(
+      workshopLandMineRadiusNextMarginalCoins(49),
+    )
+    expect(workshopDefenseStatDisplay('landMineRadiusLevel', 0)).toBe('0.00')
+    expect(workshopDefenseStatDisplay('landMineRadiusLevel', 50)).toBe('1.50')
+  })
+
+  it('Death Defy uses workshop wiki ladder (75 levels)', () => {
+    expect(workshopDefenseMaxLevel('deathDefyLevel')).toBe(WORKSHOP_DEATH_DEFY_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('deathDefyLevel', 0)).toBe(1000)
+    expect(workshopDefenseNextMarginalCoins('deathDefyLevel', 74)).toBe(110_500_000)
+    expect(workshopDefenseNextMarginalCoins('deathDefyLevel', 74)).toBe(
+      workshopDeathDefyNextMarginalCoins(74),
+    )
+    expect(workshopDefenseStatDisplay('deathDefyLevel', 0)).toBe('0%')
+    expect(workshopDefenseStatDisplay('deathDefyLevel', 75)).toBe('30%')
+  })
+
+  it('Wall Health uses workshop wiki ladder (1800 levels)', () => {
+    expect(workshopDefenseMaxLevel('wallHealthLevel')).toBe(WORKSHOP_WALL_HEALTH_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('wallHealthLevel', 0)).toBe(8e6)
+    expect(workshopDefenseNextMarginalCoins('wallHealthLevel', 1799)).toBe(23.48e12)
+    expect(workshopDefenseNextMarginalCoins('wallHealthLevel', 1799)).toBe(
+      workshopWallHealthNextMarginalCoins(1799),
+    )
+    expect(workshopDefenseStatDisplay('wallHealthLevel', 0)).toBe('+0.00%')
+    expect(workshopDefenseStatDisplay('wallHealthLevel', 1800)).toBe('+200.00%')
+  })
+
+  it('Wall Rebuild uses workshop wiki ladder (300 levels)', () => {
+    expect(workshopDefenseMaxLevel('wallRebuildLevel')).toBe(WORKSHOP_WALL_REBUILD_MAX_LEVEL)
+    expect(workshopDefenseNextMarginalCoins('wallRebuildLevel', 0)).toBe(16e6)
+    expect(workshopDefenseNextMarginalCoins('wallRebuildLevel', 299)).toBe(923.56e9)
+    expect(workshopDefenseNextMarginalCoins('wallRebuildLevel', 299)).toBe(
+      workshopWallRebuildNextMarginalCoins(299),
+    )
+    expect(workshopDefenseStatDisplay('wallRebuildLevel', 0)).toBe('1200s')
+    expect(workshopDefenseStatDisplay('wallRebuildLevel', 300)).toBe('600s')
+  })
+
   it('returns undefined when maxed', () => {
     expect(workshopDefenseNextMarginalCoins('healthLevel', WORKSHOP_HEALTH_MAX_LEVEL)).toBeUndefined()
     expect(
@@ -148,6 +286,37 @@ describe('workshopDefenseNextMarginalCoins', () => {
     ).toBeUndefined()
     expect(
       workshopDefenseNextMarginalCoins('knockbackForceLevel', WORKSHOP_KNOCKBACK_FORCE_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('orbSpeedLevel', WORKSHOP_ORB_SPEED_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(workshopDefenseNextMarginalCoins('orbsLevel', WORKSHOP_ORBS_MAX_LEVEL)).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('shockwaveSizeLevel', WORKSHOP_SHOCKWAVE_SIZE_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins(
+        'shockwaveFrequencyLevel',
+        WORKSHOP_SHOCKWAVE_FREQUENCY_MAX_LEVEL,
+      ),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('landMineChanceLevel', WORKSHOP_LAND_MINE_CHANCE_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('landMineDamageLevel', WORKSHOP_LAND_MINE_DAMAGE_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('landMineRadiusLevel', WORKSHOP_LAND_MINE_RADIUS_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('deathDefyLevel', WORKSHOP_DEATH_DEFY_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('wallHealthLevel', WORKSHOP_WALL_HEALTH_MAX_LEVEL),
+    ).toBeUndefined()
+    expect(
+      workshopDefenseNextMarginalCoins('wallRebuildLevel', WORKSHOP_WALL_REBUILD_MAX_LEVEL),
     ).toBeUndefined()
   })
 })

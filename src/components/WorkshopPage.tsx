@@ -1,8 +1,16 @@
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { CoinGlyph } from './CoinGlyph'
-import { PowerStoneGlyph } from './PowerStoneGlyph'
 import {
   WORKSHOP_ATTACK_RANGE_MAX_LEVEL,
   workshopAttackRangeNextMarginalCoins,
@@ -101,19 +109,36 @@ import {
   workshopUtilityStatDisplay,
   type WorkshopUtilityUpgradeKey,
 } from '../data/workshopUtility'
+import {
+  WORKSHOP_ULTIMATE_WEAPON_ORDER,
+  workshopUltimateActiveKey,
+  workshopUltimateClampLevel,
+  workshopUltimateIsActive,
+  workshopUltimateWeaponAllMaxed,
+  type WorkshopUltimateUpgradeKey,
+  type WorkshopUltimateWeaponId,
+} from '../data/workshopUltimate'
+import { WorkshopUltimateWeaponCard } from './WorkshopUltimateWeaponCard'
 import { formatCoinAbbrev } from '../labCosts'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
 import {
   computeWorkshopCoinAggregates,
+  computeWorkshopStoneAggregates,
   formatWorkshopCoinAggregates,
+  formatWorkshopStoneAggregates,
+  type WorkshopCoinDiscountOpts,
 } from '../workshopBudgetAggregates'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import {
+  applyWorkshopDiscountToCoins,
   attackResearchDamageLabMultiplier,
   defenseResearchDefensePercentLabPercentPoints,
   defenseResearchGarlicThornsLabPercentPoints,
   defenseResearchHealthStyleMultiplier,
+  resolveWorkshopAttackDiscountPercent,
+  resolveWorkshopDefenseDiscountPercent,
+  resolveWorkshopUtilityDiscountPercent,
   type ResearchData,
 } from '../types/research'
 
@@ -140,114 +165,11 @@ const WORKSHOP_CATEGORY_ORDER: readonly WorkshopCategory[] = [
   'ultimate',
 ]
 
-const WORKSHOP_ATTACK_SWORD_OUTLINE_D =
-  'M12 4.5 L13.6 7 L13.2 12.8 L15.8 13.1 L15.6 14.7 L13.1 15 L12 17.8 L10.9 15 L8.4 14.7 L8.2 13.1 L10.8 12.8 L10.4 7 Z'
-
-/** Blade fuller (local coords; group is rotated ~46° for upper-right sword). */
-const WORKSHOP_ATTACK_SWORD_FULLER_D = 'M12 6.2 L12 11.8'
-
-const WORKSHOP_DEFENSE_SHIELD_D =
-  'M12 3 L19 5.5 V12 C19 16 15.5 19.2 12 21 C8.5 19.2 5 16 5 12 V5.5 Z'
-
-const WORKSHOP_UTILITY_STAR_D =
-  'M12 4 L14.5 10.5 L21 11 L16 15 L17.5 21.5 L12 18 L6.5 21.5 L8 15 L3 11 L9.5 10.5 Z'
-
-/** Matches `PowerStoneGlyph` inner rim (`strokeWidth` 3.2 in viewBox 108) scaled to these icons’ viewBox 24. */
-const WORKSHOP_CAT_ICON_STROKE_WIDTH = (3.2 * 24) / 108
-
-/** Matches `PowerStoneGlyph` outer glow strokes (`strokeWidth` 10 in viewBox 108) scaled to viewBox 24. */
-const WORKSHOP_CAT_POWERSTONE_STYLE_THICK = (10 * 24) / 108
-
-/**
- * PowerStoneGlyph uses `stdDeviation` 2.6 / 5.2 in viewBox 108 user units.
- * Scale by 24/108 so Gaussian blur matches the same on-screen glow in 24×24 workshop icons.
- */
-const WORKSHOP_CAT_GLOW_BLUR_SIGMA_1 = (2.6 * 24) / 108
-const WORKSHOP_CAT_GLOW_BLUR_SIGMA_2 = (5.2 * 24) / 108
-
-const WORKSHOP_UTILITY_STAR_GOLD = '#f5d000'
-const WORKSHOP_UTILITY_STAR_RIM = '#fffbeb'
-const WORKSHOP_DEFENSE_SHIELD_RED = '#ff3030'
-const WORKSHOP_DEFENSE_SHIELD_RIM = '#ffe4e6'
-
-/** Same filter, blur scaling, thick-stroke / thin-rim layering as `PowerStoneGlyph` (24×24 viewBox). */
-function WorkshopPowerstoneStyleCategoryGlyph({
-  pathD,
-  thickStroke,
-  rimStroke,
-  className,
-  wrapTransform,
-  extraRimD,
-}: {
-  pathD: string
-  thickStroke: string
-  rimStroke: string
-  className: string
-  /** Optional SVG transform for the stroked artwork (e.g. attack sword tilt). */
-  wrapTransform?: string
-  /** Optional extra open path drawn with rim stroke only (e.g. blade fuller). */
-  extraRimD?: string
-}) {
-  const uid = useId().replace(/:/g, '')
-  const filterGlow = `workshop-cat-ps-style-glow-${uid}`
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="22"
-      height="22"
-      aria-hidden
-      className={className}
-    >
-      <defs>
-        <filter
-          id={filterGlow}
-          x="-40%"
-          y="-40%"
-          width="180%"
-          height="180%"
-          colorInterpolationFilters="sRGB"
-        >
-          <feGaussianBlur in="SourceGraphic" stdDeviation={WORKSHOP_CAT_GLOW_BLUR_SIGMA_1} result="b" />
-          <feGaussianBlur in="SourceGraphic" stdDeviation={WORKSHOP_CAT_GLOW_BLUR_SIGMA_2} result="b2" />
-          <feMerge>
-            <feMergeNode in="b2" />
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <g transform={wrapTransform}>
-        <g filter={`url(#${filterGlow})`}>
-          <path
-            d={pathD}
-            fill="none"
-            stroke={thickStroke}
-            strokeWidth={WORKSHOP_CAT_POWERSTONE_STYLE_THICK}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            opacity="0.95"
-          />
-        </g>
-        <path
-          d={pathD}
-          fill="none"
-          stroke={rimStroke}
-          strokeWidth={WORKSHOP_CAT_ICON_STROKE_WIDTH}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {extraRimD ? (
-          <path
-            d={extraRimD}
-            fill="none"
-            stroke={rimStroke}
-            strokeWidth={WORKSHOP_CAT_ICON_STROKE_WIDTH}
-            strokeLinecap="round"
-          />
-        ) : null}
-      </g>
-    </svg>
-  )
+const WORKSHOP_CATEGORY_ICON_SRC: Record<WorkshopCategory, string> = {
+  attack: '/Workshop_Attack.webp',
+  defense: '/Workshop_Defense.webp',
+  utility: '/Workshop_Utility.webp',
+  ultimate: '/Ultimate_Weapons.webp',
 }
 
 const BULK_MULTIPLIERS = [100, 10, 5, 1] as const
@@ -389,6 +311,39 @@ function clampWorkshopRendArmorMultLevel(n: number): number {
   return Math.max(0, Math.min(WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL, Math.trunc(n)))
 }
 
+type WorkshopCoinDiscountContextValue = {
+  attack: number
+  defense: number
+  utility: number
+}
+
+const WorkshopCoinDiscountContext = createContext<WorkshopCoinDiscountContextValue>({
+  attack: 0,
+  defense: 0,
+  utility: 0,
+})
+
+function useAttackWorkshopCoinDiscount(): number {
+  return useContext(WorkshopCoinDiscountContext).attack
+}
+
+function useDefenseWorkshopCoinDiscount(): number {
+  return useContext(WorkshopCoinDiscountContext).defense
+}
+
+function useUtilityWorkshopCoinDiscount(): number {
+  return useContext(WorkshopCoinDiscountContext).utility
+}
+
+function discountedWorkshopMarginal(
+  raw: number | undefined,
+  discountPercent: number,
+): number | undefined {
+  if (raw == null) return undefined
+  if (!(discountPercent > 0)) return raw
+  return applyWorkshopDiscountToCoins(raw, discountPercent)
+}
+
 function WorkshopDamageCard({
   level,
   draft,
@@ -405,12 +360,16 @@ function WorkshopDamageCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
-  /** Simulated Attack **Damage** lab; when set, workshop **Value** is multiplied (coin cost unchanged). */
+  /** Simulated Attack **Damage** lab; when set, workshop **Value** is multiplied. */
   damageLabMultiplier?: number
 }) {
   const { t } = useI18n()
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
   const maxed = level >= WORKSHOP_DAMAGE_MAX_LEVEL
-  const nextCoins = workshopDamageNextMarginalCoins(level)
+  const nextCoins = discountedWorkshopMarginal(
+    workshopDamageNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopDamageStatDisplay(level, damageLabMultiplier)
   const stepHint = `×${bulkStep}`
 
@@ -500,7 +459,11 @@ function WorkshopAttackSpeedCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_ATTACK_SPEED_MAX_LEVEL
-  const nextCoins = workshopAttackSpeedNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopAttackSpeedNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopAttackSpeedStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -590,7 +553,11 @@ function WorkshopCriticalChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL
-  const nextCoins = workshopCriticalChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopCriticalChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopCriticalChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -680,7 +647,11 @@ function WorkshopCriticalFactorCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL
-  const nextCoins = workshopCriticalFactorNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopCriticalFactorNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopCriticalFactorStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -770,7 +741,11 @@ function WorkshopAttackRangeCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_ATTACK_RANGE_MAX_LEVEL
-  const nextCoins = workshopAttackRangeNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopAttackRangeNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopAttackRangeStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -860,7 +835,11 @@ function WorkshopDamagePerMeterCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL
-  const nextCoins = workshopDamagePerMeterNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopDamagePerMeterNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopDamagePerMeterStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -950,7 +929,11 @@ function WorkshopMultishotChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL
-  const nextCoins = workshopMultishotChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopMultishotChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopMultishotChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1040,7 +1023,11 @@ function WorkshopMultishotTargetsCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL
-  const nextCoins = workshopMultishotTargetsNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopMultishotTargetsNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopMultishotTargetsStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1130,7 +1117,11 @@ function WorkshopRapidFireChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL
-  const nextCoins = workshopRapidFireChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopRapidFireChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopRapidFireChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1220,7 +1211,11 @@ function WorkshopRapidFireDurationCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL
-  const nextCoins = workshopRapidFireDurationNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopRapidFireDurationNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopRapidFireDurationStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1310,7 +1305,11 @@ function WorkshopBounceShotChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL
-  const nextCoins = workshopBounceShotChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopBounceShotChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopBounceShotChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1400,7 +1399,11 @@ function WorkshopBounceShotTargetsCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL
-  const nextCoins = workshopBounceShotTargetsNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopBounceShotTargetsNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopBounceShotTargetsStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1490,7 +1493,11 @@ function WorkshopBounceShotRangeCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL
-  const nextCoins = workshopBounceShotRangeNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopBounceShotRangeNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopBounceShotRangeStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1580,7 +1587,11 @@ function WorkshopSuperCritChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL
-  const nextCoins = workshopSuperCritChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopSuperCritChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopSuperCritChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1670,7 +1681,11 @@ function WorkshopSuperCritMultCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL
-  const nextCoins = workshopSuperCritMultNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopSuperCritMultNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopSuperCritMultStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1760,7 +1775,11 @@ function WorkshopRendArmorChanceCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL
-  const nextCoins = workshopRendArmorChanceNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopRendArmorChanceNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopRendArmorChanceStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1850,7 +1869,11 @@ function WorkshopRendArmorMultCard({
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL
-  const nextCoins = workshopRendArmorMultNextMarginalCoins(level)
+  const coinDiscountPercent = useAttackWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopRendArmorMultNextMarginalCoins(level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopRendArmorMultStatDisplay(level)
   const stepHint = `×${bulkStep}`
 
@@ -1984,7 +2007,11 @@ function WorkshopDefenseUpgradeCard({
   const { t } = useI18n()
   const max = workshopDefenseMaxLevel(fieldKey)
   const maxed = level >= max
-  const nextCoins = workshopDefenseNextMarginalCoins(fieldKey, level)
+  const coinDiscountPercent = useDefenseWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopDefenseNextMarginalCoins(fieldKey, level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopDefenseStatDisplay(fieldKey, level, statDisplayOpts)
   const stepHint = `×${bulkStep}`
   const statName = t(titleId)
@@ -2080,7 +2107,11 @@ function WorkshopUtilityUpgradeCard({
   const { t } = useI18n()
   const max = workshopUtilityMaxLevel(fieldKey)
   const maxed = level >= max
-  const nextCoins = workshopUtilityNextMarginalCoins(fieldKey, level)
+  const coinDiscountPercent = useUtilityWorkshopCoinDiscount()
+  const nextCoins = discountedWorkshopMarginal(
+    workshopUtilityNextMarginalCoins(fieldKey, level),
+    coinDiscountPercent,
+  )
   const statLabel = workshopUtilityStatDisplay(fieldKey, level)
   const stepHint = `×${bulkStep}`
   const statName = t(titleId)
@@ -2228,6 +2259,39 @@ export function WorkshopPage({
     if (researchData == null) return undefined
     return attackResearchDamageLabMultiplier(researchData, labLevelOverrides)
   }, [researchData, labLevelOverrides])
+
+  const workshopCoinDiscountOpts = useMemo((): WorkshopCoinDiscountOpts => {
+    if (researchData == null) {
+      return {
+        attackDiscountPercent: 0,
+        defenseDiscountPercent: 0,
+        utilityDiscountPercent: 0,
+      }
+    }
+    return {
+      attackDiscountPercent: resolveWorkshopAttackDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+      defenseDiscountPercent: resolveWorkshopDefenseDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+      utilityDiscountPercent: resolveWorkshopUtilityDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+    }
+  }, [researchData, labLevelOverrides])
+
+  const workshopCoinDiscountContext = useMemo(
+    (): WorkshopCoinDiscountContextValue => ({
+      attack: workshopCoinDiscountOpts.attackDiscountPercent ?? 0,
+      defense: workshopCoinDiscountOpts.defenseDiscountPercent ?? 0,
+      utility: workshopCoinDiscountOpts.utilityDiscountPercent ?? 0,
+    }),
+    [workshopCoinDiscountOpts],
+  )
 
   const [multiplierOpen, setMultiplierOpen] = useState(false)
   const [damageDraft, setDamageDraft] = useState('0')
@@ -2782,6 +2846,27 @@ export function WorkshopPage({
     [multiplier, onWorkshopPersistedChange, workshopPersisted],
   )
 
+  const bumpUltimate = useCallback(
+    (key: WorkshopUltimateUpgradeKey, direction: -1 | 1) => {
+      const cur = workshopPersisted[key]
+      const nv = workshopUltimateClampLevel(key, cur + direction)
+      if (nv === cur) return
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const toggleUltimateActive = useCallback(
+    (weaponId: WorkshopUltimateWeaponId) => {
+      const key = workshopUltimateActiveKey(weaponId)
+      onWorkshopPersistedChange({
+        ...workshopPersisted,
+        [key]: !workshopUltimateIsActive(workshopPersisted, weaponId),
+      })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
   const commitUtilityDraft = useCallback(
     (key: WorkshopUtilityUpgradeKey) => {
       const raw = utilityDrafts[key].trim().replace(/,/g, '')
@@ -2804,6 +2889,13 @@ export function WorkshopPage({
     const base = DEMO_ROWS_BY_CATEGORY[category]
     return hideMaxed ? base.filter((r) => !r.maxed) : [...base]
   }, [category, hideMaxed])
+
+  const visibleUltimateWeapons = useMemo(() => {
+    if (category !== 'ultimate') return []
+    return WORKSHOP_ULTIMATE_WEAPON_ORDER.filter(
+      (weaponId) => !hideMaxed || !workshopUltimateWeaponAllMaxed(workshopPersisted, weaponId),
+    )
+  }, [category, hideMaxed, workshopPersisted])
 
   const showDamageCard =
     category === 'attack' &&
@@ -2900,19 +2992,33 @@ export function WorkshopPage({
     }
   }, [multiplierOpen])
 
+  useEffect(() => {
+    if (category === 'ultimate') setMultiplierOpen(false)
+  }, [category])
+
   const setHideMaxed = useCallback(
     (v: boolean) => onWorkshopPersistedChange({ ...workshopPersisted, hideMaxed: v }),
     [onWorkshopPersistedChange, workshopPersisted],
   )
 
   const workshopCoinAggregates = useMemo(
-    () => computeWorkshopCoinAggregates(workshopPersisted),
-    [workshopPersisted],
+    () => computeWorkshopCoinAggregates(workshopPersisted, workshopCoinDiscountOpts),
+    [workshopPersisted, workshopCoinDiscountOpts],
   )
   const workshopCoinLabels = useMemo(
     () => formatWorkshopCoinAggregates(workshopCoinAggregates),
     [workshopCoinAggregates],
   )
+  const workshopStoneAggregates = useMemo(
+    () => computeWorkshopStoneAggregates(workshopPersisted),
+    [workshopPersisted],
+  )
+  const workshopStoneLabels = useMemo(
+    () => formatWorkshopStoneAggregates(workshopStoneAggregates),
+    [workshopStoneAggregates],
+  )
+  const budgetUsesStones = category === 'ultimate'
+  const workshopBudgetLabels = budgetUsesStones ? workshopStoneLabels : workshopCoinLabels
 
   return (
     <div
@@ -2990,30 +3096,69 @@ export function WorkshopPage({
         aria-labelledby={workshopBudgetTitleId}
       >
         <h2 id={workshopBudgetTitleId} className="select-research__budget-title">
-          {t('ws_budget_title')}
+          {t(budgetUsesStones ? 'ws_budget_stones_title' : 'ws_budget_title')}
         </h2>
         <p className="visually-hidden" aria-live="polite" aria-atomic="true">
-          {fmt.workshopBudgetAria(
-            workshopCoinLabels.spentLabel,
-            workshopCoinLabels.toMaxLabel,
-            workshopCoinLabels.nextVisibleLabel,
-          )}
+          {budgetUsesStones
+            ? fmt.workshopStoneBudgetAria(
+                workshopBudgetLabels.spentLabel,
+                workshopBudgetLabels.toMaxLabel,
+                workshopBudgetLabels.nextVisibleLabel,
+              )
+            : fmt.workshopBudgetAria(
+                workshopBudgetLabels.spentLabel,
+                workshopBudgetLabels.toMaxLabel,
+                workshopBudgetLabels.nextVisibleLabel,
+              )}
         </p>
         <dl className="select-research__budget-stats">
           <div className="select-research__budget-row">
-            <dt>{t('ws_budget_spent_dt')}</dt>
-            <dd>{workshopCoinLabels.spentLabel}</dd>
+            <dt>{t(budgetUsesStones ? 'ws_budget_stones_spent_dt' : 'ws_budget_spent_dt')}</dt>
+            <dd>{workshopBudgetLabels.spentLabel}</dd>
           </div>
           <div className="select-research__budget-row">
-            <dt>{t('ws_budget_to_max_dt')}</dt>
-            <dd>{workshopCoinLabels.toMaxLabel}</dd>
+            <dt>{t(budgetUsesStones ? 'ws_budget_stones_to_max_dt' : 'ws_budget_to_max_dt')}</dt>
+            <dd>{workshopBudgetLabels.toMaxLabel}</dd>
           </div>
           <div className="select-research__budget-row">
-            <dt>{t('ws_budget_next_dt')}</dt>
-            <dd>{workshopCoinLabels.nextVisibleLabel}</dd>
+            <dt>{t(budgetUsesStones ? 'ws_budget_stones_next_dt' : 'ws_budget_next_dt')}</dt>
+            <dd>{workshopBudgetLabels.nextVisibleLabel}</dd>
           </div>
         </dl>
-        <p className="select-research__budget-footnote">{t('ws_budget_footnote')}</p>
+        <p className="select-research__budget-footnote">
+          {t(budgetUsesStones ? 'ws_budget_stones_footnote' : 'ws_budget_footnote')}
+        </p>
+      </div>
+
+      <div className="workshop__categories" role="toolbar" aria-label={t('ws_title')}>
+        {WORKSHOP_CATEGORY_ORDER.map((key) => (
+          <button
+            key={key}
+            type="button"
+            className={
+              category === key
+                ? `workshop__cat workshop__cat--${key}`
+                : `workshop__cat workshop__cat--idle workshop__cat--${key}`
+            }
+            onClick={() =>
+              onWorkshopPersistedChange({
+                ...workshopPersisted,
+                category: key,
+              })
+            }
+            aria-label={t(CATEGORY_ARIA[key])}
+            aria-pressed={category === key}
+          >
+            <img
+              src={WORKSHOP_CATEGORY_ICON_SRC[key]}
+              alt=""
+              width={22}
+              height={22}
+              className="workshop__cat-icon-img"
+              aria-hidden
+            />
+          </button>
+        ))}
       </div>
 
       <div className="workshop__body">
@@ -3022,9 +3167,11 @@ export function WorkshopPage({
           <p>{t('ws_enhance_empty')}</p>
         </div>
       ) : (
+        <WorkshopCoinDiscountContext.Provider value={workshopCoinDiscountContext}>
         <>
           <div className="workshop__section-head">
             <h2 className="workshop__section-title">{t(sectionTitleId)}</h2>
+            {category !== 'ultimate' ? (
             <div
               ref={multRailRef}
               className={
@@ -3077,9 +3224,28 @@ export function WorkshopPage({
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="workshop__mult-spacer" aria-hidden />
+            )}
           </div>
 
-          <ul className="workshop__grid">
+          <ul
+            className={
+              category === 'ultimate' ? 'workshop__grid workshop__grid--ultimate' : 'workshop__grid'
+            }
+          >
+            {category === 'ultimate'
+              ? visibleUltimateWeapons.map((weaponId) => (
+                  <WorkshopUltimateWeaponCard
+                    key={weaponId}
+                    weaponId={weaponId}
+                    active={workshopUltimateIsActive(workshopPersisted, weaponId)}
+                    levels={workshopPersisted}
+                    onBump={bumpUltimate}
+                    onToggleActive={toggleUltimateActive}
+                  />
+                ))
+              : null}
             {showDamageCard ? (
               <WorkshopDamageCard
                 level={damageLevel}
@@ -3328,56 +3494,8 @@ export function WorkshopPage({
             ))}
           </ul>
         </>
+        </WorkshopCoinDiscountContext.Provider>
       )}
-      </div>
-
-      <div className="workshop__categories" role="toolbar" aria-label={t('ws_title')}>
-        {WORKSHOP_CATEGORY_ORDER.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className={
-              category === key
-                ? `workshop__cat workshop__cat--${key}`
-                : `workshop__cat workshop__cat--idle workshop__cat--${key}`
-            }
-            onClick={() =>
-              onWorkshopPersistedChange({
-                ...workshopPersisted,
-                category: key,
-              })
-            }
-            aria-label={t(CATEGORY_ARIA[key])}
-            aria-pressed={category === key}
-          >
-            {key === 'ultimate' ? (
-              <PowerStoneGlyph className="workshop__cat-power-stone" />
-            ) : key === 'utility' ? (
-              <WorkshopPowerstoneStyleCategoryGlyph
-                pathD={WORKSHOP_UTILITY_STAR_D}
-                thickStroke={WORKSHOP_UTILITY_STAR_GOLD}
-                rimStroke={WORKSHOP_UTILITY_STAR_RIM}
-                className="workshop__cat-utility-star"
-              />
-            ) : key === 'defense' ? (
-              <WorkshopPowerstoneStyleCategoryGlyph
-                pathD={WORKSHOP_DEFENSE_SHIELD_D}
-                thickStroke={WORKSHOP_DEFENSE_SHIELD_RED}
-                rimStroke={WORKSHOP_DEFENSE_SHIELD_RIM}
-                className="workshop__cat-defense-shield"
-              />
-            ) : (
-              <WorkshopPowerstoneStyleCategoryGlyph
-                pathD={WORKSHOP_ATTACK_SWORD_OUTLINE_D}
-                thickStroke="currentColor"
-                rimStroke="currentColor"
-                className="workshop__cat-attack-sword"
-                wrapTransform="rotate(46 12 12)"
-                extraRimD={WORKSHOP_ATTACK_SWORD_FULLER_D}
-              />
-            )}
-          </button>
-        ))}
       </div>
 
       {resetWorkshopConfirmOpen

@@ -1,3 +1,7 @@
+import {
+  WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+} from './data/workshopUltimate'
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
 
 export type WorkshopCompareRow = {
@@ -66,6 +70,8 @@ const WORKSHOP_COMPARE_KEYS: readonly (keyof WorkshopPersistedV1)[] = [
   'packageChanceLevel',
   'enemyAttackLevelSkipLevel',
   'enemyHealthLevelSkipLevel',
+  ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+  ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]
 
 /** Row-wise string compare for persisted workshop state (for Tools / compare UI). */

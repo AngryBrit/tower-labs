@@ -42,6 +42,7 @@ import {
   getLevelBounds,
   levelOverrideKey,
   resolveLabsCoinDiscountPercent,
+  resolveLabsSpeedMultiplier,
 } from '../types/research'
 import { LabCompareDialog } from './LabCompareDialog'
 import { ResearchSection } from './ResearchSection'
@@ -484,6 +485,11 @@ export const SelectResearch = forwardRef<
 
   const labsCoinDiscountPercent = useMemo(
     () => resolveLabsCoinDiscountPercent(data, levelOverrides),
+    [data, levelOverrides],
+  )
+
+  const labsSpeedMultiplier = useMemo(
+    () => resolveLabsSpeedMultiplier(data, levelOverrides),
     [data, levelOverrides],
   )
 
@@ -1256,6 +1262,7 @@ export const SelectResearch = forwardRef<
             hideCompleted={hideCompleted}
             levelOverrides={levelOverrides}
             labsCoinDiscountPercent={labsCoinDiscountPercent}
+            labsSpeedMultiplier={labsSpeedMultiplier}
             onLevelDelta={(itemIndex, delta) =>
               adjustLevel(index, itemIndex, delta)
             }

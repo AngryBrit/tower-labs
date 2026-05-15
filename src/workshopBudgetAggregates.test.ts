@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { workshopDefenseNextMarginalCoins } from './data/workshopDefense'
 import { workshopDamageNextMarginalCoins } from './data/workshopDamage'
 import { defaultWorkshopPersisted } from './labPresetsStorage'
-import { computeWorkshopCoinAggregates } from './workshopBudgetAggregates'
+import { applyWorkshopDiscountToCoins } from './types/research'
+import {
+  computeWorkshopCoinAggregates,
+  computeWorkshopStoneAggregates,
+} from './workshopBudgetAggregates'
+import { workshopUltimateNextMarginalStones } from './data/workshopUltimate'
 
 describe('computeWorkshopCoinAggregates', () => {
   it('starts at zero spent with default snapshot', () => {
@@ -18,17 +24,88 @@ describe('computeWorkshopCoinAggregates', () => {
     expect(a.spentAll).toBe(m0)
   })
 
+  it('applies Workshop Attack Discount to attack workshop spend', () => {
+    const m0 = workshopDamageNextMarginalCoins(0)!
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 1,
+    }
+    const discounted = applyWorkshopDiscountToCoins(m0, 10)
+    const a = computeWorkshopCoinAggregates(ws, { attackDiscountPercent: 10 })
+    expect(a.spentAll).toBe(discounted)
+    expect(discounted).toBeLessThan(m0)
+  })
+
+  it('applies Workshop Defense Discount to defense workshop spend', () => {
+    const m0 = workshopDefenseNextMarginalCoins('healthLevel', 0)!
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      healthLevel: 1,
+    }
+    const discounted = applyWorkshopDiscountToCoins(m0, 10)
+    const a = computeWorkshopCoinAggregates(ws, { defenseDiscountPercent: 10 })
+    expect(a.spentAll).toBe(discounted)
+    expect(discounted).toBeLessThan(m0)
+  })
+
   it('uses zero visible next sum on Enhance tab', () => {
     const ws = { ...defaultWorkshopPersisted(), mainTab: 'enhance' as const }
     expect(computeWorkshopCoinAggregates(ws).nextUpgradeVisibleSum).toBe(0)
   })
 
-  it('uses zero visible next sum on Ultimate category (no coin cards yet)', () => {
+  it('excludes ultimate power stones from coin spent/to-max totals', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      goldenTowerBonusLevel: 1,
+    }
+    const coinsOnly = computeWorkshopCoinAggregates({
+      ...ws,
+      goldenTowerBonusLevel: 0,
+    })
+    const withUltimate = computeWorkshopCoinAggregates(ws)
+    expect(withUltimate.spentAll).toBe(coinsOnly.spentAll)
+  })
+})
+
+describe('computeWorkshopStoneAggregates', () => {
+  it('sums visible ultimate next upgrades on Ultimate tab when weapons are active', () => {
     const ws = {
       ...defaultWorkshopPersisted(),
       mainTab: 'upgrade' as const,
       category: 'ultimate' as const,
+      goldenTowerActive: true,
     }
-    expect(computeWorkshopCoinAggregates(ws).nextUpgradeVisibleSum).toBe(0)
+    const a = computeWorkshopStoneAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBeGreaterThan(0)
+  })
+
+  it('counts golden tower bonus spend in stones', () => {
+    const stones = workshopUltimateNextMarginalStones('goldenTowerBonusLevel', 0)!
+    const ws = { ...defaultWorkshopPersisted(), goldenTowerBonusLevel: 1 }
+    expect(computeWorkshopStoneAggregates(ws).spentAll).toBe(stones)
+  })
+
+  it('excludes inactive weapons from visible next-upgrade stone sum', () => {
+    const noneActive = computeWorkshopStoneAggregates({
+      ...defaultWorkshopPersisted(),
+      mainTab: 'upgrade',
+      category: 'ultimate',
+    }).nextUpgradeVisibleSum
+    const allActive = computeWorkshopStoneAggregates({
+      ...defaultWorkshopPersisted(),
+      mainTab: 'upgrade',
+      category: 'ultimate',
+      goldenTowerActive: true,
+      blackHoleActive: true,
+      spotlightActive: true,
+      deathWaveActive: true,
+      chainLightningActive: true,
+      smartMissilesActive: true,
+      innerLandMinesActive: true,
+      poisonSwampActive: true,
+      chronoFieldActive: true,
+    }).nextUpgradeVisibleSum
+    expect(noneActive).toBe(0)
+    expect(allActive).toBeGreaterThan(0)
   })
 })

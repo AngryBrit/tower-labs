@@ -72,8 +72,36 @@ import {
   workshopUtilityMaxLevel,
   workshopUtilityNextMarginalCoins,
 } from './data/workshopUtility'
+import {
+  WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+  WORKSHOP_ULTIMATE_WEAPON_ORDER,
+  WORKSHOP_ULTIMATE_WEAPON_STATS,
+  workshopUltimateIsActive,
+  workshopUltimateMaxLevel,
+  workshopUltimateNextMarginalStones,
+  workshopUltimateWeaponAllMaxed,
+} from './data/workshopUltimate'
 import { formatCoinAbbrev } from './labCosts'
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
+import { applyWorkshopDiscountToCoins } from './types/research'
+
+export type WorkshopCoinDiscountOpts = {
+  attackDiscountPercent?: number
+  defenseDiscountPercent?: number
+  utilityDiscountPercent?: number
+}
+
+function wrapMarginalWithWorkshopDiscount(
+  nextAt: (completed: number) => number | undefined,
+  discountPercent: number,
+): (completed: number) => number | undefined {
+  if (!(discountPercent > 0)) return nextAt
+  return (completed) => {
+    const raw = nextAt(completed)
+    if (raw == null) return undefined
+    return applyWorkshopDiscountToCoins(raw, discountPercent)
+  }
+}
 
 export type WorkshopCoinAggregates = {
   spentAll: number
@@ -110,7 +138,11 @@ function statToMax(
 function addAttackDefenseUtilityTotals(
   ws: WorkshopPersistedV1,
   sink: { spent: number; toMax: number },
+  opts: WorkshopCoinDiscountOpts = {},
 ): void {
+  const attackPct = opts.attackDiscountPercent ?? 0
+  const defensePct = opts.defenseDiscountPercent ?? 0
+  const utilityPct = opts.utilityDiscountPercent ?? 0
   const attackPairs: readonly {
     level: number
     max: number
@@ -200,22 +232,45 @@ function addAttackDefenseUtilityTotals(
   ]
 
   for (const { level, max, next } of attackPairs) {
-    sink.spent += statSpent(level, next)
-    sink.toMax += statToMax(level, max, next)
+    const discounted = wrapMarginalWithWorkshopDiscount(next, attackPct)
+    sink.spent += statSpent(level, discounted)
+    sink.toMax += statToMax(level, max, discounted)
   }
 
   for (const key of WORKSHOP_DEFENSE_UPGRADE_ORDER) {
     const max = workshopDefenseMaxLevel(key)
     const level = ws[key]
-    sink.spent += statSpent(level, (L) => workshopDefenseNextMarginalCoins(key, L))
-    sink.toMax += statToMax(level, max, (L) => workshopDefenseNextMarginalCoins(key, L))
+    const discounted = wrapMarginalWithWorkshopDiscount(
+      (L) => workshopDefenseNextMarginalCoins(key, L),
+      defensePct,
+    )
+    sink.spent += statSpent(level, discounted)
+    sink.toMax += statToMax(level, max, discounted)
   }
 
   for (const key of WORKSHOP_UTILITY_UPGRADE_ORDER) {
     const max = workshopUtilityMaxLevel(key)
     const level = ws[key]
-    sink.spent += statSpent(level, (L) => workshopUtilityNextMarginalCoins(key, L))
-    sink.toMax += statToMax(level, max, (L) => workshopUtilityNextMarginalCoins(key, L))
+    const discounted = wrapMarginalWithWorkshopDiscount(
+      (L) => workshopUtilityNextMarginalCoins(key, L),
+      utilityPct,
+    )
+    sink.spent += statSpent(level, discounted)
+    sink.toMax += statToMax(level, max, discounted)
+  }
+
+}
+
+function addUltimateStoneTotals(
+  ws: WorkshopPersistedV1,
+  sink: { spent: number; toMax: number },
+): void {
+  for (const key of WORKSHOP_ULTIMATE_UPGRADE_ORDER) {
+    const max = workshopUltimateMaxLevel(key)
+    const level = ws[key]
+    const next = (L: number) => workshopUltimateNextMarginalStones(key, L)
+    sink.spent += statSpent(level, next)
+    sink.toMax += statToMax(level, max, next)
   }
 }
 
@@ -245,9 +300,13 @@ function maybeAddNext(
  */
 export function computeWorkshopCoinAggregates(
   ws: WorkshopPersistedV1,
+  coinDiscountOpts: WorkshopCoinDiscountOpts = {},
 ): WorkshopCoinAggregates {
   const sink = { spent: 0, toMax: 0 }
-  addAttackDefenseUtilityTotals(ws, sink)
+  addAttackDefenseUtilityTotals(ws, sink, coinDiscountOpts)
+  const attackPct = coinDiscountOpts.attackDiscountPercent ?? 0
+  const defensePct = coinDiscountOpts.defenseDiscountPercent ?? 0
+  const utilityPct = coinDiscountOpts.utilityDiscountPercent ?? 0
 
   let nextUpgradeVisibleSum = 0
   if (ws.mainTab !== 'upgrade') {
@@ -262,40 +321,96 @@ export function computeWorkshopCoinAggregates(
   const sum = { n: 0 }
 
   if (category === 'attack') {
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.damageLevel, WORKSHOP_DAMAGE_MAX_LEVEL), ws.damageLevel, WORKSHOP_DAMAGE_MAX_LEVEL, workshopDamageNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.attackSpeedLevel, WORKSHOP_ATTACK_SPEED_MAX_LEVEL), ws.attackSpeedLevel, WORKSHOP_ATTACK_SPEED_MAX_LEVEL, workshopAttackSpeedNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.critChanceLevel, WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL), ws.critChanceLevel, WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL, workshopCriticalChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.critFactorLevel, WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL), ws.critFactorLevel, WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL, workshopCriticalFactorNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.attackRangeLevel, WORKSHOP_ATTACK_RANGE_MAX_LEVEL), ws.attackRangeLevel, WORKSHOP_ATTACK_RANGE_MAX_LEVEL, workshopAttackRangeNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.damagePerMeterLevel, WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL), ws.damagePerMeterLevel, WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL, workshopDamagePerMeterNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.multishotChanceLevel, WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL), ws.multishotChanceLevel, WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL, workshopMultishotChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.multishotTargetsLevel, WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL), ws.multishotTargetsLevel, WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL, workshopMultishotTargetsNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rapidFireChanceLevel, WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL), ws.rapidFireChanceLevel, WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL, workshopRapidFireChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rapidFireDurationLevel, WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL), ws.rapidFireDurationLevel, WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL, workshopRapidFireDurationNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotChanceLevel, WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL), ws.bounceShotChanceLevel, WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL, workshopBounceShotChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotTargetsLevel, WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL), ws.bounceShotTargetsLevel, WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL, workshopBounceShotTargetsNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotRangeLevel, WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL), ws.bounceShotRangeLevel, WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL, workshopBounceShotRangeNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.superCritChanceLevel, WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL), ws.superCritChanceLevel, WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL, workshopSuperCritChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.superCritMultLevel, WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL), ws.superCritMultLevel, WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL, workshopSuperCritMultNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rendArmorChanceLevel, WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL), ws.rendArmorChanceLevel, WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL, workshopRendArmorChanceNextMarginalCoins)
-    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rendArmorMultLevel, WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL), ws.rendArmorMultLevel, WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL, workshopRendArmorMultNextMarginalCoins)
+    const attackNext = (next: (l: number) => number | undefined) =>
+      wrapMarginalWithWorkshopDiscount(next, attackPct)
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.damageLevel, WORKSHOP_DAMAGE_MAX_LEVEL), ws.damageLevel, WORKSHOP_DAMAGE_MAX_LEVEL, attackNext(workshopDamageNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.attackSpeedLevel, WORKSHOP_ATTACK_SPEED_MAX_LEVEL), ws.attackSpeedLevel, WORKSHOP_ATTACK_SPEED_MAX_LEVEL, attackNext(workshopAttackSpeedNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.critChanceLevel, WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL), ws.critChanceLevel, WORKSHOP_CRITICAL_CHANCE_MAX_LEVEL, attackNext(workshopCriticalChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.critFactorLevel, WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL), ws.critFactorLevel, WORKSHOP_CRITICAL_FACTOR_MAX_LEVEL, attackNext(workshopCriticalFactorNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.attackRangeLevel, WORKSHOP_ATTACK_RANGE_MAX_LEVEL), ws.attackRangeLevel, WORKSHOP_ATTACK_RANGE_MAX_LEVEL, attackNext(workshopAttackRangeNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.damagePerMeterLevel, WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL), ws.damagePerMeterLevel, WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL, attackNext(workshopDamagePerMeterNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.multishotChanceLevel, WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL), ws.multishotChanceLevel, WORKSHOP_MULTISHOT_CHANCE_MAX_LEVEL, attackNext(workshopMultishotChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.multishotTargetsLevel, WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL), ws.multishotTargetsLevel, WORKSHOP_MULTISHOT_TARGETS_MAX_LEVEL, attackNext(workshopMultishotTargetsNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rapidFireChanceLevel, WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL), ws.rapidFireChanceLevel, WORKSHOP_RAPID_FIRE_CHANCE_MAX_LEVEL, attackNext(workshopRapidFireChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rapidFireDurationLevel, WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL), ws.rapidFireDurationLevel, WORKSHOP_RAPID_FIRE_DURATION_MAX_LEVEL, attackNext(workshopRapidFireDurationNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotChanceLevel, WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL), ws.bounceShotChanceLevel, WORKSHOP_BOUNCE_SHOT_CHANCE_MAX_LEVEL, attackNext(workshopBounceShotChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotTargetsLevel, WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL), ws.bounceShotTargetsLevel, WORKSHOP_BOUNCE_SHOT_TARGETS_MAX_LEVEL, attackNext(workshopBounceShotTargetsNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.bounceShotRangeLevel, WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL), ws.bounceShotRangeLevel, WORKSHOP_BOUNCE_SHOT_RANGE_MAX_LEVEL, attackNext(workshopBounceShotRangeNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.superCritChanceLevel, WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL), ws.superCritChanceLevel, WORKSHOP_SUPER_CRIT_CHANCE_MAX_LEVEL, attackNext(workshopSuperCritChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.superCritMultLevel, WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL), ws.superCritMultLevel, WORKSHOP_SUPER_CRIT_MULT_MAX_LEVEL, attackNext(workshopSuperCritMultNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rendArmorChanceLevel, WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL), ws.rendArmorChanceLevel, WORKSHOP_REND_ARMOR_CHANCE_MAX_LEVEL, attackNext(workshopRendArmorChanceNextMarginalCoins))
+    maybeAddNext(sum, attackCardVisible(hideMaxed, ws.rendArmorMultLevel, WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL), ws.rendArmorMultLevel, WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL, attackNext(workshopRendArmorMultNextMarginalCoins))
   } else if (category === 'defense') {
     for (const key of WORKSHOP_DEFENSE_UPGRADE_ORDER) {
       const max = workshopDefenseMaxLevel(key)
       const level = ws[key]
       const visible = !hideMaxed || level < max
-      maybeAddNext(sum, visible, level, max, (L) => workshopDefenseNextMarginalCoins(key, L))
+      maybeAddNext(
+        sum,
+        visible,
+        level,
+        max,
+        wrapMarginalWithWorkshopDiscount(
+          (L) => workshopDefenseNextMarginalCoins(key, L),
+          defensePct,
+        ),
+      )
     }
   } else if (category === 'utility') {
     for (const key of WORKSHOP_UTILITY_UPGRADE_ORDER) {
       const max = workshopUtilityMaxLevel(key)
       const level = ws[key]
       const visible = !hideMaxed || level < max
-      maybeAddNext(sum, visible, level, max, (L) => workshopUtilityNextMarginalCoins(key, L))
+      maybeAddNext(
+        sum,
+        visible,
+        level,
+        max,
+        wrapMarginalWithWorkshopDiscount(
+          (L) => workshopUtilityNextMarginalCoins(key, L),
+          utilityPct,
+        ),
+      )
     }
   }
 
   nextUpgradeVisibleSum = sum.n
+
+  return {
+    spentAll: sink.spent,
+    toMaxAll: sink.toMax,
+    nextUpgradeVisibleSum,
+  }
+}
+
+export type WorkshopStoneAggregates = WorkshopCoinAggregates
+
+/** Power-stone totals for ultimate-weapon workshop rows only. */
+export function computeWorkshopStoneAggregates(ws: WorkshopPersistedV1): WorkshopStoneAggregates {
+  const sink = { spent: 0, toMax: 0 }
+  addUltimateStoneTotals(ws, sink)
+
+  let nextUpgradeVisibleSum = 0
+  if (ws.mainTab === 'upgrade' && ws.category === 'ultimate') {
+    const sum = { n: 0 }
+    const { hideMaxed } = ws
+    for (const weaponId of WORKSHOP_ULTIMATE_WEAPON_ORDER) {
+      if (!workshopUltimateIsActive(ws, weaponId)) continue
+      if (hideMaxed && workshopUltimateWeaponAllMaxed(ws, weaponId)) continue
+      for (const { key } of WORKSHOP_ULTIMATE_WEAPON_STATS[weaponId]) {
+        const max = workshopUltimateMaxLevel(key)
+        const level = ws[key]
+        maybeAddNext(
+          sum,
+          !hideMaxed || level < max,
+          level,
+          max,
+          (L) => workshopUltimateNextMarginalStones(key, L),
+        )
+      }
+    }
+    nextUpgradeVisibleSum = sum.n
+  }
 
   return {
     spentAll: sink.spent,
@@ -315,3 +430,5 @@ export function formatWorkshopCoinAggregates(a: WorkshopCoinAggregates): {
     nextVisibleLabel: formatCoinAbbrev(a.nextUpgradeVisibleSum),
   }
 }
+
+export const formatWorkshopStoneAggregates = formatWorkshopCoinAggregates

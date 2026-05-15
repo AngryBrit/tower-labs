@@ -3,6 +3,10 @@ import {
   parseCsvLine,
   sortOverrideKeys,
 } from './labLevelOverridesCsv'
+import {
+  WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+} from './data/workshopUltimate'
 import { sanitizeWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
 
 /** First line of a combined lab + workshop backup CSV. */
@@ -11,6 +15,11 @@ export const TOWER_UNIFIED_CSV_MAGIC = 'tower_csv_v1'
 const HEADER = 'type,key,value'
 
 const LAB_KEY_RE = /^\d+-\d+$/
+
+const WS_BOOL_FIELDS = new Set<keyof WorkshopPersistedV1>([
+  'hideMaxed',
+  ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+])
 
 const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'hideMaxed',
@@ -65,6 +74,8 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'packageChanceLevel',
   'enemyAttackLevelSkipLevel',
   'enemyHealthLevelSkipLevel',
+  ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+  ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]
 
 export type ParseTowerUnifiedCsv =
@@ -155,7 +166,7 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
       const allowed = new Set<keyof WorkshopPersistedV1>(WS_FIELDS)
       if (!allowed.has(key as keyof WorkshopPersistedV1)) return { tag: 'invalid' }
       const wsKey = key as keyof WorkshopPersistedV1
-      if (wsKey === 'hideMaxed') {
+      if (WS_BOOL_FIELDS.has(wsKey)) {
         const b = parseBoolCell(valCell)
         if (b === null) return { tag: 'invalid' }
         wsRaw[wsKey] = b

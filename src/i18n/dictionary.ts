@@ -21,13 +21,21 @@ export const STRINGS_EN = {
   ws_tab_enhance: 'Enhance',
   ws_enhance_empty: 'Enhance is not modeled in this tool yet.',
   ws_budget_title: 'Workshop coins',
+  ws_budget_stones_title: 'Workshop power stones',
   ws_budget_aria:
     'Spent {{spent}}, to max {{toMax}}, next visible upgrades {{next}}.',
+  ws_budget_stones_aria:
+    'Spent {{spent}} power stones, to max {{toMax}} power stones, next visible upgrades {{next}} power stones.',
   ws_budget_footnote:
     'Totals include attack, defense, and utility rows. “Next upgrade” sums only cards visible on the Upgrade tab for the selected category (respects Hide Completed).',
+  ws_budget_stones_footnote:
+    'Totals include all ultimate-weapon basic upgrades (power stones). “Next upgrade” sums only visible stat columns on the Ultimate tab (respects Hide Completed).',
   ws_budget_spent_dt: 'Spent (all workshop upgrades)',
+  ws_budget_stones_spent_dt: 'Spent (all ultimate upgrades)',
   ws_budget_to_max_dt: 'To max (finite caps)',
+  ws_budget_stones_to_max_dt: 'To max (finite caps)',
   ws_budget_next_dt: 'Next upgrade (visible)',
+  ws_budget_stones_next_dt: 'Next upgrade (visible)',
   ws_section_attack: 'Attack Upgrades',
   ws_section_defense: 'Defense Upgrades',
   ws_section_utility: 'Utility Upgrades',
@@ -162,6 +170,27 @@ export const STRINGS_EN = {
   ws_stat_utilPackageChance: 'Package Chance',
   ws_stat_utilEnemyAttackLevelSkip: 'Enemy Attack Level Skip',
   ws_stat_utilEnemyHealthLevelSkip: 'Enemy Health Level Skip',
+  ws_uw_chainLightning: 'Chain Lightning',
+  ws_uw_smartMissiles: 'Smart Missiles',
+  ws_uw_deathWave: 'Death Wave',
+  ws_uw_chronoField: 'Chrono Field',
+  ws_uw_innerLandMines: 'Inner Land Mines',
+  ws_uw_goldenTower: 'Golden Tower',
+  ws_uw_poisonSwamp: 'Poison Swamp',
+  ws_uw_blackHole: 'Black Hole',
+  ws_uw_spotlight: 'Spotlight',
+  ws_uw_stat_damage: 'Damage',
+  ws_uw_stat_quantity: 'Quantity',
+  ws_uw_stat_chance: 'Chance',
+  ws_uw_stat_cooldown: 'Cooldown',
+  ws_uw_stat_duration: 'Duration',
+  ws_uw_stat_slow: 'Slow',
+  ws_uw_stat_bonus: 'Bonus',
+  ws_uw_stat_size: 'Size',
+  ws_uw_stat_angle: 'Angle',
+  ws_uw_stones_cost_aria: 'power stones to upgrade',
+  ws_uw_activate: 'Activate',
+  ws_uw_deactivate: 'Deactivate',
   ws_max: 'Max',
 
   sr_title: 'LAB',
@@ -344,13 +373,21 @@ export const STRINGS_ES = {
   ws_tab_enhance: 'Potenciar',
   ws_enhance_empty: 'Potenciar aún no está modelado en esta herramienta.',
   ws_budget_title: 'Monedas del taller',
+  ws_budget_stones_title: 'Piedras de poder del taller',
   ws_budget_aria:
     'Gastado {{spent}}, hasta el máximo {{toMax}}, siguientes mejoras visibles {{next}}.',
+  ws_budget_stones_aria:
+    'Gastadas {{spent}} piedras de poder, hasta el máximo {{toMax}} piedras de poder, siguientes mejoras visibles {{next}} piedras de poder.',
   ws_budget_footnote:
     'Los totales incluyen filas de ataque, defensa y utilidad. “Siguiente mejora” suma solo las tarjetas visibles en la pestaña Mejorar para la categoría seleccionada (respeta Ocultar completados).',
+  ws_budget_stones_footnote:
+    'Los totales incluyen todas las mejoras básicas de armas definitivas (piedras de poder). “Siguiente mejora” suma solo las columnas visibles en Definitivas (respeta Ocultar completados).',
   ws_budget_spent_dt: 'Gastado (todas las mejoras del taller)',
+  ws_budget_stones_spent_dt: 'Gastado (todas las mejoras definitivas)',
   ws_budget_to_max_dt: 'Hasta el máximo (topes finitos)',
+  ws_budget_stones_to_max_dt: 'Hasta el máximo (topes finitos)',
   ws_budget_next_dt: 'Siguiente mejora (visible)',
+  ws_budget_stones_next_dt: 'Siguiente mejora (visible)',
   ws_section_attack: 'Mejoras de ataque',
   ws_section_defense: 'Mejoras de defensa',
   ws_section_utility: 'Mejoras de utilidad',
@@ -487,6 +524,27 @@ export const STRINGS_ES = {
   ws_stat_utilPackageChance: 'Prob. de paquete',
   ws_stat_utilEnemyAttackLevelSkip: 'Salto de nivel de ataque enemigo',
   ws_stat_utilEnemyHealthLevelSkip: 'Salto de nivel de salud enemiga',
+  ws_uw_chainLightning: 'Rayo en cadena',
+  ws_uw_smartMissiles: 'Misiles inteligentes',
+  ws_uw_deathWave: 'Ola mortal',
+  ws_uw_chronoField: 'Campo crono',
+  ws_uw_innerLandMines: 'Minas terrestres internas',
+  ws_uw_goldenTower: 'Torre dorada',
+  ws_uw_poisonSwamp: 'Pantano venenoso',
+  ws_uw_blackHole: 'Agujero negro',
+  ws_uw_spotlight: 'Foco',
+  ws_uw_stat_damage: 'Daño',
+  ws_uw_stat_quantity: 'Cantidad',
+  ws_uw_stat_chance: 'Probabilidad',
+  ws_uw_stat_cooldown: 'Recarga',
+  ws_uw_stat_duration: 'Duración',
+  ws_uw_stat_slow: 'Ralentización',
+  ws_uw_stat_bonus: 'Bonificación',
+  ws_uw_stat_size: 'Tamaño',
+  ws_uw_stat_angle: 'Ángulo',
+  ws_uw_stones_cost_aria: 'piedras de poder para mejorar',
+  ws_uw_activate: 'Activar',
+  ws_uw_deactivate: 'Desactivar',
   ws_max: 'Máx',
 
   sr_title: 'LAB',
@@ -670,6 +728,7 @@ export type I18nFormatters = {
   sectionLoadError: (rel: string, status: number) => string
   simulatorBudgetAria: (spent: string, toMax: string, next: string) => string
   workshopBudgetAria: (spent: string, toMax: string, next: string) => string
+  workshopStoneBudgetAria: (spent: string, toMax: string, next: string) => string
   versionAria: (version: string) => string
   compareDifferingLabsCount: (count: number) => string
   compareDifferingWorkshopFields: (count: number) => string
@@ -714,6 +773,9 @@ function formatters(s: Record<StringId, string>): I18nFormatters {
     },
     workshopBudgetAria(spent, toMax, next) {
       return replaceParams(s.ws_budget_aria, { spent, toMax, next })
+    },
+    workshopStoneBudgetAria(spent, toMax, next) {
+      return replaceParams(s.ws_budget_stones_aria, { spent, toMax, next })
     },
     versionAria(version) {
       return replaceParams(s.sr_version_aria, { version })

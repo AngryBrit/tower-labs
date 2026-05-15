@@ -20,7 +20,31 @@ import {
   WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL,
 } from './data/workshopRendArmor'
 import { workshopDefenseClampLevel } from './data/workshopDefense'
+import {
+  WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_UPGRADE_ORDER,
+  WORKSHOP_ULTIMATE_WEAPON_ORDER,
+  workshopUltimateClampLevel,
+  type WorkshopUltimateActiveKey,
+  type WorkshopUltimateUpgradeKey,
+} from './data/workshopUltimate'
 import { workshopUtilityClampLevel } from './data/workshopUtility'
+
+type WorkshopUltimateLevels = { [K in WorkshopUltimateUpgradeKey]: number }
+
+function defaultUltimateLevels(): WorkshopUltimateLevels {
+  return Object.fromEntries(
+    WORKSHOP_ULTIMATE_UPGRADE_ORDER.map((key) => [key, 0]),
+  ) as WorkshopUltimateLevels
+}
+
+type WorkshopUltimateActiveFlags = { [K in WorkshopUltimateActiveKey]: boolean }
+
+function defaultUltimateActive(): WorkshopUltimateActiveFlags {
+  return Object.fromEntries(
+    WORKSHOP_ULTIMATE_WEAPON_ORDER.map((id) => [`${id}Active`, false]),
+  ) as WorkshopUltimateActiveFlags
+}
 
 export type WorkshopCategoryPersisted = 'attack' | 'defense' | 'utility' | 'ultimate'
 
@@ -77,7 +101,8 @@ export type WorkshopPersistedV1 = {
   packageChanceLevel: number
   enemyAttackLevelSkipLevel: number
   enemyHealthLevelSkipLevel: number
-}
+} & WorkshopUltimateLevels &
+  WorkshopUltimateActiveFlags
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
 
@@ -135,6 +160,8 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     packageChanceLevel: 0,
     enemyAttackLevelSkipLevel: 0,
     enemyHealthLevelSkipLevel: 0,
+    ...defaultUltimateLevels(),
+    ...defaultUltimateActive(),
   }
 }
 
@@ -310,7 +337,19 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
       'enemyHealthLevelSkipLevel',
       Number(o.enemyHealthLevelSkipLevel),
     ),
-  }
+    ...Object.fromEntries(
+      WORKSHOP_ULTIMATE_UPGRADE_ORDER.map((key) => [
+        key,
+        workshopUltimateClampLevel(key, Number(o[key])),
+      ]),
+    ),
+    ...Object.fromEntries(
+      WORKSHOP_ULTIMATE_ACTIVE_ORDER.map((key) => [
+        key,
+        (o as Record<string, unknown>)[key] === true ? true : false,
+      ]),
+    ),
+  } as WorkshopPersistedV1
 }
 
 export type LabPreset = {

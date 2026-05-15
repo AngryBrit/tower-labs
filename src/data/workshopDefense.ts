@@ -1,7 +1,10 @@
 /**
  * Workshop **defense** upgrades: **Health**, **Health Regen**, and **Defense %** use dedicated wiki
  * ladders (`workshopHealth`, `workshopHealthRegen`, `workshopDefensePercent`, `workshopDefenseAbsolute`,
- * `workshopThornDamage`, `workshopLifesteal`, `workshopKnockbackChance`, `workshopKnockbackForce`). Other rows reuse the workshop damage marginal curve as
+ * `workshopThornDamage`, `workshopLifesteal`, `workshopKnockbackChance`, `workshopKnockbackForce`, `workshopOrbSpeed`,
+ * `workshopOrbs`, `workshopShockwaveSize`, `workshopShockwaveFrequency`, `workshopLandMineChance`,
+ * `workshopLandMineDamage`, `workshopLandMineRadius`, `workshopDeathDefy`, `workshopWallHealth`, `workshopWallRebuild`).
+ * Other rows reuse the workshop damage marginal curve as
  * an interim placeholder.
  */
 
@@ -53,16 +56,55 @@ import {
   workshopKnockbackForceStatDisplay,
 } from './workshopKnockbackForce'
 import {
-  battleConditionsGroup1ResistanceValueDisplay,
-  extraExtraOrbsBonusDisplay,
-  innerMineBlastRadiusValueDisplay,
-  innerMineRotationSpeedValueDisplay,
-  landMineDamagePercentDisplay,
-  orbsSpeedPlusValueDisplay,
-  shockwaveSizePlusDisplay,
-  wallHealthPercentValueDisplay,
-  wallRebuildSecondsDisplay,
-} from '../types/research'
+  WORKSHOP_ORB_SPEED_MAX_LEVEL,
+  workshopOrbSpeedNextMarginalCoins,
+  workshopOrbSpeedStatDisplay,
+} from './workshopOrbSpeed'
+import {
+  WORKSHOP_ORBS_MAX_LEVEL,
+  workshopOrbsNextMarginalCoins,
+  workshopOrbsStatDisplay,
+} from './workshopOrbs'
+import {
+  WORKSHOP_SHOCKWAVE_SIZE_MAX_LEVEL,
+  workshopShockwaveSizeNextMarginalCoins,
+  workshopShockwaveSizeStatDisplay,
+} from './workshopShockwaveSize'
+import {
+  WORKSHOP_SHOCKWAVE_FREQUENCY_MAX_LEVEL,
+  workshopShockwaveFrequencyNextMarginalCoins,
+  workshopShockwaveFrequencyStatDisplay,
+} from './workshopShockwaveFrequency'
+import {
+  WORKSHOP_LAND_MINE_CHANCE_MAX_LEVEL,
+  workshopLandMineChanceNextMarginalCoins,
+  workshopLandMineChanceStatDisplay,
+} from './workshopLandMineChance'
+import {
+  WORKSHOP_LAND_MINE_DAMAGE_MAX_LEVEL,
+  workshopLandMineDamageNextMarginalCoins,
+  workshopLandMineDamageStatDisplay,
+} from './workshopLandMineDamage'
+import {
+  WORKSHOP_LAND_MINE_RADIUS_MAX_LEVEL,
+  workshopLandMineRadiusNextMarginalCoins,
+  workshopLandMineRadiusStatDisplay,
+} from './workshopLandMineRadius'
+import {
+  WORKSHOP_DEATH_DEFY_MAX_LEVEL,
+  workshopDeathDefyNextMarginalCoins,
+  workshopDeathDefyStatDisplay,
+} from './workshopDeathDefy'
+import {
+  WORKSHOP_WALL_HEALTH_MAX_LEVEL,
+  workshopWallHealthNextMarginalCoins,
+  workshopWallHealthStatDisplay,
+} from './workshopWallHealth'
+import {
+  WORKSHOP_WALL_REBUILD_MAX_LEVEL,
+  workshopWallRebuildNextMarginalCoins,
+  workshopWallRebuildStatDisplay,
+} from './workshopWallRebuild'
 
 export type WorkshopDefenseUpgradeKey =
   | 'healthLevel'
@@ -130,20 +172,25 @@ export function workshopDefenseMaxLevel(key: WorkshopDefenseUpgradeKey): number 
     case 'knockbackForceLevel':
       return WORKSHOP_KNOCKBACK_FORCE_MAX_LEVEL
     case 'orbSpeedLevel':
+      return WORKSHOP_ORB_SPEED_MAX_LEVEL
     case 'shockwaveSizeLevel':
+      return WORKSHOP_SHOCKWAVE_SIZE_MAX_LEVEL
     case 'shockwaveFrequencyLevel':
+      return WORKSHOP_SHOCKWAVE_FREQUENCY_MAX_LEVEL
     case 'landMineDamageLevel':
+      return WORKSHOP_LAND_MINE_DAMAGE_MAX_LEVEL
     case 'landMineRadiusLevel':
+      return WORKSHOP_LAND_MINE_RADIUS_MAX_LEVEL
     case 'wallRebuildLevel':
-      return 20
+      return WORKSHOP_WALL_REBUILD_MAX_LEVEL
     case 'orbsLevel':
-      return 10
+      return WORKSHOP_ORBS_MAX_LEVEL
     case 'landMineChanceLevel':
-      return 35
+      return WORKSHOP_LAND_MINE_CHANCE_MAX_LEVEL
     case 'deathDefyLevel':
-      return 10
+      return WORKSHOP_DEATH_DEFY_MAX_LEVEL
     case 'wallHealthLevel':
-      return 50
+      return WORKSHOP_WALL_HEALTH_MAX_LEVEL
   }
 }
 
@@ -174,18 +221,11 @@ function formatAbbrevWithHealthStyleLabMultiplier(base: number, labMult: number)
   return main
 }
 
-/** Interim display (not yet matched to a published lab curve). */
-function landMineChanceDisplay(level: number, max: number): string {
-  const L = cap(level, max)
-  return `+${(0.286 * L).toFixed(2)}%`
-}
-
 export function workshopDefenseStatDisplay(
   key: WorkshopDefenseUpgradeKey,
   completedLevels: number,
   opts?: WorkshopDefenseStatDisplayOpts,
 ): string {
-  const max = workshopDefenseMaxLevel(key)
   switch (key) {
     case 'healthLevel': {
       const m = opts?.healthLabMultiplier
@@ -229,33 +269,35 @@ export function workshopDefenseStatDisplay(
     case 'knockbackForceLevel':
       return workshopKnockbackForceStatDisplay(completedLevels)
     case 'orbSpeedLevel':
-      return orbsSpeedPlusValueDisplay(completedLevels, max)
+      return workshopOrbSpeedStatDisplay(completedLevels)
     case 'orbsLevel':
-      return extraExtraOrbsBonusDisplay(completedLevels, max)
+      return workshopOrbsStatDisplay(completedLevels)
     case 'shockwaveSizeLevel':
-      return shockwaveSizePlusDisplay(completedLevels, max)
+      return workshopShockwaveSizeStatDisplay(completedLevels)
     case 'shockwaveFrequencyLevel':
-      return innerMineRotationSpeedValueDisplay(completedLevels, max)
+      return workshopShockwaveFrequencyStatDisplay(completedLevels)
     case 'landMineChanceLevel':
-      return landMineChanceDisplay(completedLevels, max)
+      return workshopLandMineChanceStatDisplay(completedLevels)
     case 'landMineDamageLevel':
-      return landMineDamagePercentDisplay(completedLevels, max)
+      return workshopLandMineDamageStatDisplay(completedLevels)
     case 'landMineRadiusLevel':
-      return innerMineBlastRadiusValueDisplay(completedLevels, max)
+      return workshopLandMineRadiusStatDisplay(completedLevels)
     case 'deathDefyLevel':
-      return battleConditionsGroup1ResistanceValueDisplay(completedLevels, max)
+      return workshopDeathDefyStatDisplay(completedLevels)
     case 'wallHealthLevel':
-      return wallHealthPercentValueDisplay(completedLevels, max)
+      return workshopWallHealthStatDisplay(completedLevels)
     case 'wallRebuildLevel':
-      return wallRebuildSecondsDisplay(completedLevels, max)
+      return workshopWallRebuildStatDisplay(completedLevels)
   }
 }
 
 /**
  * Coins for the next purchase when `completedLevels` upgrades are already done.
  * **Health** / **Health Regen** / **Defense %** / **Defense Absolute** / **Thorn Damage** / **Lifesteal** /
- * **Knockback Chance** / **Knockback Force**: dedicated workshop ladders; others: workshop damage curve
- * (placeholder).
+ * **Knockback Chance** / **Knockback Force** / **Orb Speed** / **Orbs** / **Shockwave Size** / **Shockwave
+ * Frequency** / **Land Mine Chance** / **Land Mine Damage** / **Land Mine Radius** / **Death Defy** / **Wall
+ * Health** / **Wall Rebuild**: dedicated workshop ladders; others: workshop
+ * damage curve (placeholder) for rows not listed above.
  */
 export function workshopDefenseNextMarginalCoins(
   key: WorkshopDefenseUpgradeKey,
@@ -286,6 +328,36 @@ export function workshopDefenseNextMarginalCoins(
   }
   if (key === 'knockbackForceLevel') {
     return workshopKnockbackForceNextMarginalCoins(completedLevels)
+  }
+  if (key === 'orbSpeedLevel') {
+    return workshopOrbSpeedNextMarginalCoins(completedLevels)
+  }
+  if (key === 'orbsLevel') {
+    return workshopOrbsNextMarginalCoins(completedLevels)
+  }
+  if (key === 'shockwaveSizeLevel') {
+    return workshopShockwaveSizeNextMarginalCoins(completedLevels)
+  }
+  if (key === 'shockwaveFrequencyLevel') {
+    return workshopShockwaveFrequencyNextMarginalCoins(completedLevels)
+  }
+  if (key === 'landMineChanceLevel') {
+    return workshopLandMineChanceNextMarginalCoins(completedLevels)
+  }
+  if (key === 'landMineDamageLevel') {
+    return workshopLandMineDamageNextMarginalCoins(completedLevels)
+  }
+  if (key === 'landMineRadiusLevel') {
+    return workshopLandMineRadiusNextMarginalCoins(completedLevels)
+  }
+  if (key === 'deathDefyLevel') {
+    return workshopDeathDefyNextMarginalCoins(completedLevels)
+  }
+  if (key === 'wallHealthLevel') {
+    return workshopWallHealthNextMarginalCoins(completedLevels)
+  }
+  if (key === 'wallRebuildLevel') {
+    return workshopWallRebuildNextMarginalCoins(completedLevels)
   }
   const idx = Math.min(completedLevels, WORKSHOP_DAMAGE_MAX_LEVEL - 1)
   return workshopDamageNextMarginalCoins(idx)

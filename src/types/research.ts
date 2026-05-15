@@ -43,7 +43,8 @@ function applyLabsCoinDiscountToCoins(
  * on the row), not coin-style lab ladder totals. **Labs Coin Discount** does not apply.
  *
  * Other labs: `labsCoinDiscountPercent` is total Labs Coin Discount % from the simulated Labs Coin
- * Discount lab level (list price × (1 − pct/100)).
+ * Discount lab level (list price × (1 − pct/100)). The **Labs Coin Discount** row itself is never
+ * discounted (wiki: discount applies to all other labs only).
  */
 export function marginalCostForNextUpgrade(
   item: ResearchItem,
@@ -64,10 +65,9 @@ export function marginalCostForNextUpgrade(
 
   const fromToolkit = toolkitMarginalCoinCost(item.name, effectiveLevel)
   if (fromToolkit != null) {
-    const discounted = applyLabsCoinDiscountToCoins(
-      fromToolkit,
-      labsCoinDiscountPercent,
-    )
+    const discount =
+      item.name === 'Labs Coin Discount' ? 0 : labsCoinDiscountPercent
+    const discounted = applyLabsCoinDiscountToCoins(fromToolkit, discount)
     return formatCoinAbbrev(discounted)
   }
 
@@ -90,10 +90,9 @@ export function rawDiscountedMarginalCoinAtCurrentLevel(
 
   const fromToolkit = toolkitMarginalCoinCost(item.name, fromLevel)
   if (fromToolkit != null) {
-    return applyLabsCoinDiscountToCoins(
-      fromToolkit,
-      labsCoinDiscountPercent,
-    )
+    const discount =
+      item.name === 'Labs Coin Discount' ? 0 : labsCoinDiscountPercent
+    return applyLabsCoinDiscountToCoins(fromToolkit, discount)
   }
 
   return undefined
@@ -162,17 +161,24 @@ export function gameSpeedMultiplierLabel(
 /**
  * Labs Speed — wiki **Value**: **1.00 + 0.02 × lab level** as **`x`** (Lv.0→**x1.00**, Lv.1→**x1.02** … Lv.99→**x2.98**).
  * Max **99** levels (Milestones tier 1 wave 150). Cost/time in `tower-labs.json` under **`Lab Speed`** (display name **Labs Speed** aliases here).
+ * Multiplier applies to research **time** on all other labs (not Labs Speed itself).
  */
-export function labsSpeedValueDisplay(
+export function labsSpeedMultiplierAtLevel(
   effectiveLevel: number,
   maxLevelCap: number,
-): string {
+): number {
   const capped =
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const v = 1 + 0.02 * capped
-  return `x${v.toFixed(2)}`
+  return 1 + 0.02 * capped
+}
+
+export function labsSpeedValueDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  return `x${labsSpeedMultiplierAtLevel(effectiveLevel, maxLevelCap).toFixed(2)}`
 }
 
 function moduleLabCappedLevel(
@@ -1509,16 +1515,34 @@ const DISSONANT_ECHO_LABS = new Set([
  * (Lv.1→0.50% … Lv.99→49.50%; Lv.0→0.00%). Max **99** levels; cost/time match **Starting Cash** ladder in `tower-labs.json`.
  * Unlock milestones differ by lab (wiki: **Attack** tier 1 wave 40; **Defense** tier 2 wave 50; **Utility** tier 2 wave 60).
  */
-export function workshopDiscountValuePercentDisplay(
+/** Total Workshop Attack/Defense/Utility discount % at a given lab level. */
+export function workshopDiscountTotalPercent(
   effectiveLevel: number,
   maxLevelCap: number,
-): string {
+): number {
   const capped =
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const v = 0.5 * capped
-  return `${v.toFixed(2)}%`
+  return 0.5 * capped
+}
+
+export function workshopDiscountValuePercentDisplay(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): string {
+  return `${workshopDiscountTotalPercent(effectiveLevel, maxLevelCap).toFixed(2)}%`
+}
+
+/** List price × (1 − discount%/100) for workshop upgrade coins. */
+export function applyWorkshopDiscountToCoins(
+  rawCoins: number,
+  workshopDiscountPercent: number,
+): number {
+  if (!Number.isFinite(rawCoins) || rawCoins < 0) return rawCoins
+  const mult = 1 - workshopDiscountPercent / 100
+  if (!Number.isFinite(mult)) return rawCoins
+  return Math.max(0, rawCoins * mult)
 }
 
 /**
@@ -2081,17 +2105,29 @@ export function benefitLineWithNextUpgrade(
   return `${current} » ${nextStr}`
 }
 
-/** Time for the next upgrade at `effectiveLevel`; from `tower-labs.json` `DURATION` only. */
+/**
+ * Time for the next upgrade at `effectiveLevel`; from `tower-labs.json` `DURATION`, divided by
+ * simulated **Labs Speed** (`labsSpeedMultiplier`) on all labs except **Labs Speed** itself.
+ */
 export function researchTimeForNextUpgrade(
   item: ResearchItem,
   effectiveLevel: number,
   maxLevelCap: number,
+  labsSpeedMultiplier = 1,
 ): string {
   if (maxLevelCap > 0 && effectiveLevel >= maxLevelCap) return 'Max'
 
   const sec = toolkitUpgradeDurationSeconds(item.name, effectiveLevel)
   if (sec != null) {
-    return formatResearchDurationSeconds(sec)
+    let adjusted = sec
+    if (
+      item.name !== 'Labs Speed' &&
+      labsSpeedMultiplier > 1 &&
+      Number.isFinite(labsSpeedMultiplier)
+    ) {
+      adjusted = sec / labsSpeedMultiplier
+    }
+    return formatResearchDurationSeconds(adjusted)
   }
 
   return '—'
@@ -2114,7 +2150,10 @@ export function getEffectiveLevel(
   return getLevelBounds(item).current
 }
 
-/** Labs Coin Discount % implied by the simulated level of that lab (0 if missing). */
+/**
+ * Labs Coin Discount % implied by the simulated level of that lab (0 if missing).
+ * Applies to all coin labs except **Labs Coin Discount** itself (see {@link marginalCostForNextUpgrade}).
+ */
 export function resolveLabsCoinDiscountPercent(
   data: ResearchData,
   overrides: Record<string, number>,
@@ -2130,6 +2169,24 @@ export function resolveLabsCoinDiscountPercent(
     }
   }
   return 0
+}
+
+/** Labs Speed multiplier implied by the simulated level of that lab (**x1** when missing). */
+export function resolveLabsSpeedMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]
+      if (item.name !== 'Labs Speed') continue
+      const bounds = getLevelBounds(item)
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      return labsSpeedMultiplierAtLevel(eff, bounds.max)
+    }
+  }
+  return 1
 }
 
 /**
@@ -2203,6 +2260,60 @@ export function defenseResearchDefensePercentLabPercentPoints(
  * Simulated Attack **Damage** lab as a multiplier for workshop **Damage** display (same curve as the lab card).
  * Returns **1** when the row is missing from `data`.
  */
+function resolveWorkshopDiscountPercentByLabName(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== labName) continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return workshopDiscountTotalPercent(eff, max)
+    }
+  }
+  return 0
+}
+
+/** Simulated **Workshop Attack Discount** % (0 when missing). */
+export function resolveWorkshopAttackDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveWorkshopDiscountPercentByLabName(
+    data,
+    overrides,
+    'Workshop Attack Discount',
+  )
+}
+
+/** Simulated **Workshop Defense Discount** % (0 when missing). */
+export function resolveWorkshopDefenseDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveWorkshopDiscountPercentByLabName(
+    data,
+    overrides,
+    'Workshop Defense Discount',
+  )
+}
+
+/** Simulated **Workshop Utility Discount** % (0 when missing). */
+export function resolveWorkshopUtilityDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveWorkshopDiscountPercentByLabName(
+    data,
+    overrides,
+    'Workshop Utility Discount',
+  )
+}
+
 export function attackResearchDamageLabMultiplier(
   data: ResearchData,
   overrides: Record<string, number>,
