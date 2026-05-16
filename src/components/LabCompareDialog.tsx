@@ -141,6 +141,42 @@ function workshopFieldLabel(field: WorkshopCompareRow['field'], t: TFn): string 
       return t('ws_stat_utilEnemyAttackLevelSkip')
     case 'enemyHealthLevelSkipLevel':
       return t('ws_stat_utilEnemyHealthLevelSkip')
+    case 'enhanceDamageLevel':
+      return t('ws_stat_enhanceDamage')
+    case 'enhanceRendArmorLevel':
+      return t('ws_stat_enhanceRendArmor')
+    case 'enhanceCritFactorLevel':
+      return t('ws_stat_enhanceCritFactor')
+    case 'enhanceDamagePerMeterLevel':
+      return t('ws_stat_enhanceDamagePerMeter')
+    case 'enhanceSuperCritMultLevel':
+      return t('ws_stat_enhanceSuperCritMult')
+    case 'enhanceAttackSpeedLevel':
+      return t('ws_stat_enhanceAttackSpeed')
+    case 'enhanceHealthLevel':
+      return t('ws_stat_enhanceHealth')
+    case 'enhanceHealthRegenLevel':
+      return t('ws_stat_enhanceHealthRegen')
+    case 'enhanceDefenseAbsoluteLevel':
+      return t('ws_stat_enhanceDefenseAbsolute')
+    case 'enhanceLandMineDamageLevel':
+      return t('ws_stat_enhanceLandMineDamage')
+    case 'enhanceWallHealthLevel':
+      return t('ws_stat_enhanceWallHealth')
+    case 'enhanceOrbSizeLevel':
+      return t('ws_stat_enhanceOrbSize')
+    case 'enhanceCashBonusLevel':
+      return t('ws_stat_enhanceCashBonus')
+    case 'enhanceCoinBonusLevel':
+      return t('ws_stat_enhanceCoinBonus')
+    case 'enhanceCellsKillBonusLevel':
+      return t('ws_stat_enhanceCellsKillBonus')
+    case 'enhanceFreeUpgradesLevel':
+      return t('ws_stat_enhanceFreeUpgrades')
+    case 'enhanceRecoveryPackageLevel':
+      return t('ws_stat_enhanceRecoveryPackage')
+    case 'enhanceEnemyLevelSkipLevel':
+      return t('ws_stat_enhanceEnemyLevelSkip')
     case 'hideMaxed':
       return t('sr_ws_field_hide_maxed')
     case 'mainTab':

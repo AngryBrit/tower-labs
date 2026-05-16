@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { workshopDefenseNextMarginalCoins } from './data/workshopDefense'
+import { workshopEnhanceAttackNextMarginalCoins } from './data/workshopEnhanceAttack'
+import { workshopEnhanceDefenseNextMarginalCoins } from './data/workshopEnhanceDefense'
+import { workshopEnhanceUtilityNextMarginalCoins } from './data/workshopEnhanceUtility'
 import { workshopDamageNextMarginalCoins } from './data/workshopDamage'
 import { defaultWorkshopPersisted } from './labPresetsStorage'
 import { applyWorkshopDiscountToCoins } from './types/research'
@@ -48,8 +51,78 @@ describe('computeWorkshopCoinAggregates', () => {
     expect(discounted).toBeLessThan(m0)
   })
 
-  it('uses zero visible next sum on Enhance tab', () => {
-    const ws = { ...defaultWorkshopPersisted(), mainTab: 'enhance' as const }
+  it('sums only unlocked attack enhancement next upgrades at level 0', () => {
+    const damageNext = workshopEnhanceAttackNextMarginalCoins('enhanceDamageLevel', 0)!
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'attack' as const,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBe(damageNext)
+  })
+
+  it('includes more attack enhancement next upgrades after category spend unlocks', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'attack' as const,
+      enhanceDamageLevel: 400,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBeGreaterThan(5e9)
+  })
+
+  it('sums only unlocked defense enhancement next upgrades at level 0', () => {
+    const healthNext = workshopEnhanceDefenseNextMarginalCoins('enhanceHealthLevel', 0)!
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'defense' as const,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBe(healthNext)
+  })
+
+  it('includes more defense enhancement next upgrades after category spend unlocks', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'defense' as const,
+      enhanceHealthLevel: 400,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBeGreaterThan(5e9)
+  })
+
+  it('sums only unlocked utility enhancement next upgrades at level 0', () => {
+    const cashNext = workshopEnhanceUtilityNextMarginalCoins('enhanceCashBonusLevel', 0)!
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'utility' as const,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBe(cashNext)
+  })
+
+  it('includes more utility enhancement next upgrades after category spend unlocks', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'utility' as const,
+      enhanceCashBonusLevel: 400,
+    }
+    const a = computeWorkshopCoinAggregates(ws)
+    expect(a.nextUpgradeVisibleSum).toBeGreaterThan(5e9)
+  })
+
+  it('uses zero visible next sum on Enhance tab for ultimate category', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'ultimate' as const,
+    }
     expect(computeWorkshopCoinAggregates(ws).nextUpgradeVisibleSum).toBe(0)
   })
 

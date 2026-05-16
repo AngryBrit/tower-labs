@@ -72,6 +72,23 @@ import {
   workshopEnemyHealthLevelSkipNextMarginalCoins,
   workshopEnemyHealthLevelSkipStatDisplay,
 } from './workshopEnemyHealthLevelSkip'
+import {
+  formatAdditivePercentPoints,
+  formatWithDamageStyleLabMultiplier,
+} from './workshopLabDisplayHelpers'
+import type { WorkshopUtilityLabDisplayOpts } from './workshopLabDisplayOpts'
+import { workshopCashBonusStatMultiplier } from './workshopCashBonus'
+import { workshopCashPerWaveStatAmount } from './workshopCashPerWave'
+import { workshopCoinsKillBonusStatMultiplier } from './workshopCoinsKillBonus'
+import { workshopCoinsWaveStatAmount } from './workshopCoinsWave'
+import { workshopEnemyAttackLevelSkipStatPercent } from './workshopEnemyAttackLevelSkip'
+import { workshopEnemyHealthLevelSkipStatPercent } from './workshopEnemyHealthLevelSkip'
+import { workshopInterestPerWaveStatPercentPoints } from './workshopInterestPerWave'
+import { workshopMaxRecoveryStatMultiplier } from './workshopMaxRecovery'
+import { workshopPackageChanceStatPercent } from './workshopPackageChance'
+import { workshopRecoveryAmountStatPercent } from './workshopRecoveryAmount'
+
+export type { WorkshopUtilityLabDisplayOpts } from './workshopLabDisplayOpts'
 
 export type WorkshopUtilityUpgradeKey =
   | 'cashBonusLevel'
@@ -147,34 +164,118 @@ export function workshopUtilityClampLevel(key: WorkshopUtilityUpgradeKey, n: num
 export function workshopUtilityStatDisplay(
   key: WorkshopUtilityUpgradeKey,
   completedLevels: number,
+  opts?: WorkshopUtilityLabDisplayOpts,
 ): string {
   switch (key) {
-    case 'cashBonusLevel':
+    case 'cashBonusLevel': {
+      const m = opts?.cashBonusLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopCashBonusStatMultiplier(completedLevels),
+          m,
+          (v) => `x${v.toFixed(2)}`,
+        )
+      }
       return workshopCashBonusStatDisplay(completedLevels)
-    case 'cashPerWaveLevel':
+    }
+    case 'cashPerWaveLevel': {
+      const m = opts?.cashPerWaveLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopCashPerWaveStatAmount(completedLevels),
+          m,
+          (v) => String(Math.round(v)),
+        )
+      }
       return workshopCashPerWaveStatDisplay(completedLevels)
-    case 'coinsKillBonusLevel':
+    }
+    case 'coinsKillBonusLevel': {
+      const m = opts?.coinsKillBonusLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopCoinsKillBonusStatMultiplier(completedLevels),
+          m,
+          (v) => `x${v.toFixed(2)}`,
+        )
+      }
       return workshopCoinsKillBonusStatDisplay(completedLevels)
-    case 'coinsWaveLevel':
+    }
+    case 'coinsWaveLevel': {
+      const m = opts?.coinsWaveLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopCoinsWaveStatAmount(completedLevels),
+          m,
+          (v) => String(Math.round(v)),
+        )
+      }
       return workshopCoinsWaveStatDisplay(completedLevels)
-    case 'interestPerWaveLevel':
+    }
+    case 'interestPerWaveLevel': {
+      const m = opts?.interestPerWaveLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopInterestPerWaveStatPercentPoints(completedLevels),
+          m,
+          (v) => `+${v.toFixed(2)}%`,
+        )
+      }
       return workshopInterestPerWaveStatDisplay(completedLevels)
+    }
     case 'freeAttackUpgradeLevel':
       return workshopFreeAttackUpgradeStatDisplay(completedLevels)
     case 'freeDefenseUpgradeLevel':
       return workshopFreeDefenseUpgradeStatDisplay(completedLevels)
     case 'freeUtilityUpgradeLevel':
       return workshopFreeUtilityUpgradeStatDisplay(completedLevels)
-    case 'recoveryAmountLevel':
+    case 'recoveryAmountLevel': {
+      const lab = opts?.recoveryAmountLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditivePercentPoints(
+          workshopRecoveryAmountStatPercent(completedLevels),
+          lab,
+        )
+      }
       return workshopRecoveryAmountStatDisplay(completedLevels)
-    case 'maxRecoveryLevel':
+    }
+    case 'maxRecoveryLevel': {
+      const m = opts?.maxRecoveryLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithDamageStyleLabMultiplier(
+          workshopMaxRecoveryStatMultiplier(completedLevels),
+          m,
+          (v) => `x${v.toFixed(2)}`,
+        )
+      }
       return workshopMaxRecoveryStatDisplay(completedLevels)
-    case 'packageChanceLevel':
+    }
+    case 'packageChanceLevel': {
+      const lab = opts?.packageChanceLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditivePercentPoints(workshopPackageChanceStatPercent(completedLevels), lab)
+      }
       return workshopPackageChanceStatDisplay(completedLevels)
-    case 'enemyAttackLevelSkipLevel':
+    }
+    case 'enemyAttackLevelSkipLevel': {
+      const lab = opts?.enemyAttackLevelSkipLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditivePercentPoints(
+          workshopEnemyAttackLevelSkipStatPercent(completedLevels),
+          lab,
+        )
+      }
       return workshopEnemyAttackLevelSkipStatDisplay(completedLevels)
-    case 'enemyHealthLevelSkipLevel':
+    }
+    case 'enemyHealthLevelSkipLevel': {
+      const lab = opts?.enemyHealthLevelSkipLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditivePercentPoints(
+          workshopEnemyHealthLevelSkipStatPercent(completedLevels),
+          lab,
+        )
+      }
       return workshopEnemyHealthLevelSkipStatDisplay(completedLevels)
+    }
   }
 }
 

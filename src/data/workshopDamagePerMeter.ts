@@ -75,10 +75,16 @@ export function workshopDamagePerMeterStatMultiplier(completedLevels: number): n
  * Workshop card: effective multiplier on damage **per meter** vs baseline (**×1** at Lv.0),
  * wiki-style **`x1.00079 / m`** … **`x1.059 / m`** (raw bonus `v` is `×(1+v)` here).
  */
-export function workshopDamagePerMeterStatDisplay(completedLevels: number): string {
+export function workshopDamagePerMeterStatDisplay(
+  completedLevels: number,
+  labMultiplier?: number,
+): string {
   const v = workshopDamagePerMeterStatMultiplier(completedLevels)
-  if (v === 0) return 'x1 / m'
-  const n = 1 + v
+  let n = v === 0 ? 1 : 1 + v
+  if (labMultiplier != null && Number.isFinite(labMultiplier) && labMultiplier > 1 + 1e-9) {
+    n *= labMultiplier
+  }
+  if (v === 0 && (labMultiplier == null || labMultiplier <= 1 + 1e-9)) return 'x1 / m'
   const s = n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '')
   return `x${s} / m`
 }

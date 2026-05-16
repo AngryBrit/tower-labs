@@ -9,6 +9,20 @@
  */
 
 import { formatCoinAbbrev } from '../labCosts'
+import {
+  formatAdditiveCount,
+  formatAdditiveNumeric,
+  formatAdditivePercentPoints,
+  formatSecondsAfterLabReduction,
+  formatWithHealthStyleLabMultiplier,
+} from './workshopLabDisplayHelpers'
+import { workshopDefenseAbsoluteStatValue } from './workshopDefenseAbsolute'
+import { workshopLandMineDamageStatPercent } from './workshopLandMineDamage'
+import { workshopOrbSpeedStatMultiplier } from './workshopOrbSpeed'
+import { workshopOrbsStatCount } from './workshopOrbs'
+import { workshopShockwaveSizeStatMultiplier } from './workshopShockwaveSize'
+import { workshopWallHealthStatPercent } from './workshopWallHealth'
+import { workshopWallRebuildStatSeconds } from './workshopWallRebuild'
 import { workshopDamageNextMarginalCoins } from './workshopDamage'
 import { WORKSHOP_DAMAGE_MAX_LEVEL } from './workshopDamage'
 import {
@@ -206,19 +220,13 @@ export type WorkshopDefenseStatDisplayOpts = {
   thornDamageLabPercentPoints?: number
   /** Additive **Defense %** lab (percent points), summed with workshop Defense %. */
   defensePercentLabPercentPoints?: number
-}
-
-/**
- * When wiki **Value** is **0**, multiplying by a Health-style lab still yields **0** — append **`×m`**
- * so the workshop row reflects the simulated lab like the research card.
- */
-function formatAbbrevWithHealthStyleLabMultiplier(base: number, labMult: number): string {
-  const rounded = Math.round(base * labMult)
-  const main = formatCoinAbbrev(rounded)
-  if (base === 0 && labMult > 1 + 1e-9) {
-    return `${main} ×${labMult.toFixed(2)}`
-  }
-  return main
+  defenseAbsoluteLabMultiplier?: number
+  orbSpeedLabPlus?: number
+  orbsLabBonus?: number
+  shockwaveSizeLabPlus?: number
+  landMineDamageLabPercentPoints?: number
+  wallHealthLabPercentPoints?: number
+  wallRebuildLabSecondsReduction?: number
 }
 
 export function workshopDefenseStatDisplay(
@@ -230,22 +238,30 @@ export function workshopDefenseStatDisplay(
     case 'healthLevel': {
       const m = opts?.healthLabMultiplier
       if (m !== undefined && Number.isFinite(m) && m > 0) {
-        return formatAbbrevWithHealthStyleLabMultiplier(workshopHealthStatValue(completedLevels), m)
+        return formatWithHealthStyleLabMultiplier(workshopHealthStatValue(completedLevels), m)
       }
       return workshopHealthStatDisplay(completedLevels)
     }
     case 'healthRegenLevel': {
       const m = opts?.healthRegenLabMultiplier
       if (m !== undefined && Number.isFinite(m) && m > 0) {
-        return formatAbbrevWithHealthStyleLabMultiplier(
+        return formatWithHealthStyleLabMultiplier(
           workshopHealthRegenStatValue(completedLevels),
           m,
         )
       }
       return workshopHealthRegenStatDisplay(completedLevels)
     }
-    case 'defenseAbsoluteLevel':
+    case 'defenseAbsoluteLevel': {
+      const m = opts?.defenseAbsoluteLabMultiplier
+      if (m !== undefined && Number.isFinite(m) && m > 1 + 1e-9) {
+        return formatWithHealthStyleLabMultiplier(
+          workshopDefenseAbsoluteStatValue(completedLevels),
+          m,
+        )
+      }
       return workshopDefenseAbsoluteStatDisplay(completedLevels)
+    }
     case 'defensePercentLevel': {
       const labPts = opts?.defensePercentLabPercentPoints
       if (labPts !== undefined && Number.isFinite(labPts)) {
@@ -268,26 +284,60 @@ export function workshopDefenseStatDisplay(
       return workshopKnockbackChanceStatDisplay(completedLevels)
     case 'knockbackForceLevel':
       return workshopKnockbackForceStatDisplay(completedLevels)
-    case 'orbSpeedLevel':
+    case 'orbSpeedLevel': {
+      const lab = opts?.orbSpeedLabPlus
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditiveNumeric(workshopOrbSpeedStatMultiplier(completedLevels), lab)
+      }
       return workshopOrbSpeedStatDisplay(completedLevels)
-    case 'orbsLevel':
+    }
+    case 'orbsLevel': {
+      const lab = opts?.orbsLabBonus
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditiveCount(workshopOrbsStatCount(completedLevels), lab)
+      }
       return workshopOrbsStatDisplay(completedLevels)
-    case 'shockwaveSizeLevel':
+    }
+    case 'shockwaveSizeLevel': {
+      const lab = opts?.shockwaveSizeLabPlus
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditiveNumeric(workshopShockwaveSizeStatMultiplier(completedLevels), lab)
+      }
       return workshopShockwaveSizeStatDisplay(completedLevels)
+    }
     case 'shockwaveFrequencyLevel':
       return workshopShockwaveFrequencyStatDisplay(completedLevels)
     case 'landMineChanceLevel':
       return workshopLandMineChanceStatDisplay(completedLevels)
-    case 'landMineDamageLevel':
+    case 'landMineDamageLevel': {
+      const lab = opts?.landMineDamageLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        const w = workshopLandMineDamageStatPercent(completedLevels)
+        return `+${Math.round(w + lab)}%`
+      }
       return workshopLandMineDamageStatDisplay(completedLevels)
+    }
     case 'landMineRadiusLevel':
       return workshopLandMineRadiusStatDisplay(completedLevels)
     case 'deathDefyLevel':
       return workshopDeathDefyStatDisplay(completedLevels)
-    case 'wallHealthLevel':
+    case 'wallHealthLevel': {
+      const lab = opts?.wallHealthLabPercentPoints
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatAdditivePercentPoints(workshopWallHealthStatPercent(completedLevels), lab)
+      }
       return workshopWallHealthStatDisplay(completedLevels)
-    case 'wallRebuildLevel':
+    }
+    case 'wallRebuildLevel': {
+      const lab = opts?.wallRebuildLabSecondsReduction
+      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
+        return formatSecondsAfterLabReduction(
+          workshopWallRebuildStatSeconds(completedLevels),
+          lab,
+        )
+      }
       return workshopWallRebuildStatDisplay(completedLevels)
+    }
   }
 }
 

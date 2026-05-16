@@ -74,6 +74,32 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'packageChanceLevel',
   'enemyAttackLevelSkipLevel',
   'enemyHealthLevelSkipLevel',
+  'enhanceDamageLevel',
+  'enhanceRendArmorLevel',
+  'enhanceCritFactorLevel',
+  'enhanceDamagePerMeterLevel',
+  'enhanceSuperCritMultLevel',
+  'enhanceAttackSpeedLevel',
+  'enhanceHealthLevel',
+  'enhanceHealthRegenLevel',
+  'enhanceDefenseAbsoluteLevel',
+  'enhanceLandMineDamageLevel',
+  'enhanceWallHealthLevel',
+  'enhanceOrbSizeLevel',
+  'enhanceCashBonusLevel',
+  'enhanceCoinBonusLevel',
+  'enhanceCellsKillBonusLevel',
+  'enhanceFreeUpgradesLevel',
+  'enhanceRecoveryPackageLevel',
+  'enhanceEnemyLevelSkipLevel',
+  'simDamageCardStars',
+  'simAttackSpeedCardStars',
+  'simAttackSpeedModuleSubEffect',
+  'simBerserkerCardStars',
+  'simBerserkerDamageTaken',
+  'simRelicsBonusFraction',
+  'simPerkDamageQuantity',
+  'simAssistModuleSlot',
   ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]
@@ -172,8 +198,23 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
         wsRaw[wsKey] = b
       } else if (wsKey === 'mainTab') {
         const t = valCell.toLowerCase()
-        if (t !== 'upgrade' && t !== 'enhance') return { tag: 'invalid' }
+        if (t !== 'upgrade' && t !== 'enhance' && t !== 'modules' && t !== 'cards') {
+          return { tag: 'invalid' }
+        }
         wsRaw[wsKey] = t
+      } else if (wsKey === 'simAssistModuleSlot') {
+        const t = valCell.toLowerCase()
+        if (t !== 'cannon' && t !== 'armor' && t !== 'generator' && t !== 'core') {
+          return { tag: 'invalid' }
+        }
+        wsRaw[wsKey] = t
+      } else if (
+        wsKey === 'simRelicsBonusFraction' ||
+        wsKey === 'simBerserkerDamageTaken'
+      ) {
+        const n = valCell === '' ? 0 : Number(valCell)
+        if (!Number.isFinite(n) || n < 0) return { tag: 'invalid' }
+        wsRaw[wsKey] = n
       } else if (wsKey === 'category') {
         const t = valCell.toLowerCase()
         if (!['attack', 'defense', 'utility', 'ultimate'].includes(t)) return { tag: 'invalid' }

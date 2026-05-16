@@ -73,6 +73,29 @@ import {
   workshopUtilityNextMarginalCoins,
 } from './data/workshopUtility'
 import {
+  WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER,
+  workshopEnhanceAttackMaxLevel,
+  workshopEnhanceAttackNextMarginalCoins,
+} from './data/workshopEnhanceAttack'
+import {
+  WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER,
+  workshopEnhanceDefenseMaxLevel,
+  workshopEnhanceDefenseNextMarginalCoins,
+} from './data/workshopEnhanceDefense'
+import {
+  WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER,
+  workshopEnhanceUtilityMaxLevel,
+  workshopEnhanceUtilityNextMarginalCoins,
+} from './data/workshopEnhanceUtility'
+import {
+  workshopEnhanceAttackIsUnlocked,
+  workshopEnhanceAttackUnlockSpentCoins,
+  workshopEnhanceDefenseCategorySpentCoins,
+  workshopEnhanceDefenseIsUnlocked,
+  workshopEnhanceUtilityCategorySpentCoins,
+  workshopEnhanceUtilityIsUnlocked,
+} from './data/workshopEnhanceUnlock'
+import {
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   WORKSHOP_ULTIMATE_WEAPON_ORDER,
   WORKSHOP_ULTIMATE_WEAPON_STATS,
@@ -89,6 +112,9 @@ export type WorkshopCoinDiscountOpts = {
   attackDiscountPercent?: number
   defenseDiscountPercent?: number
   utilityDiscountPercent?: number
+  enhancementAttackDiscountPercent?: number
+  enhancementDefenseDiscountPercent?: number
+  enhancementUtilityDiscountPercent?: number
 }
 
 function wrapMarginalWithWorkshopDiscount(
@@ -259,6 +285,54 @@ function addAttackDefenseUtilityTotals(
     sink.toMax += statToMax(level, max, discounted)
   }
 
+  const enhanceAttackPct = opts.enhancementAttackDiscountPercent ?? 0
+  for (const key of WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER) {
+    const max = workshopEnhanceAttackMaxLevel(key)
+    const level = ws[key]
+    const discounted = wrapMarginalWithWorkshopDiscount(
+      (L) => workshopEnhanceAttackNextMarginalCoins(key, L),
+      enhanceAttackPct,
+    )
+    sink.spent += statSpent(level, discounted)
+    if (
+      workshopEnhanceAttackIsUnlocked(
+        key,
+        workshopEnhanceAttackUnlockSpentCoins(key, ws, enhanceAttackPct),
+      )
+    ) {
+      sink.toMax += statToMax(level, max, discounted)
+    }
+  }
+
+  const enhanceDefensePct = opts.enhancementDefenseDiscountPercent ?? 0
+  const defenseEnhanceSpent = workshopEnhanceDefenseCategorySpentCoins(ws, enhanceDefensePct)
+  for (const key of WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER) {
+    const max = workshopEnhanceDefenseMaxLevel(key)
+    const level = ws[key]
+    const discounted = wrapMarginalWithWorkshopDiscount(
+      (L) => workshopEnhanceDefenseNextMarginalCoins(key, L),
+      enhanceDefensePct,
+    )
+    sink.spent += statSpent(level, discounted)
+    if (workshopEnhanceDefenseIsUnlocked(key, defenseEnhanceSpent)) {
+      sink.toMax += statToMax(level, max, discounted)
+    }
+  }
+
+  const enhanceUtilityPct = opts.enhancementUtilityDiscountPercent ?? 0
+  const utilityEnhanceSpent = workshopEnhanceUtilityCategorySpentCoins(ws, enhanceUtilityPct)
+  for (const key of WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER) {
+    const max = workshopEnhanceUtilityMaxLevel(key)
+    const level = ws[key]
+    const discounted = wrapMarginalWithWorkshopDiscount(
+      (L) => workshopEnhanceUtilityNextMarginalCoins(key, L),
+      enhanceUtilityPct,
+    )
+    sink.spent += statSpent(level, discounted)
+    if (workshopEnhanceUtilityIsUnlocked(key, utilityEnhanceSpent)) {
+      sink.toMax += statToMax(level, max, discounted)
+    }
+  }
 }
 
 function addUltimateStoneTotals(
@@ -309,16 +383,77 @@ export function computeWorkshopCoinAggregates(
   const utilityPct = coinDiscountOpts.utilityDiscountPercent ?? 0
 
   let nextUpgradeVisibleSum = 0
-  if (ws.mainTab !== 'upgrade') {
+  const { hideMaxed, category } = ws
+  const sum = { n: 0 }
+
+  if (ws.mainTab === 'enhance') {
+    const enhanceAttackPct = coinDiscountOpts.enhancementAttackDiscountPercent ?? 0
+    const enhanceDefensePct = coinDiscountOpts.enhancementDefenseDiscountPercent ?? 0
+    const enhanceUtilityPct = coinDiscountOpts.enhancementUtilityDiscountPercent ?? 0
+    if (category === 'attack') {
+      const enhanceNext = (key: (typeof WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER)[number]) =>
+        wrapMarginalWithWorkshopDiscount(
+          (L) => workshopEnhanceAttackNextMarginalCoins(key, L),
+          enhanceAttackPct,
+        )
+      for (const key of WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER) {
+        const max = workshopEnhanceAttackMaxLevel(key)
+        const level = ws[key]
+        const unlockSpent = workshopEnhanceAttackUnlockSpentCoins(key, ws, enhanceAttackPct)
+        const unlocked = workshopEnhanceAttackIsUnlocked(key, unlockSpent)
+        maybeAddNext(
+          sum,
+          attackCardVisible(hideMaxed, level, max) && unlocked,
+          level,
+          max,
+          enhanceNext(key),
+        )
+      }
+    } else if (category === 'defense') {
+      const defenseEnhanceSpent = workshopEnhanceDefenseCategorySpentCoins(ws, enhanceDefensePct)
+      const enhanceNext = (key: (typeof WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER)[number]) =>
+        wrapMarginalWithWorkshopDiscount(
+          (L) => workshopEnhanceDefenseNextMarginalCoins(key, L),
+          enhanceDefensePct,
+        )
+      for (const key of WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER) {
+        const max = workshopEnhanceDefenseMaxLevel(key)
+        const level = ws[key]
+        const unlocked = workshopEnhanceDefenseIsUnlocked(key, defenseEnhanceSpent)
+        maybeAddNext(
+          sum,
+          attackCardVisible(hideMaxed, level, max) && unlocked,
+          level,
+          max,
+          enhanceNext(key),
+        )
+      }
+    } else if (category === 'utility') {
+      const utilityEnhanceSpent = workshopEnhanceUtilityCategorySpentCoins(ws, enhanceUtilityPct)
+      const enhanceNext = (key: (typeof WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER)[number]) =>
+        wrapMarginalWithWorkshopDiscount(
+          (L) => workshopEnhanceUtilityNextMarginalCoins(key, L),
+          enhanceUtilityPct,
+        )
+      for (const key of WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER) {
+        const max = workshopEnhanceUtilityMaxLevel(key)
+        const level = ws[key]
+        const unlocked = workshopEnhanceUtilityIsUnlocked(key, utilityEnhanceSpent)
+        maybeAddNext(
+          sum,
+          attackCardVisible(hideMaxed, level, max) && unlocked,
+          level,
+          max,
+          enhanceNext(key),
+        )
+      }
+    }
     return {
       spentAll: sink.spent,
       toMaxAll: sink.toMax,
-      nextUpgradeVisibleSum: 0,
+      nextUpgradeVisibleSum: sum.n,
     }
   }
-
-  const { hideMaxed, category } = ws
-  const sum = { n: 0 }
 
   if (category === 'attack') {
     const attackNext = (next: (l: number) => number | undefined) =>

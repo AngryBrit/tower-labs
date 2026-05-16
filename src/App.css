@@ -121,7 +121,7 @@
 
 .select-research__inpanel-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.35rem;
   margin: 0 0 0.65rem;
   padding-bottom: 0.65rem;
@@ -129,8 +129,8 @@
 }
 
 .select-research__inpanel-tab {
-  padding: 0.4rem 0.35rem;
-  font-size: 0.68rem;
+  padding: 0.4rem 0.3rem;
+  font-size: 0.62rem;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.04em;
@@ -159,6 +159,12 @@
 .select-research__inpanel-presets-slot {
   width: 100%;
   margin: 0 0 0.35rem;
+}
+
+.select-research__inpanel-presets-slot .select-research__presets-row {
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(34, 211, 238, 0.25);
 }
 
 .select-research__inpanel-workshop-toolbar-slot {
@@ -223,14 +229,72 @@
   background: rgba(15, 23, 42, 0.55);
 }
 
+.select-research__budget--collapsed {
+  padding-bottom: 0.45rem;
+}
+
+.select-research__budget-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  min-height: 1.35rem;
+}
+
+.select-research__budget-toggle {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  color: var(--sr-cyan);
+  cursor: pointer;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.select-research__budget-toggle:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 2px;
+}
+
+.select-research__budget-chevron {
+  display: inline-block;
+  font-size: 0.55rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.select-research__budget--collapsed .select-research__budget-chevron {
+  transform: rotate(-90deg);
+}
+
 .select-research__budget-title {
-  margin: 0 0 0.4rem;
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  margin: 0;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--sr-muted);
   text-align: center;
+}
+
+.select-research__budget-body {
+  margin-top: 0.4rem;
+}
+
+.select-research__budget-body[hidden] {
+  display: none;
 }
 
 .select-research__budget-stats {
@@ -1307,14 +1371,14 @@ span.research-card__costIcon .workshop-power-stone-svg {
 
 .workshop__tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   margin-bottom: 0.55rem;
 }
 
 .workshop__tab {
-  padding: 0.45rem 0.5rem;
-  font-size: 0.78rem;
+  padding: 0.45rem 0.35rem;
+  font-size: 0.72rem;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.04em;
@@ -1829,6 +1893,69 @@ span.research-card__costIcon .workshop-power-stone-svg {
     inset 0 0 0 1px rgba(234, 179, 8, 0.14);
 }
 
+.workshop__card--locked {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(24, 24, 32, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.workshop__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.workshop__card--locked .workshop__card-body {
+  filter: blur(2.5px);
+  opacity: 0.52;
+  pointer-events: none;
+  user-select: none;
+}
+
+.workshop__card-unlock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.65rem;
+  background: rgba(15, 23, 42, 0.45);
+  pointer-events: none;
+}
+
+.workshop__card-unlock-hint {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #e2e8f0;
+  text-align: center;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 10px rgba(15, 23, 42, 0.95);
+}
+
+.workshop__card--locked .workshop__level-input {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.workshop__card--locked .workshop__level-step {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.workshop__card--locked .workshop__card-value {
+  color: #94a3b8;
+}
+
 .workshop__card-damage-head {
   display: flex;
   justify-content: space-between;
@@ -2028,6 +2155,60 @@ span.research-card__costIcon .workshop-power-stone-svg {
   padding-top: 0.25rem;
 }
 
+.workshop__categories--modules {
+  margin-bottom: 0.35rem;
+}
+
+.workshop__cat.workshop__cat--module {
+  aspect-ratio: auto;
+  max-height: none;
+  max-width: none;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.workshop__cat.workshop__cat--module-on {
+  z-index: 1;
+  color: var(--sr-cyan);
+  border: 1px solid rgba(34, 211, 238, 0.48);
+  background: rgba(15, 23, 42, 0.75);
+  box-shadow:
+    0 0 12px rgba(34, 211, 238, 0.12),
+    inset 0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+
+.workshop__grid--sim {
+  margin-top: 0.15rem;
+}
+
+.workshop__card--sim {
+  min-height: 0;
+}
+
+.workshop__card--sim-wide {
+  grid-column: 1 / -1;
+}
+
+.workshop__card-level-row--solo {
+  grid-template-columns: 1fr;
+}
+
+.workshop__level-field--wide {
+  width: 100%;
+}
+
+.workshop__sim-foot {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--sr-muted);
+}
+
 .workshop__cat {
   position: relative;
   z-index: 0;
@@ -2118,6 +2299,16 @@ span.research-card__costIcon .workshop-power-stone-svg {
   background: transparent;
 }
 
+.tools-settings-page {
+  width: 100%;
+}
+
+.tools-settings-page__divider {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid rgba(34, 211, 238, 0.2);
+}
+
 .tools-page,
 .settings-page {
   width: 100%;
@@ -2161,6 +2352,19 @@ span.research-card__costIcon .workshop-power-stone-svg {
 .settings-page__locale-select {
   width: 100%;
   max-width: 14rem;
+}
+
+.settings-page__toggle {
+  width: 100%;
+  max-width: 28rem;
+  justify-content: flex-start;
+}
+
+.settings-page__hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--sr-muted);
 }
 
 .settings-page__meta {

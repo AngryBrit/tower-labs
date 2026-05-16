@@ -78,8 +78,16 @@ export function workshopSuperCritMultValue(completedLevels: number): number {
 }
 
 /** Display like wiki (`1.20×` … `13.20×`). */
-export function workshopSuperCritMultStatDisplay(completedLevels: number): string {
-  return `${workshopSuperCritMultValue(completedLevels).toFixed(2)}×`
+export function workshopSuperCritMultStatDisplay(
+  completedLevels: number,
+  labMultiplier?: number,
+): string {
+  const base = workshopSuperCritMultValue(completedLevels)
+  const v =
+    labMultiplier != null && Number.isFinite(labMultiplier) && labMultiplier > 1 + 1e-9
+      ? base * labMultiplier
+      : base
+  return `${v.toFixed(2)}×`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

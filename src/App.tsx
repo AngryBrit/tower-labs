@@ -2,8 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { APP_VERSION, CHANGELOG_URL } from './appVersion'
 import type { SelectResearchHandle } from './components/SelectResearch'
 import { SelectResearch } from './components/SelectResearch'
-import { SettingsPage } from './components/SettingsPage'
-import { ToolsPage } from './components/ToolsPage'
+import { ToolsSettingsPage } from './components/ToolsSettingsPage'
+import { CardsPage } from './components/CardsPage'
+import { ModulesPage } from './components/ModulesPage'
 import { WorkshopPage } from './components/WorkshopPage'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
 import { useI18n } from './i18n'
@@ -11,7 +12,7 @@ import { loadResearchData } from './loadResearchData'
 import type { ResearchData } from './types/research'
 import './App.css'
 
-type MainPanel = 'research' | 'workshop' | 'tools' | 'settings'
+type MainPanel = 'research' | 'workshop' | 'modules' | 'cards' | 'toolsSettings'
 
 export default function App() {
   const { t, fmt } = useI18n()
@@ -40,6 +41,12 @@ export default function App() {
   const handleLabLevelOverridesChange = useCallback((overrides: Record<string, number>) => {
     setLabLevelOverrides(overrides)
   }, [])
+
+  useEffect(() => {
+    const tab = workshopPersisted.mainTab
+    if (tab === 'modules') setMainPanel('modules')
+    else if (tab === 'cards') setMainPanel('cards')
+  }, [workshopPersisted.mainTab])
 
   useEffect(() => {
     let cancelled = false
@@ -119,39 +126,66 @@ export default function App() {
                         ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
                         : 'select-research__inpanel-tab'
                     }
-                    onClick={() => setMainPanel('workshop')}
+                    onClick={() => {
+                      setMainPanel('workshop')
+                      const tab = workshopPersisted.mainTab
+                      if (tab === 'modules' || tab === 'cards') {
+                        setWorkshopPersisted({ ...workshopPersisted, mainTab: 'upgrade' })
+                      }
+                    }}
                   >
                     {t('app_nav_workshop')}
                   </button>
                   <button
-                    id="inpanel-tab-tools"
+                    id="inpanel-tab-modules"
                     type="button"
                     role="tab"
-                    aria-selected={mainPanel === 'tools'}
-                    aria-controls="inpanel-panel-tools"
+                    aria-selected={mainPanel === 'modules'}
+                    aria-controls="inpanel-panel-modules"
                     className={
-                      mainPanel === 'tools'
+                      mainPanel === 'modules'
                         ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
                         : 'select-research__inpanel-tab'
                     }
-                    onClick={() => setMainPanel('tools')}
+                    onClick={() => {
+                      setMainPanel('modules')
+                      setWorkshopPersisted({ ...workshopPersisted, mainTab: 'modules' })
+                    }}
                   >
-                    {t('app_nav_tools')}
+                    {t('app_nav_modules')}
                   </button>
                   <button
-                    id="inpanel-tab-settings"
+                    id="inpanel-tab-cards"
                     type="button"
                     role="tab"
-                    aria-selected={mainPanel === 'settings'}
-                    aria-controls="inpanel-panel-settings"
+                    aria-selected={mainPanel === 'cards'}
+                    aria-controls="inpanel-panel-cards"
                     className={
-                      mainPanel === 'settings'
+                      mainPanel === 'cards'
                         ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
                         : 'select-research__inpanel-tab'
                     }
-                    onClick={() => setMainPanel('settings')}
+                    onClick={() => {
+                      setMainPanel('cards')
+                      setWorkshopPersisted({ ...workshopPersisted, mainTab: 'cards' })
+                    }}
                   >
-                    {t('app_nav_settings')}
+                    {t('app_nav_cards')}
+                  </button>
+                  <button
+                    id="inpanel-tab-tools-settings"
+                    type="button"
+                    role="tab"
+                    aria-selected={mainPanel === 'toolsSettings'}
+                    aria-controls="inpanel-panel-tools-settings"
+                    className={
+                      mainPanel === 'toolsSettings'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab'
+                    }
+                    onClick={() => setMainPanel('toolsSettings')}
+                  >
+                    {t('app_nav_tools_settings')}
                   </button>
                 </nav>
 
@@ -159,7 +193,10 @@ export default function App() {
                   ref={setInpanelPresetsMount}
                   className="select-research__inpanel-presets-slot"
                   hidden={
-                    mainPanel !== 'research' && mainPanel !== 'workshop'
+                    mainPanel !== 'research' &&
+                    mainPanel !== 'workshop' &&
+                    mainPanel !== 'modules' &&
+                    mainPanel !== 'cards'
                   }
                 />
 
@@ -207,20 +244,38 @@ export default function App() {
                   />
                 </div>
                 <div
-                  id="inpanel-panel-tools"
+                  id="inpanel-panel-modules"
                   role="tabpanel"
-                  aria-labelledby="inpanel-tab-tools"
-                  hidden={mainPanel !== 'tools'}
+                  aria-labelledby="inpanel-tab-modules"
+                  hidden={mainPanel !== 'modules'}
                 >
-                  <ToolsPage labToolsRef={labToolsRef} />
+                  <ModulesPage
+                    embeddedInPanel
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
+                    researchData={data}
+                    labLevelOverrides={labLevelOverrides}
+                  />
                 </div>
                 <div
-                  id="inpanel-panel-settings"
+                  id="inpanel-panel-cards"
                   role="tabpanel"
-                  aria-labelledby="inpanel-tab-settings"
-                  hidden={mainPanel !== 'settings'}
+                  aria-labelledby="inpanel-tab-cards"
+                  hidden={mainPanel !== 'cards'}
                 >
-                  <SettingsPage />
+                  <CardsPage
+                    embeddedInPanel
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
+                  />
+                </div>
+                <div
+                  id="inpanel-panel-tools-settings"
+                  role="tabpanel"
+                  aria-labelledby="inpanel-tab-tools-settings"
+                  hidden={mainPanel !== 'toolsSettings'}
+                >
+                  <ToolsSettingsPage labToolsRef={labToolsRef} />
                 </div>
 
                 <footer className="select-research__site-footer">

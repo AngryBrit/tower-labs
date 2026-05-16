@@ -22,8 +22,15 @@ export function workshopAttackRangeMeters(completedLevels: number): number {
 }
 
 /** Wiki-style value (`30.00M` … `69.50M`); **M** = meters. */
-export function workshopAttackRangeStatDisplay(completedLevels: number): string {
-  return `${workshopAttackRangeMeters(completedLevels).toFixed(2)}M`
+export function workshopAttackRangeStatDisplay(
+  completedLevels: number,
+  labMultiplier?: number,
+): string {
+  let m = workshopAttackRangeMeters(completedLevels)
+  if (labMultiplier != null && Number.isFinite(labMultiplier) && labMultiplier > 1 + 1e-9) {
+    m = Math.round(m * labMultiplier * 100) / 100
+  }
+  return `${m.toFixed(2)}M`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

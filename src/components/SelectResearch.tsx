@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -12,6 +13,7 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { LabPresetsRow } from './LabPresetsRow'
 import { APP_VERSION, CHANGELOG_URL } from '../appVersion'
+import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
 import { buildLabDomIdTables, getLabSlugFromUrl } from '../labSlug'
 import {
   buildLabsShareUrls,
@@ -75,6 +77,7 @@ interface SelectResearchProps {
 const LEVEL_OVERRIDES_STORAGE_KEY = 'tower-export-level-overrides-v1'
 const LAB_PRESETS_STORAGE_KEY = 'tower-export-lab-presets-v1'
 const SECTION_COLLAPSED_STORAGE_KEY = 'tower-export-section-collapsed-v1'
+const LAB_BUDGET_COLLAPSED_STORAGE_KEY = 'tower-export-lab-budget-collapsed-v1'
 const BULK_SECTIONS_TOGGLE_ID = 'tower-bulk-sections-collapsed-toggle'
 
 function labOverlayPortal(node: ReactNode) {
@@ -142,6 +145,8 @@ export const SelectResearch = forwardRef<
   ref,
 ) {
   const { t, fmt, locale, setLocale } = useI18n()
+  const [budgetPanelsVisible] = useBudgetPanelsVisible()
+  const labBudgetBodyId = useId().replace(/:/g, '')
   const [search, setSearch] = useState('')
   const [hideCompleted, setHideCompleted] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({})
@@ -164,6 +169,13 @@ export const SelectResearch = forwardRef<
   const [labCompareOpen, setLabCompareOpen] = useState(false)
   const [presetSaveDialogOpen, setPresetSaveDialogOpen] = useState(false)
   const [presetSaveDraft, setPresetSaveDraft] = useState('')
+  const [labBudgetCollapsed, setLabBudgetCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(LAB_BUDGET_COLLAPSED_STORAGE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
   const importLabCsvFileInputRef = useRef<HTMLInputElement>(null)
   const presetSaveNameInputRef = useRef<HTMLInputElement>(null)
   const bulkAllSectionsToggleRef = useRef<HTMLInputElement>(null)
@@ -195,6 +207,17 @@ export const SelectResearch = forwardRef<
     const t = window.setTimeout(() => setImportNotice(null), 5000)
     return () => window.clearTimeout(t)
   }, [importNotice])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        LAB_BUDGET_COLLAPSED_STORAGE_KEY,
+        labBudgetCollapsed ? '1' : '0',
+      )
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [labBudgetCollapsed])
 
   useEffect(() => {
     const onDocKeyDown = (e: KeyboardEvent) => {
@@ -1049,14 +1072,42 @@ export const SelectResearch = forwardRef<
           )
         : null}
 
+      {budgetPanelsVisible ? (
       <div
-        className="select-research__budget"
+        className={
+          labBudgetCollapsed
+            ? 'select-research__budget select-research__budget--collapsed'
+            : 'select-research__budget'
+        }
         role="region"
         aria-labelledby="simulator-budget-title"
       >
-        <h2 id="simulator-budget-title" className="select-research__budget-title">
-          {t('sr_budget_title')}
-        </h2>
+        <div className="select-research__budget-head">
+          <h2 id="simulator-budget-title" className="select-research__budget-title">
+            {t('sr_budget_title')}
+          </h2>
+          <button
+            type="button"
+            className="select-research__budget-toggle"
+            aria-expanded={!labBudgetCollapsed}
+            aria-controls={labBudgetBodyId}
+            aria-label={
+              labBudgetCollapsed
+                ? t('sr_budget_toggle_expand')
+                : t('sr_budget_toggle_collapse')
+            }
+            onClick={() => setLabBudgetCollapsed((c) => !c)}
+          >
+            <span className="select-research__budget-chevron" aria-hidden>
+              ▼
+            </span>
+          </button>
+        </div>
+        <div
+          id={labBudgetBodyId}
+          className="select-research__budget-body"
+          hidden={labBudgetCollapsed}
+        >
         <p className="visually-hidden" aria-live="polite" aria-atomic="true">
           {fmt.simulatorBudgetAria(
             simulatorCoinLabels.spentLabel,
@@ -1081,7 +1132,9 @@ export const SelectResearch = forwardRef<
         <p className="select-research__budget-footnote">
           {t('sr_budget_footnote')}
         </p>
+        </div>
       </div>
+      ) : null}
 
       {labDataPanelOpen
         ? labOverlayPortal(

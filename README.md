@@ -7,7 +7,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.0.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.1.0-2ea44f)
 
 ---
 
@@ -16,11 +16,15 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 - **Research browser** — Loads [`public/research/manifest.json`](public/research/manifest.json) and every section file it lists (main, attack, defense, utility, ultimate weapon, cards, perks, bots, enemies, modules, card mastery, battle conditions). Cards show costs and benefits where data allows.
 - **Lab economics** — Upgrade costs and build times from [`src/data/tower-labs.json`](src/data/tower-labs.json), aligned with the in-game lab grid.
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
+- **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves).
+- **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, card stars (damage, attack speed, berserker), relics, perk quantity, and assist-module substats from your lab levels.
+- **Cards & modules simulators** — Star ratings and assist chassis selection feed the displayed-stat formulas; module substats pull from MODULES research labs when data is loaded.
+- **Unified CSV backup** — Export and import a single CSV that carries both lab `key,level` rows and a `ws,…` workshop snapshot (upgrade, enhance, sim, and tab state) via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
 - **Shareable builds** — Encode the current lab selection in the `?labs=` query string; optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
-- **Persistence** — Section collapse state and locale choice survive reloads (`localStorage`).
+- **Persistence** — Section collapse state, locale, workshop snapshot, lab presets, and optional budget-panel visibility survive reloads (`localStorage`).
 
-For a full list of what shipped in **2.0.0**, see [`CHANGELOG.md`](CHANGELOG.md).
+For release history, see [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
@@ -75,6 +79,8 @@ These are run with Node directly when you update data or regenerate assets:
 | [`write-research-overlay.mjs`](scripts/write-research-overlay.mjs) | Regenerate [`src/i18n/research-overlay.es.json`](src/i18n/research-overlay.es.json) from the manifest and Spanish string tables. |
 | [`gen-dissonant-echo-labs.mjs`](scripts/gen-dissonant-echo-labs.mjs) | Generate Dissonant Echo lab duration/cost rows and patch `tower-labs.json` (wiki-aligned). |
 | [`gen-enhancement-coin-discount-labs.mjs`](scripts/gen-enhancement-coin-discount-labs.mjs) | Generate enhancement coin discount lab rows and patch `tower-labs.json`. |
+| [`gen-utility-enhance-coins.mjs`](scripts/gen-utility-enhance-coins.mjs) | Regenerate utility enhancement coin ladders (`workshopEnhanceUtilityTier200`, free upgrades, enemy level skip) from a wiki table scrape. |
+| [`gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs) | Regenerate ultimate-weapon workshop tables from exported data. |
 
 Example:
 
@@ -94,9 +100,11 @@ node scripts/write-research-overlay.mjs
 | [`src/data/card-mastery-tier-labels.json`](src/data/card-mastery-tier-labels.json) | Tier labels for card mastery display. |
 | [`src/types/research.ts`](src/types/research.ts) | Typed parsing and validation helpers for research JSON. |
 | [`src/loadResearchData.ts`](src/loadResearchData.ts) | Fetches manifest + sections and returns typed `ResearchData`. |
-| [`src/components/`](src/components/) | UI: `SelectResearch`, `ResearchCard`, `ResearchSection`, `LabCompareDialog`, and related pieces. |
+| [`src/components/`](src/components/) | UI: research (`SelectResearch`, `ResearchCard`, …), workshop (`WorkshopPage`, enhance panels, cards/modules panels), `LabCompareDialog`, `ToolsSettingsPage`, and related pieces. |
+| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, card/module simulators, and Vitest coverage. |
 | [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish research overlay, and benefit translation helpers. |
-| [`src/labCompare.ts`](src/labCompare.ts), [`src/labBudgetAggregates.ts`](src/labBudgetAggregates.ts), … | Lab comparison, budgets, presets, slugs, and share codec (`labsShareCodec.ts`). |
+| [`src/labCompare.ts`](src/labCompare.ts), [`src/labBudgetAggregates.ts`](src/labBudgetAggregates.ts), [`src/workshopCompare.ts`](src/workshopCompare.ts), [`src/workshopBudgetAggregates.ts`](src/workshopBudgetAggregates.ts), … | Lab and workshop comparison, budgets, presets, slugs, share codec, and unified CSV. |
+| [`src/budgetPanelsVisibility.ts`](src/budgetPanelsVisibility.ts) | Toggle for showing lab and workshop budget summary panels (persisted). |
 | [`src/appVersion.ts`](src/appVersion.ts) | `APP_VERSION` and changelog URL (from `package.json`). |
 
 After you edit files under `public/research/` or `src/data/`, save and refresh the browser (or let Vite HMR pick up changes).

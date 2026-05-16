@@ -2290,6 +2290,72 @@ export function resolveWorkshopAttackDiscountPercent(
   )
 }
 
+/** Total **Enhancement Attack - Coin Discount** % at a given lab level. */
+export function enhancementAttackDiscountTotalPercent(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return 0.3 * capped
+}
+
+/** Simulated **Enhancement Attack - Coin Discount** % (0 when missing). */
+export function resolveEnhancementAttackDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveEnhancementCoinDiscountPercentByLabName(
+    data,
+    overrides,
+    'Enhancement Attack - Coin Discount',
+  )
+}
+
+/** Simulated **Enhancement Defense - Coin Discount** % (0 when missing). */
+export function resolveEnhancementDefenseDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveEnhancementCoinDiscountPercentByLabName(
+    data,
+    overrides,
+    'Enhancement Defense - Coin Discount',
+  )
+}
+
+/** Simulated **Enhancement Utility - Coin Discount** % (0 when missing). */
+export function resolveEnhancementUtilityDiscountPercent(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return resolveEnhancementCoinDiscountPercentByLabName(
+    data,
+    overrides,
+    'Enhancement Utility - Coin Discount',
+  )
+}
+
+function resolveEnhancementCoinDiscountPercentByLabName(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== labName) continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      return enhancementAttackDiscountTotalPercent(eff, max)
+    }
+  }
+  return 0
+}
+
 /** Simulated **Workshop Defense Discount** % (0 when missing). */
 export function resolveWorkshopDefenseDiscountPercent(
   data: ResearchData,
@@ -2314,22 +2380,232 @@ export function resolveWorkshopUtilityDiscountPercent(
   )
 }
 
-export function attackResearchDamageLabMultiplier(
+function attackResearchLabMultiplierByName(
   data: ResearchData,
   overrides: Record<string, number>,
+  labName: string,
 ): number {
   for (let si = 0; si < data.sections.length; si++) {
     if (data.sections[si].sectionSlug !== 'attack-research') continue
     const items = data.sections[si].items
     for (let ii = 0; ii < items.length; ii++) {
       const item = items[ii]!
-      if (item.name !== 'Damage') continue
+      if (item.name !== labName) continue
       const eff = getEffectiveLevel(si, ii, item, overrides)
       const { max } = getLevelBounds(item)
       return damageStyleLabMultiplier(eff, max)
     }
   }
   return 1
+}
+
+export function attackResearchDamageLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return attackResearchLabMultiplierByName(data, overrides, 'Damage')
+}
+
+/** Simulated Attack **Attack Speed** lab multiplier (same **+0.02/level** curve as Damage). */
+export function attackResearchAttackSpeedLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  return attackResearchLabMultiplierByName(data, overrides, 'Attack Speed')
+}
+
+/** Simulated Attack lab using the **Damage-style** multiplier curve (**+0.02/level**). */
+export function attackResearchDamageStyleLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  return attackResearchLabMultiplierByName(data, overrides, labName)
+}
+
+type LabEffectiveLevel = { effectiveLevel: number; maxLevel: number }
+
+function findLabEffectiveLevel(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+  sectionSlug?: string,
+): LabEffectiveLevel | null {
+  for (let si = 0; si < data.sections.length; si++) {
+    const section = data.sections[si]!
+    if (sectionSlug != null && section.sectionSlug !== sectionSlug) continue
+    const items = section.items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== labName) continue
+      const { max } = getLevelBounds(item)
+      return {
+        effectiveLevel: getEffectiveLevel(si, ii, item, overrides),
+        maxLevel: max,
+      }
+    }
+  }
+  return null
+}
+
+function cappedLabLevel(level: LabEffectiveLevel): number {
+  return level.maxLevel > 0
+    ? Math.min(Math.max(0, level.effectiveLevel), level.maxLevel)
+    : Math.max(0, level.effectiveLevel)
+}
+
+function defenseLabLevel(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): LabEffectiveLevel | null {
+  return findLabEffectiveLevel(data, overrides, labName, 'defense-research')
+}
+
+function utilityLabLevel(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): LabEffectiveLevel | null {
+  return findLabEffectiveLevel(data, overrides, labName, 'utility-research')
+}
+
+/** **+pctPerLevel × lab level** percent points (Recovery Package, Enemy Level Skip, etc.). */
+export function labIncludePercentPoints(
+  effectiveLevel: number,
+  maxLevelCap: number,
+  pctPerLevel: number,
+): number {
+  const capped =
+    maxLevelCap > 0
+      ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
+      : Math.max(0, effectiveLevel)
+  return pctPerLevel * capped
+}
+
+export function utilityResearchDamageStyleLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  const level = utilityLabLevel(data, overrides, labName)
+  if (level == null) return 1
+  return damageStyleLabMultiplier(level.effectiveLevel, level.maxLevel)
+}
+
+export function attackResearchHealthStyleLabMultiplier(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  const level = findLabEffectiveLevel(data, overrides, labName, 'attack-research')
+  if (level == null) return 1
+  return healthStyleLabMultiplier(level.effectiveLevel, level.maxLevel)
+}
+
+export function defenseResearchHealthStyleLabMultiplierByName(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  const level = defenseLabLevel(data, overrides, labName)
+  if (level == null) return 1
+  return healthStyleLabMultiplier(level.effectiveLevel, level.maxLevel)
+}
+
+export function defenseResearchOrbsSpeedLabPlus(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Orbs Speed')
+  if (level == null) return 0
+  return 0.1 * cappedLabLevel(level)
+}
+
+export function defenseResearchExtraExtraOrbsBonus(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Extra Extra Orbs')
+  if (level == null) return 0
+  return cappedLabLevel(level)
+}
+
+export function defenseResearchShockwaveSizeLabPlus(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Shockwave Size')
+  if (level == null) return 0
+  return 0.05 * cappedLabLevel(level)
+}
+
+export function defenseResearchLandMineDamageLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Land Mine Damage')
+  if (level == null) return 0
+  return 10 * cappedLabLevel(level)
+}
+
+export function defenseResearchWallHealthLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Wall Health')
+  if (level == null) return 0
+  return 2 * cappedLabLevel(level)
+}
+
+export function defenseResearchWallRebuildLabSecondsReduction(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = defenseLabLevel(data, overrides, 'Wall Rebuild')
+  if (level == null) return 0
+  return 10 * cappedLabLevel(level)
+}
+
+export function attackResearchSuperCritChanceLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = findLabEffectiveLevel(data, overrides, 'Super Crit Chance', 'attack-research')
+  if (level == null) return 0
+  return 0.1 * cappedLabLevel(level)
+}
+
+export function utilityResearchIncludePercentLabPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+  pctPerLevel: number,
+): number {
+  const level = utilityLabLevel(data, overrides, labName)
+  if (level == null) return 0
+  return labIncludePercentPoints(level.effectiveLevel, level.maxLevel, pctPerLevel)
+}
+
+/** **Standard Perks Bonus** lab: level **n** → **n%** bonus (0…0.25 at max 25). */
+export function attackResearchStandardPerkBonusFraction(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  for (let si = 0; si < data.sections.length; si++) {
+    if (data.sections[si].sectionSlug !== 'perks-research') continue
+    const items = data.sections[si].items
+    for (let ii = 0; ii < items.length; ii++) {
+      const item = items[ii]!
+      if (item.name !== 'Standard Perks Bonus') continue
+      const eff = getEffectiveLevel(si, ii, item, overrides)
+      const { max } = getLevelBounds(item)
+      const capped =
+        max > 0 ? Math.min(Math.max(0, eff), max) : Math.max(0, eff)
+      return capped / 100
+    }
+  }
+  return 0
 }
 
 export interface ResearchSection {

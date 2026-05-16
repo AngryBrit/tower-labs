@@ -29,6 +29,24 @@ import {
   type WorkshopUltimateUpgradeKey,
 } from './data/workshopUltimate'
 import { workshopUtilityClampLevel } from './data/workshopUtility'
+import {
+  WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER,
+  workshopEnhanceAttackClampLevel,
+} from './data/workshopEnhanceAttack'
+import {
+  WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER,
+  workshopEnhanceDefenseClampLevel,
+} from './data/workshopEnhanceDefense'
+import {
+  WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER,
+  workshopEnhanceUtilityClampLevel,
+} from './data/workshopEnhanceUtility'
+import type { WorkshopAssistModuleSlot } from './data/workshopSimModules'
+import {
+  WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
+  WORKSHOP_BERSERKER_CARD_MAX_STARS,
+  WORKSHOP_DAMAGE_CARD_MAX_STARS,
+} from './data/workshopSimCards'
 
 type WorkshopUltimateLevels = { [K in WorkshopUltimateUpgradeKey]: number }
 
@@ -48,9 +66,11 @@ function defaultUltimateActive(): WorkshopUltimateActiveFlags {
 
 export type WorkshopCategoryPersisted = 'attack' | 'defense' | 'utility' | 'ultimate'
 
+export type WorkshopMainTab = 'upgrade' | 'enhance' | 'modules' | 'cards'
+
 export type WorkshopPersistedV1 = {
   hideMaxed: boolean
-  mainTab: 'upgrade' | 'enhance'
+  mainTab: WorkshopMainTab
   category: WorkshopCategoryPersisted
   multiplier: 1 | 5 | 10 | 100
   damageLevel: number
@@ -101,6 +121,40 @@ export type WorkshopPersistedV1 = {
   packageChanceLevel: number
   enemyAttackLevelSkipLevel: number
   enemyHealthLevelSkipLevel: number
+  enhanceDamageLevel: number
+  enhanceRendArmorLevel: number
+  enhanceCritFactorLevel: number
+  enhanceDamagePerMeterLevel: number
+  enhanceSuperCritMultLevel: number
+  enhanceAttackSpeedLevel: number
+  enhanceHealthLevel: number
+  enhanceHealthRegenLevel: number
+  enhanceDefenseAbsoluteLevel: number
+  enhanceLandMineDamageLevel: number
+  enhanceWallHealthLevel: number
+  enhanceOrbSizeLevel: number
+  enhanceCashBonusLevel: number
+  enhanceCoinBonusLevel: number
+  enhanceCellsKillBonusLevel: number
+  enhanceFreeUpgradesLevel: number
+  enhanceRecoveryPackageLevel: number
+  enhanceEnemyLevelSkipLevel: number
+  /** Cards/Damage equipped stars (0 = none, 7 = max). */
+  simDamageCardStars: number
+  /** Cards/Attack Speed equipped stars (0 = none, 7 = max). */
+  simAttackSpeedCardStars: number
+  /** Cannon submodule flat attack speed add (wiki Sub-Module Effects). */
+  simAttackSpeedModuleSubEffect: number
+  /** Cards/Berserker equipped stars (0 = none). */
+  simBerserkerCardStars: number
+  /** Damage taken this round for Berserker flat bonus. */
+  simBerserkerDamageTaken: number
+  /** Relic sum inside **(1 + Relics)** as a fraction (0.5 = +50%). */
+  simRelicsBonusFraction: number
+  /** Damage perk count for displayed-damage Perk term. */
+  simPerkDamageQuantity: number
+  /** Active assist module chassis for cannon % sim. */
+  simAssistModuleSlot: WorkshopAssistModuleSlot
 } & WorkshopUltimateLevels &
   WorkshopUltimateActiveFlags
 
@@ -160,6 +214,32 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     packageChanceLevel: 0,
     enemyAttackLevelSkipLevel: 0,
     enemyHealthLevelSkipLevel: 0,
+    enhanceDamageLevel: 0,
+    enhanceRendArmorLevel: 0,
+    enhanceCritFactorLevel: 0,
+    enhanceDamagePerMeterLevel: 0,
+    enhanceSuperCritMultLevel: 0,
+    enhanceAttackSpeedLevel: 0,
+    enhanceHealthLevel: 0,
+    enhanceHealthRegenLevel: 0,
+    enhanceDefenseAbsoluteLevel: 0,
+    enhanceLandMineDamageLevel: 0,
+    enhanceWallHealthLevel: 0,
+    enhanceOrbSizeLevel: 0,
+    enhanceCashBonusLevel: 0,
+    enhanceCoinBonusLevel: 0,
+    enhanceCellsKillBonusLevel: 0,
+    enhanceFreeUpgradesLevel: 0,
+    enhanceRecoveryPackageLevel: 0,
+    enhanceEnemyLevelSkipLevel: 0,
+    simDamageCardStars: 0,
+    simAttackSpeedCardStars: 0,
+    simAttackSpeedModuleSubEffect: 0,
+    simBerserkerCardStars: 0,
+    simBerserkerDamageTaken: 0,
+    simRelicsBonusFraction: 0,
+    simPerkDamageQuantity: 0,
+    simAssistModuleSlot: 'cannon',
     ...defaultUltimateLevels(),
     ...defaultUltimateActive(),
   }
@@ -176,7 +256,20 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
   const o = raw as Record<string, unknown>
 
   const hideMaxed = o.hideMaxed === true
-  const mainTab = o.mainTab === 'enhance' ? 'enhance' : 'upgrade'
+  const mt = o.mainTab
+  const mainTab: WorkshopMainTab =
+    mt === 'enhance'
+      ? 'enhance'
+      : mt === 'modules'
+        ? 'modules'
+        : mt === 'cards'
+          ? 'cards'
+          : 'upgrade'
+  const slotRaw = o.simAssistModuleSlot
+  const simAssistModuleSlot: WorkshopAssistModuleSlot =
+    slotRaw === 'armor' || slotRaw === 'generator' || slotRaw === 'core'
+      ? slotRaw
+      : 'cannon'
   const cat = o.category
   const category: WorkshopCategoryPersisted =
     cat === 'defense' || cat === 'utility' || cat === 'ultimate' ? cat : 'attack'
@@ -338,6 +431,24 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
       Number(o.enemyHealthLevelSkipLevel),
     ),
     ...Object.fromEntries(
+      WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER.map((key) => [
+        key,
+        workshopEnhanceAttackClampLevel(key, Number(o[key])),
+      ]),
+    ),
+    ...Object.fromEntries(
+      WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER.map((key) => [
+        key,
+        workshopEnhanceDefenseClampLevel(key, Number(o[key])),
+      ]),
+    ),
+    ...Object.fromEntries(
+      WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER.map((key) => [
+        key,
+        workshopEnhanceUtilityClampLevel(key, Number(o[key])),
+      ]),
+    ),
+    ...Object.fromEntries(
       WORKSHOP_ULTIMATE_UPGRADE_ORDER.map((key) => [
         key,
         workshopUltimateClampLevel(key, Number(o[key])),
@@ -349,6 +460,29 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         (o as Record<string, unknown>)[key] === true ? true : false,
       ]),
     ),
+    simDamageCardStars: clampInt(
+      Number(o.simDamageCardStars),
+      0,
+      WORKSHOP_DAMAGE_CARD_MAX_STARS,
+    ),
+    simAttackSpeedCardStars: clampInt(
+      Number(o.simAttackSpeedCardStars),
+      0,
+      WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
+    ),
+    simAttackSpeedModuleSubEffect: Math.max(
+      0,
+      Number(o.simAttackSpeedModuleSubEffect) || 0,
+    ),
+    simBerserkerCardStars: clampInt(
+      Number(o.simBerserkerCardStars),
+      0,
+      WORKSHOP_BERSERKER_CARD_MAX_STARS,
+    ),
+    simBerserkerDamageTaken: Math.max(0, Number(o.simBerserkerDamageTaken) || 0),
+    simRelicsBonusFraction: Math.max(0, Number(o.simRelicsBonusFraction) || 0),
+    simPerkDamageQuantity: clampInt(Number(o.simPerkDamageQuantity), 0, 99),
+    simAssistModuleSlot,
   } as WorkshopPersistedV1
 }
 

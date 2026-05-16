@@ -5,8 +5,11 @@ export const STRINGS_EN = {
   app_nav_main_aria: 'Primary pages',
   app_nav_research: 'LAB',
   app_nav_workshop: 'WORKSHOP',
+  app_nav_modules: 'MODULES',
+  app_nav_cards: 'CARDS',
   app_nav_tools: 'TOOLS',
   app_nav_settings: 'SETTINGS',
+  app_nav_tools_settings: 'TOOLS & SETTINGS',
   app_inpanel_tabs_aria: 'Main sections',
   app_tools_title: 'Tools',
   app_tools_intro:
@@ -15,11 +18,111 @@ export const STRINGS_EN = {
     'Tip: switch to the LAB tab to edit levels, or WORKSHOP for modeled attack, defense, and utility stats; presets and notices appear on the LAB tab while you work.',
   app_settings_title: 'Settings',
   app_settings_language_label: 'Language',
+  app_settings_budget_panels_label: 'Show lab & workshop budget panels',
+  app_settings_budget_panels_hint:
+    'Coin totals at the bottom of the LAB and WORKSHOP tabs (spent, to max, next upgrade).',
 
   ws_title: 'Workshop',
   ws_tab_upgrade: 'Upgrade',
   ws_tab_enhance: 'Enhance',
-  ws_enhance_empty: 'Enhance is not modeled in this tool yet.',
+  ws_tab_modules: 'Modules',
+  ws_tab_cards: 'Cards',
+  ws_section_modules: 'Assist modules',
+  ws_section_cards: 'Cards & relics',
+  ws_sim_damage_card: 'Damage card (stars)',
+  ws_sim_attack_speed_card: 'Attack Speed card (stars)',
+  ws_sim_attack_speed_sub_effect: 'Cannon submodule attack speed (+)',
+  ws_sim_attack_speed_sub_hint: 'Flat add inside (Workshop × Lab × Card + …); wiki 0.3–5 by rarity.',
+  ws_sim_berserker_card: 'Berserker card (stars)',
+  ws_sim_relics_bonus: 'Relics bonus',
+  ws_sim_perk_damage_quantity: 'Damage perk quantity',
+  ws_sim_berserker_damage_taken: 'Damage taken (Berserker)',
+  ws_sim_stars_down_aria: 'Decrease card stars',
+  ws_sim_stars_up_aria: 'Increase card stars',
+  ws_sim_stars_input_aria: 'Card stars (type a number, Enter or blur to apply)',
+  ws_sim_stars_max: 'Max stars:',
+  ws_sim_number_input_aria: 'Simulator value (type a number, Enter or blur to apply)',
+  ws_sim_relics_hint: 'Sum inside (1 + Relics) as a percent bonus.',
+  ws_sim_perk_quantity_hint: 'Damage perk count for the Perk term in displayed damage.',
+  ws_sim_berserker_taken_hint: 'Damage taken this round for Berserker flat bonus.',
+  ws_sim_module_cannon: 'Cannon',
+  ws_sim_module_armor: 'Armor',
+  ws_sim_module_generator: 'Generator',
+  ws_sim_module_core: 'Core',
+  ws_sim_module_lab_substats: 'Assist substats (lab)',
+  ws_sim_module_lab_bonus: 'Assist bonus (lab)',
+  ws_sim_module_cannon_damage: 'Cannon module damage',
+  ws_sim_module_substats_hint: 'From MODULES research for the selected chassis.',
+  ws_sim_module_bonus_hint: 'Support module bonus labs for the selected chassis.',
+  ws_sim_module_cannon_hint: 'Cannon % applies only when Cannon is the active assist slot.',
+  ws_sim_module_not_cannon: '—',
+  ws_enhance_empty: 'Enhance is not modeled for this category yet.',
+  ws_section_attack_enhance: 'Attack Enhancements',
+  ws_section_defense_enhance: 'Defense Enhancements',
+  ws_section_utility_enhance: 'Utility Enhancements',
+  ws_stat_enhanceCashBonus: 'Cash Bonus +',
+  ws_stat_enhanceCoinBonus: 'Coin Bonus +',
+  ws_stat_enhanceCellsKillBonus: 'Cells/Kill Bonus',
+  ws_stat_enhanceFreeUpgrades: 'Free Upgrades +',
+  ws_stat_enhanceRecoveryPackage: 'Recovery Package +',
+  ws_stat_enhanceEnemyLevelSkip: 'Enemy Level Skip +',
+  ws_enhance_cash_bonus_level_input_aria:
+    'Cash bonus enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_coin_bonus_level_input_aria:
+    'Coin bonus enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_cells_kill_bonus_level_input_aria:
+    'Cells/kill bonus enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_free_upgrades_level_input_aria:
+    'Free upgrades enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_recovery_package_level_input_aria:
+    'Recovery package enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_enemy_level_skip_level_input_aria:
+    'Enemy level skip enhancement level (type a number, Enter or blur to apply)',
+  ws_stat_enhanceHealth: 'Health +',
+  ws_stat_enhanceHealthRegen: 'Health Regen +',
+  ws_stat_enhanceDefenseAbsolute: 'Defense Absolute +',
+  ws_stat_enhanceLandMineDamage: 'Land Mine Damage +',
+  ws_stat_enhanceWallHealth: 'Wall Health +',
+  ws_stat_enhanceOrbSize: 'Orb Size',
+  ws_enhance_health_level_input_aria:
+    'Health enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_health_regen_level_input_aria:
+    'Health regen enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_defense_absolute_level_input_aria:
+    'Defense absolute enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_land_mine_damage_level_input_aria:
+    'Land mine damage enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_wall_health_level_input_aria:
+    'Wall health enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_orb_size_level_input_aria:
+    'Orb size enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_level_down_aria: 'Decrease enhancement level',
+  ws_enhance_level_up_aria: 'Increase enhancement level',
+  ws_enhance_locked_attack:
+    'Spend {remaining} more on attack enhancements ({required} total)',
+  ws_enhance_locked_attack_damage:
+    'Spend {remaining} more on damage enhancements ({required} total)',
+  ws_enhance_locked_defense:
+    'Spend {remaining} more on defense enhancements ({required} total)',
+  ws_enhance_locked_utility:
+    'Spend {remaining} more on utility enhancements ({required} total)',
+  ws_enhance_damage_level_input_aria: 'Damage enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_rend_armor_level_input_aria:
+    'Rend armor enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_crit_factor_level_input_aria:
+    'Critical factor enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_damage_per_meter_level_input_aria:
+    'Damage per meter enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_super_crit_mult_level_input_aria:
+    'Super crit mult enhancement level (type a number, Enter or blur to apply)',
+  ws_enhance_attack_speed_level_input_aria:
+    'Attack speed enhancement level (type a number, Enter or blur to apply)',
+  ws_stat_enhanceDamage: 'Damage +',
+  ws_stat_enhanceRendArmor: 'Rend Armor',
+  ws_stat_enhanceCritFactor: 'Critical Factor +',
+  ws_stat_enhanceDamagePerMeter: 'Damage / Meter +',
+  ws_stat_enhanceSuperCritMult: 'Super Crit Multi +',
+  ws_stat_enhanceAttackSpeed: 'Attack Speed +',
   ws_budget_title: 'Workshop coins',
   ws_budget_stones_title: 'Workshop power stones',
   ws_budget_aria:
@@ -36,6 +139,8 @@ export const STRINGS_EN = {
   ws_budget_stones_to_max_dt: 'To max (finite caps)',
   ws_budget_next_dt: 'Next upgrade (visible)',
   ws_budget_stones_next_dt: 'Next upgrade (visible)',
+  ws_budget_toggle_collapse: 'Collapse workshop budget',
+  ws_budget_toggle_expand: 'Expand workshop budget',
   ws_section_attack: 'Attack Upgrades',
   ws_section_defense: 'Defense Upgrades',
   ws_section_utility: 'Utility Upgrades',
@@ -218,6 +323,8 @@ export const STRINGS_EN = {
   sr_budget_spent_dt: 'Spent (all coin labs)',
   sr_budget_to_max_dt: 'To max (finite caps)',
   sr_budget_next_dt: 'Next upgrade (visible)',
+  sr_budget_toggle_collapse: 'Collapse lab budget',
+  sr_budget_toggle_expand: 'Expand lab budget',
 
   sr_lab_data_title: 'Tower Backup & Sharing',
   sr_lab_data_intro:
@@ -357,8 +464,11 @@ export const STRINGS_ES = {
   app_nav_main_aria: 'Páginas principales',
   app_nav_research: 'Laboratorio',
   app_nav_workshop: 'Taller',
+  app_nav_modules: 'Módulos',
+  app_nav_cards: 'Cartas',
   app_nav_tools: 'Herramientas',
   app_nav_settings: 'Ajustes',
+  app_nav_tools_settings: 'Herramientas y ajustes',
   app_inpanel_tabs_aria: 'Secciones principales',
   app_tools_title: 'Herramientas',
   app_tools_intro:
@@ -367,11 +477,112 @@ export const STRINGS_ES = {
     'Consejo: ve a LAB para editar niveles o a WORKSHOP para las estadísticas de ataque, defensa y utilidad modeladas; los avisos y presets aparecen en LAB mientras trabajas.',
   app_settings_title: 'Ajustes',
   app_settings_language_label: 'Idioma',
+  app_settings_budget_panels_label: 'Mostrar paneles de presupuesto (lab y taller)',
+  app_settings_budget_panels_hint:
+    'Totales de monedas al final de las pestañas LAB y WORKSHOP (gastado, hasta el máximo, siguiente mejora).',
 
   ws_title: 'Taller',
   ws_tab_upgrade: 'Mejorar',
   ws_tab_enhance: 'Potenciar',
-  ws_enhance_empty: 'Potenciar aún no está modelado en esta herramienta.',
+  ws_tab_modules: 'Módulos',
+  ws_tab_cards: 'Cartas',
+  ws_section_modules: 'Módulos de apoyo',
+  ws_section_cards: 'Cartas y reliquias',
+  ws_sim_damage_card: 'Carta de daño (estrellas)',
+  ws_sim_attack_speed_card: 'Carta de velocidad de ataque (estrellas)',
+  ws_sim_attack_speed_sub_effect: 'Submódulo cañón velocidad de ataque (+)',
+  ws_sim_attack_speed_sub_hint: 'Suma plana en (Taller × Lab × Carta + …); wiki 0,3–5 según rareza.',
+  ws_sim_berserker_card: 'Carta berserker (estrellas)',
+  ws_sim_relics_bonus: 'Bono de reliquias',
+  ws_sim_perk_damage_quantity: 'Cantidad de perks de daño',
+  ws_sim_berserker_damage_taken: 'Daño recibido (Berserker)',
+  ws_sim_stars_down_aria: 'Reducir estrellas de carta',
+  ws_sim_stars_up_aria: 'Aumentar estrellas de carta',
+  ws_sim_stars_input_aria: 'Estrellas de carta (escribe un número; Enter o salir para aplicar)',
+  ws_sim_stars_max: 'Estrellas máx.:',
+  ws_sim_number_input_aria: 'Valor del simulador (escribe un número; Enter o salir para aplicar)',
+  ws_sim_relics_hint: 'Suma dentro de (1 + Reliquias) como porcentaje.',
+  ws_sim_perk_quantity_hint: 'Cantidad de perks de daño para el término Perk en el daño mostrado.',
+  ws_sim_berserker_taken_hint: 'Daño recibido en esta ronda para el bono fijo de Berserker.',
+  ws_sim_module_cannon: 'Cañón',
+  ws_sim_module_armor: 'Armadura',
+  ws_sim_module_generator: 'Generador',
+  ws_sim_module_core: 'Núcleo',
+  ws_sim_module_lab_substats: 'Subestadísticas de apoyo (lab)',
+  ws_sim_module_lab_bonus: 'Bono de apoyo (lab)',
+  ws_sim_module_cannon_damage: 'Daño del módulo cañón',
+  ws_sim_module_substats_hint: 'De la investigación MÓDULOS para el chasis seleccionado.',
+  ws_sim_module_bonus_hint: 'Labs de bono del módulo de apoyo para el chasis seleccionado.',
+  ws_sim_module_cannon_hint: 'El % de cañón solo aplica cuando Cañón es la ranura activa.',
+  ws_sim_module_not_cannon: '—',
+  ws_enhance_empty: 'Potenciar aún no está modelado para esta categoría.',
+  ws_section_attack_enhance: 'Mejoras de ataque',
+  ws_section_defense_enhance: 'Mejoras de defensa',
+  ws_section_utility_enhance: 'Mejoras de utilidad',
+  ws_stat_enhanceCashBonus: 'Bono de efectivo +',
+  ws_stat_enhanceCoinBonus: 'Bono de monedas +',
+  ws_stat_enhanceCellsKillBonus: 'Células/bajas +',
+  ws_stat_enhanceFreeUpgrades: 'Mejoras gratis +',
+  ws_stat_enhanceRecoveryPackage: 'Paquete de recuperación +',
+  ws_stat_enhanceEnemyLevelSkip: 'Salto de nivel enemigo +',
+  ws_enhance_cash_bonus_level_input_aria:
+    'Nivel de mejora de bono de efectivo (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_coin_bonus_level_input_aria:
+    'Nivel de mejora de bono de monedas (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_cells_kill_bonus_level_input_aria:
+    'Nivel de mejora de células/bajas (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_free_upgrades_level_input_aria:
+    'Nivel de mejora de mejoras gratis (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_recovery_package_level_input_aria:
+    'Nivel de mejora de paquete de recuperación (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_enemy_level_skip_level_input_aria:
+    'Nivel de mejora de salto de nivel enemigo (escribe un número; Enter o salir para aplicar)',
+  ws_stat_enhanceHealth: 'Salud +',
+  ws_stat_enhanceHealthRegen: 'Regen. de salud +',
+  ws_stat_enhanceDefenseAbsolute: 'Defensa absoluta +',
+  ws_stat_enhanceLandMineDamage: 'Daño de minas +',
+  ws_stat_enhanceWallHealth: 'Salud del muro +',
+  ws_stat_enhanceOrbSize: 'Tamaño de orbe',
+  ws_enhance_health_level_input_aria:
+    'Nivel de mejora de salud (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_health_regen_level_input_aria:
+    'Nivel de mejora de regen. de salud (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_defense_absolute_level_input_aria:
+    'Nivel de mejora de defensa absoluta (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_land_mine_damage_level_input_aria:
+    'Nivel de mejora de daño de minas (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_wall_health_level_input_aria:
+    'Nivel de mejora de salud del muro (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_orb_size_level_input_aria:
+    'Nivel de mejora de tamaño de orbe (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_level_down_aria: 'Bajar nivel de mejora',
+  ws_enhance_level_up_aria: 'Subir nivel de mejora',
+  ws_enhance_locked_attack:
+    'Gasta {remaining} más en mejoras de ataque ({required} en total)',
+  ws_enhance_locked_attack_damage:
+    'Gasta {remaining} más en mejoras de daño ({required} en total)',
+  ws_enhance_locked_defense:
+    'Gasta {remaining} más en mejoras de defensa ({required} en total)',
+  ws_enhance_locked_utility:
+    'Gasta {remaining} más en mejoras de utilidad ({required} en total)',
+  ws_enhance_damage_level_input_aria:
+    'Nivel de mejora de daño (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_rend_armor_level_input_aria:
+    'Nivel de mejora de perforar armadura (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_crit_factor_level_input_aria:
+    'Nivel de mejora de factor crítico (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_damage_per_meter_level_input_aria:
+    'Nivel de mejora de daño por metro (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_super_crit_mult_level_input_aria:
+    'Nivel de mejora de mult. súper crítico (escribe un número; Enter o salir para aplicar)',
+  ws_enhance_attack_speed_level_input_aria:
+    'Nivel de mejora de velocidad de ataque (escribe un número; Enter o salir para aplicar)',
+  ws_stat_enhanceDamage: 'Daño +',
+  ws_stat_enhanceRendArmor: 'Perforar armadura',
+  ws_stat_enhanceCritFactor: 'Factor crítico +',
+  ws_stat_enhanceDamagePerMeter: 'Daño / Metro +',
+  ws_stat_enhanceSuperCritMult: 'Mult. súper crítico +',
+  ws_stat_enhanceAttackSpeed: 'Velocidad de ataque +',
   ws_budget_title: 'Monedas del taller',
   ws_budget_stones_title: 'Piedras de poder del taller',
   ws_budget_aria:
@@ -388,6 +599,8 @@ export const STRINGS_ES = {
   ws_budget_stones_to_max_dt: 'Hasta el máximo (topes finitos)',
   ws_budget_next_dt: 'Siguiente mejora (visible)',
   ws_budget_stones_next_dt: 'Siguiente mejora (visible)',
+  ws_budget_toggle_collapse: 'Contraer presupuesto del taller',
+  ws_budget_toggle_expand: 'Expandir presupuesto del taller',
   ws_section_attack: 'Mejoras de ataque',
   ws_section_defense: 'Mejoras de defensa',
   ws_section_utility: 'Mejoras de utilidad',
@@ -572,6 +785,8 @@ export const STRINGS_ES = {
   sr_budget_spent_dt: 'Gastado (todos los labs de monedas)',
   sr_budget_to_max_dt: 'Hasta el máximo (topes finitos)',
   sr_budget_next_dt: 'Siguiente mejora (visible)',
+  sr_budget_toggle_collapse: 'Contraer presupuesto del laboratorio',
+  sr_budget_toggle_expand: 'Expandir presupuesto del laboratorio',
 
   sr_lab_data_title: 'Tower — copia de seguridad y compartir',
   sr_lab_data_intro:

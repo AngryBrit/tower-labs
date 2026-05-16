@@ -35,6 +35,7 @@ import {
   WORKSHOP_DAMAGE_MAX_LEVEL,
   workshopDamageNextMarginalCoins,
   workshopDamageStatDisplay,
+  type WorkshopDamageDisplayOpts,
 } from '../data/workshopDamage'
 import {
   WORKSHOP_DAMAGE_PER_METER_MAX_LEVEL,
@@ -107,6 +108,7 @@ import {
   workshopUtilityMaxLevel,
   workshopUtilityNextMarginalCoins,
   workshopUtilityStatDisplay,
+  type WorkshopUtilityLabDisplayOpts,
   type WorkshopUtilityUpgradeKey,
 } from '../data/workshopUtility'
 import {
@@ -119,6 +121,12 @@ import {
   type WorkshopUltimateWeaponId,
 } from '../data/workshopUltimate'
 import { WorkshopUltimateWeaponCard } from './WorkshopUltimateWeaponCard'
+import { workshopAttackSpeedDisplayOptsFromPersisted } from '../data/workshopDisplayedAttackSpeed'
+import { workshopDamageDisplayOptsFromPersisted } from '../data/workshopDisplayedDamage'
+import type { WorkshopAttackSpeedDisplayOpts } from '../data/workshopAttackSpeed'
+import { WorkshopEnhanceAttackPanel } from './WorkshopEnhanceAttackPanel'
+import { WorkshopEnhanceDefensePanel } from './WorkshopEnhanceDefensePanel'
+import { WorkshopEnhanceUtilityPanel } from './WorkshopEnhanceUtilityPanel'
 import { formatCoinAbbrev } from '../labCosts'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
 import {
@@ -128,14 +136,20 @@ import {
   formatWorkshopStoneAggregates,
   type WorkshopCoinDiscountOpts,
 } from '../workshopBudgetAggregates'
+import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import {
+  buildWorkshopAttackLabDisplayOpts,
+  buildWorkshopDefenseLabDisplayOpts,
+  buildWorkshopUtilityLabDisplayOpts,
+  type WorkshopAttackLabDisplayOpts,
+} from '../data/workshopLabDisplayOpts'
+import {
   applyWorkshopDiscountToCoins,
-  attackResearchDamageLabMultiplier,
-  defenseResearchDefensePercentLabPercentPoints,
-  defenseResearchGarlicThornsLabPercentPoints,
-  defenseResearchHealthStyleMultiplier,
+  resolveEnhancementAttackDiscountPercent,
+  resolveEnhancementDefenseDiscountPercent,
+  resolveEnhancementUtilityDiscountPercent,
   resolveWorkshopAttackDiscountPercent,
   resolveWorkshopDefenseDiscountPercent,
   resolveWorkshopUtilityDiscountPercent,
@@ -335,6 +349,14 @@ function useUtilityWorkshopCoinDiscount(): number {
   return useContext(WorkshopCoinDiscountContext).utility
 }
 
+const WorkshopAttackLabDisplayContext = createContext<
+  WorkshopAttackLabDisplayOpts | undefined
+>(undefined)
+
+function useWorkshopAttackLabDisplayOpts(): WorkshopAttackLabDisplayOpts | undefined {
+  return useContext(WorkshopAttackLabDisplayContext)
+}
+
 function discountedWorkshopMarginal(
   raw: number | undefined,
   discountPercent: number,
@@ -351,7 +373,7 @@ function WorkshopDamageCard({
   onBump,
   onCommitDraft,
   bulkStep,
-  damageLabMultiplier,
+  damageDisplayOpts,
 }: {
   level: number
   draft: string
@@ -360,8 +382,8 @@ function WorkshopDamageCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
-  /** Simulated Attack **Damage** lab; when set, workshop **Value** is multiplied. */
-  damageLabMultiplier?: number
+  /** Wiki displayed-damage factors (lab, enhancements, cards, …). */
+  damageDisplayOpts?: WorkshopDamageDisplayOpts
 }) {
   const { t } = useI18n()
   const coinDiscountPercent = useAttackWorkshopCoinDiscount()
@@ -370,7 +392,7 @@ function WorkshopDamageCard({
     workshopDamageNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopDamageStatDisplay(level, damageLabMultiplier)
+  const statLabel = workshopDamageStatDisplay(level, damageDisplayOpts)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -449,6 +471,7 @@ function WorkshopAttackSpeedCard({
   onBump,
   onCommitDraft,
   bulkStep,
+  attackSpeedDisplayOpts,
 }: {
   level: number
   draft: string
@@ -456,6 +479,7 @@ function WorkshopAttackSpeedCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
+  attackSpeedDisplayOpts?: WorkshopAttackSpeedDisplayOpts
 }) {
   const { t } = useI18n()
   const maxed = level >= WORKSHOP_ATTACK_SPEED_MAX_LEVEL
@@ -464,7 +488,7 @@ function WorkshopAttackSpeedCard({
     workshopAttackSpeedNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopAttackSpeedStatDisplay(level)
+  const statLabel = workshopAttackSpeedStatDisplay(level, attackSpeedDisplayOpts)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -652,7 +676,8 @@ function WorkshopCriticalFactorCard({
     workshopCriticalFactorNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopCriticalFactorStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopCriticalFactorStatDisplay(level, attackLabOpts?.criticalFactorLabMultiplier)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -746,7 +771,8 @@ function WorkshopAttackRangeCard({
     workshopAttackRangeNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopAttackRangeStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopAttackRangeStatDisplay(level, attackLabOpts?.attackRangeLabMultiplier)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -840,7 +866,8 @@ function WorkshopDamagePerMeterCard({
     workshopDamagePerMeterNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopDamagePerMeterStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopDamagePerMeterStatDisplay(level, attackLabOpts?.damagePerMeterLabMultiplier)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -1592,7 +1619,11 @@ function WorkshopSuperCritChanceCard({
     workshopSuperCritChanceNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopSuperCritChanceStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopSuperCritChanceStatDisplay(
+    level,
+    attackLabOpts?.superCritChanceLabPercentPoints,
+  )
   const stepHint = `×${bulkStep}`
 
   return (
@@ -1686,7 +1717,8 @@ function WorkshopSuperCritMultCard({
     workshopSuperCritMultNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopSuperCritMultStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopSuperCritMultStatDisplay(level, attackLabOpts?.superCritMultLabMultiplier)
   const stepHint = `×${bulkStep}`
 
   return (
@@ -2094,6 +2126,7 @@ function WorkshopUtilityUpgradeCard({
   onBump,
   onCommitDraft,
   bulkStep,
+  statDisplayOpts,
 }: {
   fieldKey: WorkshopUtilityUpgradeKey
   titleId: StringId
@@ -2103,6 +2136,7 @@ function WorkshopUtilityUpgradeCard({
   onBump: (direction: -1 | 1) => void
   onCommitDraft: () => void
   bulkStep: WorkshopMultiplier
+  statDisplayOpts?: WorkshopUtilityLabDisplayOpts
 }) {
   const { t } = useI18n()
   const max = workshopUtilityMaxLevel(fieldKey)
@@ -2112,7 +2146,7 @@ function WorkshopUtilityUpgradeCard({
     workshopUtilityNextMarginalCoins(fieldKey, level),
     coinDiscountPercent,
   )
-  const statLabel = workshopUtilityStatDisplay(fieldKey, level)
+  const statLabel = workshopUtilityStatDisplay(fieldKey, level, statDisplayOpts)
   const stepHint = `×${bulkStep}`
   const statName = t(titleId)
 
@@ -2185,6 +2219,8 @@ function WorkshopUtilityUpgradeCard({
   )
 }
 
+const WORKSHOP_BUDGET_COLLAPSED_STORAGE_KEY = 'tower-export-workshop-budget-collapsed-v1'
+
 type WorkshopPageProps = {
   embeddedInPanel?: boolean
   /** In-panel: mount node between app tabs and workshop panel (shared chrome). */
@@ -2205,8 +2241,10 @@ export function WorkshopPage({
   labLevelOverrides = {},
 }: WorkshopPageProps) {
   const { t, fmt } = useI18n()
+  const [budgetPanelsVisible] = useBudgetPanelsVisible()
   const headingId = useId()
   const workshopBudgetTitleId = useId().replace(/:/g, '')
+  const workshopBudgetBodyId = useId().replace(/:/g, '')
   const {
     hideMaxed,
     mainTab,
@@ -2231,34 +2269,43 @@ export function WorkshopPage({
     rendArmorMultLevel,
   } = workshopPersisted
 
-  const defenseStatLabDisplayOpts = useMemo((): WorkshopDefenseStatDisplayOpts | undefined => {
-    if (researchData == null) return undefined
-    return {
-      healthLabMultiplier: defenseResearchHealthStyleMultiplier(
-        researchData,
-        labLevelOverrides,
-        'Health',
-      ),
-      healthRegenLabMultiplier: defenseResearchHealthStyleMultiplier(
-        researchData,
-        labLevelOverrides,
-        'Health Regen',
-      ),
-      thornDamageLabPercentPoints: defenseResearchGarlicThornsLabPercentPoints(
-        researchData,
-        labLevelOverrides,
-      ),
-      defensePercentLabPercentPoints: defenseResearchDefensePercentLabPercentPoints(
-        researchData,
-        labLevelOverrides,
-      ),
-    }
-  }, [researchData, labLevelOverrides])
+  const workshopMainTab =
+    mainTab === 'modules' || mainTab === 'cards' ? 'upgrade' : mainTab
 
-  const damageLabMultiplier = useMemo(() => {
-    if (researchData == null) return undefined
-    return attackResearchDamageLabMultiplier(researchData, labLevelOverrides)
-  }, [researchData, labLevelOverrides])
+  const defenseStatLabDisplayOpts = useMemo(
+    () => buildWorkshopDefenseLabDisplayOpts(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
+  )
+
+  const attackStatLabDisplayOpts = useMemo(
+    () => buildWorkshopAttackLabDisplayOpts(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
+  )
+
+  const utilityStatLabDisplayOpts = useMemo(
+    () => buildWorkshopUtilityLabDisplayOpts(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
+  )
+
+  const damageDisplayOpts = useMemo(
+    (): WorkshopDamageDisplayOpts | undefined =>
+      workshopDamageDisplayOptsFromPersisted(
+        workshopPersisted,
+        researchData,
+        labLevelOverrides,
+      ),
+    [researchData, labLevelOverrides, workshopPersisted],
+  )
+
+  const attackSpeedDisplayOpts = useMemo(
+    (): WorkshopAttackSpeedDisplayOpts | undefined =>
+      workshopAttackSpeedDisplayOptsFromPersisted(
+        workshopPersisted,
+        researchData,
+        labLevelOverrides,
+      ),
+    [researchData, labLevelOverrides, workshopPersisted],
+  )
 
   const workshopCoinDiscountOpts = useMemo((): WorkshopCoinDiscountOpts => {
     if (researchData == null) {
@@ -2266,6 +2313,9 @@ export function WorkshopPage({
         attackDiscountPercent: 0,
         defenseDiscountPercent: 0,
         utilityDiscountPercent: 0,
+        enhancementAttackDiscountPercent: 0,
+        enhancementDefenseDiscountPercent: 0,
+        enhancementUtilityDiscountPercent: 0,
       }
     }
     return {
@@ -2278,6 +2328,18 @@ export function WorkshopPage({
         labLevelOverrides,
       ),
       utilityDiscountPercent: resolveWorkshopUtilityDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+      enhancementAttackDiscountPercent: resolveEnhancementAttackDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+      enhancementDefenseDiscountPercent: resolveEnhancementDefenseDiscountPercent(
+        researchData,
+        labLevelOverrides,
+      ),
+      enhancementUtilityDiscountPercent: resolveEnhancementUtilityDiscountPercent(
         researchData,
         labLevelOverrides,
       ),
@@ -2294,6 +2356,24 @@ export function WorkshopPage({
   )
 
   const [multiplierOpen, setMultiplierOpen] = useState(false)
+  const [workshopBudgetCollapsed, setWorkshopBudgetCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(WORKSHOP_BUDGET_COLLAPSED_STORAGE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        WORKSHOP_BUDGET_COLLAPSED_STORAGE_KEY,
+        workshopBudgetCollapsed ? '1' : '0',
+      )
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [workshopBudgetCollapsed])
   const [damageDraft, setDamageDraft] = useState('0')
   const [attackSpeedDraft, setAttackSpeedDraft] = useState('0')
   const [critChanceDraft, setCritChanceDraft] = useState('0')
@@ -2410,7 +2490,26 @@ export function WorkshopPage({
     workshopPersisted.enemyHealthLevelSkipLevel,
   ])
 
-  const sectionTitleId = SECTION_TITLE[category]
+  const sectionTitleId: StringId =
+    workshopMainTab === 'enhance' && category === 'attack'
+        ? 'ws_section_attack_enhance'
+        : workshopMainTab === 'enhance' && category === 'defense'
+          ? 'ws_section_defense_enhance'
+          : workshopMainTab === 'enhance' && category === 'utility'
+            ? 'ws_section_utility_enhance'
+            : SECTION_TITLE[category]
+
+  const showWorkshopBudget =
+    budgetPanelsVisible &&
+    (workshopMainTab === 'upgrade' || workshopMainTab === 'enhance')
+  const showCategoryBar = workshopMainTab === 'upgrade' || workshopMainTab === 'enhance'
+
+  const enhancementAttackDiscountPercent =
+    workshopCoinDiscountOpts.enhancementAttackDiscountPercent ?? 0
+  const enhancementDefenseDiscountPercent =
+    workshopCoinDiscountOpts.enhancementDefenseDiscountPercent ?? 0
+  const enhancementUtilityDiscountPercent =
+    workshopCoinDiscountOpts.enhancementUtilityDiscountPercent ?? 0
 
   const commitDamageDraft = useCallback(() => {
     const raw = damageDraft.trim().replace(/,/g, '')
@@ -3065,9 +3164,9 @@ export function WorkshopPage({
         <button
           type="button"
           role="tab"
-          aria-selected={mainTab === 'upgrade'}
+          aria-selected={workshopMainTab === 'upgrade'}
           className={
-            mainTab === 'upgrade' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
+            workshopMainTab === 'upgrade' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
           }
           onClick={() =>
             onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'upgrade' })
@@ -3078,9 +3177,9 @@ export function WorkshopPage({
         <button
           type="button"
           role="tab"
-          aria-selected={mainTab === 'enhance'}
+          aria-selected={workshopMainTab === 'enhance'}
           className={
-            mainTab === 'enhance' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
+            workshopMainTab === 'enhance' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
           }
           onClick={() =>
             onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'enhance' })
@@ -3090,14 +3189,42 @@ export function WorkshopPage({
         </button>
       </div>
 
+      {showWorkshopBudget ? (
       <div
-        className="select-research__budget"
+        className={
+          workshopBudgetCollapsed
+            ? 'select-research__budget select-research__budget--collapsed'
+            : 'select-research__budget'
+        }
         role="region"
         aria-labelledby={workshopBudgetTitleId}
       >
-        <h2 id={workshopBudgetTitleId} className="select-research__budget-title">
-          {t(budgetUsesStones ? 'ws_budget_stones_title' : 'ws_budget_title')}
-        </h2>
+        <div className="select-research__budget-head">
+          <h2 id={workshopBudgetTitleId} className="select-research__budget-title">
+            {t(budgetUsesStones ? 'ws_budget_stones_title' : 'ws_budget_title')}
+          </h2>
+          <button
+            type="button"
+            className="select-research__budget-toggle"
+            aria-expanded={!workshopBudgetCollapsed}
+            aria-controls={workshopBudgetBodyId}
+            aria-label={
+              workshopBudgetCollapsed
+                ? t('ws_budget_toggle_expand')
+                : t('ws_budget_toggle_collapse')
+            }
+            onClick={() => setWorkshopBudgetCollapsed((c) => !c)}
+          >
+            <span className="select-research__budget-chevron" aria-hidden>
+              ▼
+            </span>
+          </button>
+        </div>
+        <div
+          id={workshopBudgetBodyId}
+          className="select-research__budget-body"
+          hidden={workshopBudgetCollapsed}
+        >
         <p className="visually-hidden" aria-live="polite" aria-atomic="true">
           {budgetUsesStones
             ? fmt.workshopStoneBudgetAria(
@@ -3128,8 +3255,11 @@ export function WorkshopPage({
         <p className="select-research__budget-footnote">
           {t(budgetUsesStones ? 'ws_budget_stones_footnote' : 'ws_budget_footnote')}
         </p>
+        </div>
       </div>
+      ) : null}
 
+      {showCategoryBar ? (
       <div className="workshop__categories" role="toolbar" aria-label={t('ws_title')}>
         {WORKSHOP_CATEGORY_ORDER.map((key) => (
           <button
@@ -3160,14 +3290,103 @@ export function WorkshopPage({
           </button>
         ))}
       </div>
+      ) : null}
 
       <div className="workshop__body">
-      {mainTab === 'enhance' ? (
-        <div className="workshop__enhance-placeholder">
-          <p>{t('ws_enhance_empty')}</p>
-        </div>
+      {workshopMainTab === 'enhance' ? (
+        category === 'attack' || category === 'defense' || category === 'utility' ? (
+          <>
+            <div className="workshop__section-head">
+              <h2 className="workshop__section-title">{t(sectionTitleId)}</h2>
+              <div
+                ref={multRailRef}
+                className={
+                  multiplierOpen ? 'workshop__mult workshop__mult--open' : 'workshop__mult'
+                }
+              >
+                <div
+                  className="workshop__mult-rail"
+                  role="group"
+                  aria-label={t('ws_multiplier_group_aria')}
+                >
+                  <div className="workshop__mult-track">
+                    <div className="workshop__mult-opts" aria-hidden={!multiplierOpen}>
+                      {BULK_MULTIPLIERS.map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          className={
+                            multiplier === m
+                              ? 'workshop__mult-chip workshop__mult-chip--selected'
+                              : 'workshop__mult-chip'
+                          }
+                          tabIndex={multiplierOpen ? 0 : -1}
+                          aria-pressed={multiplier === m}
+                          onClick={() => {
+                            onWorkshopPersistedChange({
+                              ...workshopPersisted,
+                              multiplier: m,
+                            })
+                            setMultiplierOpen(false)
+                          }}
+                        >
+                          ×{m}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="workshop__mult-anchor"
+                      aria-expanded={multiplierOpen}
+                      aria-label={
+                        multiplierOpen
+                          ? t('ws_multiplier_toggle_collapse')
+                          : t('ws_multiplier_toggle_expand')
+                      }
+                      onClick={() => setMultiplierOpen((o) => !o)}
+                    >
+                      ×{multiplier}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ul className="workshop__grid">
+              {category === 'attack' ? (
+                <WorkshopEnhanceAttackPanel
+                  workshopPersisted={workshopPersisted}
+                  onWorkshopPersistedChange={onWorkshopPersistedChange}
+                  hideMaxed={hideMaxed}
+                  multiplier={multiplier}
+                  enhancementAttackDiscountPercent={enhancementAttackDiscountPercent}
+                />
+              ) : category === 'defense' ? (
+                <WorkshopEnhanceDefensePanel
+                  workshopPersisted={workshopPersisted}
+                  onWorkshopPersistedChange={onWorkshopPersistedChange}
+                  hideMaxed={hideMaxed}
+                  multiplier={multiplier}
+                  enhancementDefenseDiscountPercent={enhancementDefenseDiscountPercent}
+                />
+              ) : (
+                <WorkshopEnhanceUtilityPanel
+                  workshopPersisted={workshopPersisted}
+                  onWorkshopPersistedChange={onWorkshopPersistedChange}
+                  hideMaxed={hideMaxed}
+                  multiplier={multiplier}
+                  enhancementUtilityDiscountPercent={enhancementUtilityDiscountPercent}
+                />
+              )}
+            </ul>
+          </>
+        ) : (
+          <div className="workshop__enhance-placeholder">
+            <p>{t('ws_enhance_empty')}</p>
+          </div>
+        )
       ) : (
         <WorkshopCoinDiscountContext.Provider value={workshopCoinDiscountContext}>
+        <WorkshopAttackLabDisplayContext.Provider value={attackStatLabDisplayOpts}>
         <>
           <div className="workshop__section-head">
             <h2 className="workshop__section-title">{t(sectionTitleId)}</h2>
@@ -3254,7 +3473,7 @@ export function WorkshopPage({
                 bulkStep={multiplier}
                 onBump={bumpDamage}
                 onCommitDraft={commitDamageDraft}
-                damageLabMultiplier={damageLabMultiplier}
+                damageDisplayOpts={damageDisplayOpts}
               />
             ) : null}
             {showAttackSpeedCard ? (
@@ -3265,6 +3484,7 @@ export function WorkshopPage({
                 bulkStep={multiplier}
                 onBump={bumpAttackSpeed}
                 onCommitDraft={commitAttackSpeedDraft}
+                attackSpeedDisplayOpts={attackSpeedDisplayOpts}
               />
             ) : null}
             {showCritChanceCard ? (
@@ -3454,6 +3674,7 @@ export function WorkshopPage({
                       bulkStep={multiplier}
                       onBump={(dir) => bumpUtility(key, dir)}
                       onCommitDraft={() => commitUtilityDraft(key)}
+                      statDisplayOpts={utilityStatLabDisplayOpts}
                     />
                   )
                 })
@@ -3494,6 +3715,7 @@ export function WorkshopPage({
             ))}
           </ul>
         </>
+        </WorkshopAttackLabDisplayContext.Provider>
         </WorkshopCoinDiscountContext.Provider>
       )}
       </div>

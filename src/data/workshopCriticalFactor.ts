@@ -19,8 +19,16 @@ export function workshopCriticalFactorStatValue(completedLevels: number): number
 }
 
 /** Display like wiki **Value** (`1.30×` … `16.20×`). */
-export function workshopCriticalFactorStatDisplay(completedLevels: number): string {
-  return `${workshopCriticalFactorStatValue(completedLevels).toFixed(2)}×`
+export function workshopCriticalFactorStatDisplay(
+  completedLevels: number,
+  labMultiplier?: number,
+): string {
+  const base = workshopCriticalFactorStatValue(completedLevels)
+  const v =
+    labMultiplier != null && Number.isFinite(labMultiplier) && labMultiplier > 1 + 1e-9
+      ? base * labMultiplier
+      : base
+  return `${v.toFixed(2)}×`
 }
 
 /** Marginal **Cost** at each `ANCHOR_LEVELS` row (exact wiki values). */

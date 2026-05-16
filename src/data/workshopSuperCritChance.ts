@@ -27,8 +27,15 @@ export function workshopSuperCritChancePercent(completedLevels: number): number 
 }
 
 /** Two decimals + `%` (e.g. `0.20%`, `20.00%`). */
-export function workshopSuperCritChanceStatDisplay(completedLevels: number): string {
-  return `${workshopSuperCritChancePercent(completedLevels).toFixed(2)}%`
+export function workshopSuperCritChanceStatDisplay(
+  completedLevels: number,
+  labPercentPoints?: number,
+): string {
+  let pct = workshopSuperCritChancePercent(completedLevels)
+  if (labPercentPoints != null && Number.isFinite(labPercentPoints) && labPercentPoints > 0) {
+    pct += labPercentPoints
+  }
+  return `${pct.toFixed(2)}%`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

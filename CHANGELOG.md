@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-05-16
+
+### Added
+
+- **Workshop Enhance tab**: Attack, defense, and utility enhancement panels with per-stat level controls, coin ladders, unlock spend gates, and Vitest coverage (`workshopEnhanceAttack`, `workshopEnhanceDefense`, `workshopEnhanceUtility`, tier-400/200 ladders, orb size, recovery package, free upgrades, enemy level skip).
+- **Displayed stats**: Wiki-aligned **displayed damage** and **displayed attack speed** on workshop upgrade cards, driven by lab multipliers, enhancement tiers, and sim inputs (`workshopDisplayedDamage`, `workshopDisplayedAttackSpeed`, `workshopSimCards`, `workshopSimModules`, `workshopLabDisplayOpts`).
+- **Cards & modules**: Top-level **Cards** and **Modules** navigation plus dedicated workshop panels; card stars, relics, perk quantity, berserker inputs, and assist-module substats feed displayed-stat formulas.
+- **Tools & settings**: Combined `ToolsSettingsPage` (lab import/export/compare tools plus app settings); setting to show or hide lab and workshop budget panels (`budgetPanelsVisibility`).
+- **Unified CSV**: Workshop snapshot keys (`ws,…`) alongside lab rows in `towerUnifiedCsv` for single-file backup and restore.
+- **Maintenance**: `scripts/gen-utility-enhance-coins.mjs` to regenerate utility enhancement coin tables from wiki scrape data.
+
+### Changed
+
+- **Navigation**: Main app tabs for Research, Workshop, Modules, Cards, and Tools/Settings; workshop toolbar portaled into the in-panel header on the Workshop tab.
+- **Workshop budgets & compare**: Extended `workshopBudgetAggregates` and `workshopCompare` for enhance spend and sim state; defense and utility upgrade modules aligned with lab-display options.
+- **Persistence**: `WorkshopPersistedV1` expanded with enhance levels, sim card/module fields, and `mainTab` (`upgrade` | `enhance` | `modules` | `cards`).
+- **i18n**: EN/ES strings for enhance stats, simulators, budget toggle, and new navigation labels.
+
 ## [2.0.0] - 2026-05-14
 
 ### Added

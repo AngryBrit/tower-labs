@@ -9,6 +9,16 @@
  */
 
 import { formatCoinAbbrev } from '../labCosts'
+import {
+  workshopDisplayedDamageFromWorkshopLevel,
+  type WorkshopDamageDisplayOpts,
+} from './workshopDisplayedDamage'
+
+export type { WorkshopDamageDisplayOpts } from './workshopDisplayedDamage'
+export {
+  computeWorkshopDisplayedDamage,
+  workshopDisplayedDamagePerkMultiplier,
+} from './workshopDisplayedDamage'
 
 export const WORKSHOP_DAMAGE_MAX_LEVEL = 6000 as const
 
@@ -71,16 +81,15 @@ export function workshopDamageStatAtLevel(completedLevels: number): number {
   return logLerp(v0, v1, t)
 }
 
-/** Abbreviated damage number (same style as coin abbreviations in this app). */
+/**
+ * Abbreviated displayed damage (wiki formula when {@link WorkshopDamageDisplayOpts} passed;
+ * legacy: a bare `number` is treated as **labMultiplier** only).
+ */
 export function workshopDamageStatDisplay(
   completedLevels: number,
-  labMultiplier?: number,
+  opts?: WorkshopDamageDisplayOpts | number,
 ): string {
-  let v = workshopDamageStatAtLevel(completedLevels)
-  if (labMultiplier !== undefined && Number.isFinite(labMultiplier) && labMultiplier > 0) {
-    v *= labMultiplier
-  }
-  return formatCoinAbbrev(v)
+  return formatCoinAbbrev(workshopDisplayedDamageFromWorkshopLevel(completedLevels, opts))
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {
