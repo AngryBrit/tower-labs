@@ -43,10 +43,19 @@ import {
 } from './data/workshopEnhanceUtility'
 import type { WorkshopAssistModuleSlot } from './data/workshopSimModules'
 import {
-  WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
-  WORKSHOP_BERSERKER_CARD_MAX_STARS,
-  WORKSHOP_DAMAGE_CARD_MAX_STARS,
-} from './data/workshopSimCards'
+  clampWorkshopCardActivePresetIndex,
+  defaultWorkshopCardStars,
+  workshopCardStarMirrorsForPersisted,
+  workshopCardStarsFromLegacy,
+  type WorkshopCardStarsState,
+  type WorkshopGameCardId,
+} from './data/workshopGameCards'
+import {
+  clampWorkshopCardEquipSlots,
+  defaultCardPresetLoadouts,
+  sanitizeCardPresetLoadouts,
+  WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
+} from './data/workshopGameCardWiki'
 
 type WorkshopUltimateLevels = { [K in WorkshopUltimateUpgradeKey]: number }
 
@@ -139,9 +148,17 @@ export type WorkshopPersistedV1 = {
   enhanceFreeUpgradesLevel: number
   enhanceRecoveryPackageLevel: number
   enhanceEnemyLevelSkipLevel: number
-  /** Cards/Damage equipped stars (0 = none, 7 = max). */
+  /** Star level for each of the 31 in-game cards (0 = none, 7 = max). */
+  cardStars: WorkshopCardStarsState
+  /** Equipped card ids per preset tab (Preset 1…5). */
+  cardPresetLoadouts: WorkshopGameCardId[][]
+  /** Preset tab used for workshop displayed-damage / attack-speed card sim. */
+  cardActivePresetIndex: number
+  /** Max cards equippable at once (wiki: up to 28 with Harmony keys). */
+  cardEquipSlots: number
+  /** Active-preset Damage card stars (0 if not equipped). */
   simDamageCardStars: number
-  /** Cards/Attack Speed equipped stars (0 = none, 7 = max). */
+  /** Active-preset Attack Speed card stars (0 if not equipped). */
   simAttackSpeedCardStars: number
   /** Cannon submodule flat attack speed add (wiki Sub-Module Effects). */
   simAttackSpeedModuleSubEffect: number
@@ -160,7 +177,63 @@ export type WorkshopPersistedV1 = {
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
 
+/**
+ * Reset workshop upgrade / enhance / ultimate levels only.
+ * Preserves cards, modules sim, and UI prefs (tab, category, hide maxed).
+ */
+/**
+ * Reset card stars, preset loadouts, and equip slots only.
+ * Preserves workshop upgrade / enhance / ultimate levels and module sim fields.
+ */
+export function resetWorkshopCards(current: WorkshopPersistedV1): WorkshopPersistedV1 {
+  const cardStars = defaultWorkshopCardStars()
+  const cardPresetLoadouts = defaultCardPresetLoadouts()
+  const cardActivePresetIndex = 0
+  return {
+    ...current,
+    cardStars,
+    cardPresetLoadouts,
+    cardActivePresetIndex,
+    cardEquipSlots: WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
+    ...workshopCardStarMirrorsForPersisted({
+      cardStars,
+      cardPresetLoadouts,
+      cardActivePresetIndex,
+    }),
+  }
+}
+
+export function resetWorkshopUpgradeLevels(
+  current: WorkshopPersistedV1,
+): WorkshopPersistedV1 {
+  const d = defaultWorkshopPersisted()
+  return {
+    ...d,
+    hideMaxed: current.hideMaxed,
+    mainTab: current.mainTab,
+    category: current.category,
+    multiplier: current.multiplier,
+    cardStars: current.cardStars,
+    cardPresetLoadouts: current.cardPresetLoadouts,
+    cardActivePresetIndex: current.cardActivePresetIndex,
+    cardEquipSlots: current.cardEquipSlots,
+    simAttackSpeedModuleSubEffect: current.simAttackSpeedModuleSubEffect,
+    simAssistModuleSlot: current.simAssistModuleSlot,
+    simRelicsBonusFraction: current.simRelicsBonusFraction,
+    simPerkDamageQuantity: current.simPerkDamageQuantity,
+    simBerserkerDamageTaken: current.simBerserkerDamageTaken,
+    ...workshopCardStarMirrorsForPersisted({
+      cardStars: current.cardStars,
+      cardPresetLoadouts: current.cardPresetLoadouts,
+      cardActivePresetIndex: current.cardActivePresetIndex,
+    }),
+  }
+}
+
 export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
+  const cardStars = defaultWorkshopCardStars()
+  const cardPresetLoadouts = defaultCardPresetLoadouts()
+  const cardActivePresetIndex = 0
   return {
     hideMaxed: false,
     mainTab: 'upgrade',
@@ -232,10 +305,16 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     enhanceFreeUpgradesLevel: 0,
     enhanceRecoveryPackageLevel: 0,
     enhanceEnemyLevelSkipLevel: 0,
-    simDamageCardStars: 0,
-    simAttackSpeedCardStars: 0,
+    cardStars,
+    cardPresetLoadouts,
+    cardActivePresetIndex,
+    cardEquipSlots: WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
+    ...workshopCardStarMirrorsForPersisted({
+      cardStars,
+      cardPresetLoadouts,
+      cardActivePresetIndex,
+    }),
     simAttackSpeedModuleSubEffect: 0,
-    simBerserkerCardStars: 0,
     simBerserkerDamageTaken: 0,
     simRelicsBonusFraction: 0,
     simPerkDamageQuantity: 0,
@@ -460,24 +539,31 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         (o as Record<string, unknown>)[key] === true ? true : false,
       ]),
     ),
-    simDamageCardStars: clampInt(
-      Number(o.simDamageCardStars),
-      0,
-      WORKSHOP_DAMAGE_CARD_MAX_STARS,
-    ),
-    simAttackSpeedCardStars: clampInt(
-      Number(o.simAttackSpeedCardStars),
-      0,
-      WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
+    ...(() => {
+      const cardStars = workshopCardStarsFromLegacy(o)
+      const cardPresetLoadouts = sanitizeCardPresetLoadouts(o.cardPresetLoadouts)
+      const cardActivePresetIndex = clampWorkshopCardActivePresetIndex(
+        Number(o.cardActivePresetIndex),
+      )
+      return {
+        cardStars,
+        cardPresetLoadouts,
+        cardActivePresetIndex,
+        ...workshopCardStarMirrorsForPersisted({
+          cardStars,
+          cardPresetLoadouts,
+          cardActivePresetIndex,
+        }),
+      }
+    })(),
+    cardEquipSlots: clampWorkshopCardEquipSlots(
+      o.cardEquipSlots != null && o.cardEquipSlots !== ''
+        ? Number(o.cardEquipSlots)
+        : WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
     ),
     simAttackSpeedModuleSubEffect: Math.max(
       0,
       Number(o.simAttackSpeedModuleSubEffect) || 0,
-    ),
-    simBerserkerCardStars: clampInt(
-      Number(o.simBerserkerCardStars),
-      0,
-      WORKSHOP_BERSERKER_CARD_MAX_STARS,
     ),
     simBerserkerDamageTaken: Math.max(0, Number(o.simBerserkerDamageTaken) || 0),
     simRelicsBonusFraction: Math.max(0, Number(o.simRelicsBonusFraction) || 0),

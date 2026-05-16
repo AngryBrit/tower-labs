@@ -3,6 +3,8 @@ import {
   buildLabPresetsPayload,
   defaultWorkshopPersisted,
   parseLabPresetsFile,
+  resetWorkshopCards,
+  resetWorkshopUpgradeLevels,
 } from './labPresetsStorage'
 
 describe('parseLabPresetsFile', () => {
@@ -24,6 +26,50 @@ describe('parseLabPresetsFile', () => {
         scratchOverrides: {},
       }),
     ).toBeNull()
+  })
+})
+
+describe('resetWorkshopCards', () => {
+  it('clears card state but keeps workshop upgrade levels', () => {
+    const before = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 42,
+      enhanceDamageLevel: 3,
+      simAssistModuleSlot: 'armor' as const,
+      simRelicsBonusFraction: 0.25,
+      cardStars: { ...defaultWorkshopPersisted().cardStars, damage: 5 },
+      cardEquipSlots: 8,
+    }
+    before.cardPresetLoadouts[0] = ['damage', 'health']
+    const after = resetWorkshopCards(before)
+    expect(after.damageLevel).toBe(42)
+    expect(after.enhanceDamageLevel).toBe(3)
+    expect(after.simAssistModuleSlot).toBe('armor')
+    expect(after.simRelicsBonusFraction).toBe(0.25)
+    expect(after.cardStars.damage).toBe(0)
+    expect(after.cardEquipSlots).toBe(1)
+    expect(after.cardPresetLoadouts[0]).toEqual([])
+    expect(after.simDamageCardStars).toBe(0)
+  })
+})
+
+describe('resetWorkshopUpgradeLevels', () => {
+  it('clears upgrade levels but keeps cards and modules sim', () => {
+    const before = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 42,
+      enhanceDamageLevel: 3,
+      cardStars: { ...defaultWorkshopPersisted().cardStars, damage: 5 },
+      simAssistModuleSlot: 'armor' as const,
+      simAttackSpeedModuleSubEffect: 12,
+    }
+    const after = resetWorkshopUpgradeLevels(before)
+    expect(after.damageLevel).toBe(0)
+    expect(after.enhanceDamageLevel).toBe(0)
+    expect(after.cardStars.damage).toBe(5)
+    expect(after.simAssistModuleSlot).toBe('armor')
+    expect(after.simAttackSpeedModuleSubEffect).toBe(12)
+    expect(after.simDamageCardStars).toBe(0)
   })
 })
 

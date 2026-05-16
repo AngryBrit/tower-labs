@@ -1,0 +1,347 @@
+/**
+ * Wiki **Cards** page: star tables (Lv.1–7), rarities, descriptions, slot gem costs.
+ */
+
+import type { WorkshopGameCardId } from './workshopGameCards'
+
+export type WorkshopGameCardRarity = 'common' | 'rare' | 'epic'
+
+export type WorkshopCardValueKind = 'mult' | 'percent' | 'addPercent' | 'sec' | 'min' | 'flat'
+
+export type WorkshopGameCardWikiDef = {
+  rarity: WorkshopGameCardRarity
+  description: string
+  kind: WorkshopCardValueKind
+  /** Wiki Lv.1 … Lv.7 values. */
+  stars: readonly [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
+  /** Milestone gate (wiki); card still listed in inventory. */
+  milestone?: string
+}
+
+/** Gem cost per slot index (slot 1 = free). */
+export const WORKSHOP_CARD_SLOT_GEM_COSTS: readonly number[] = [
+  0, 50, 100, 200, 300, 400, 500, 600, 750, 1000, 1200, 1400, 1600, 1800, 2500,
+  3500, 4500, 5500, 6500, 7500, 8500, 10000,
+] as const
+
+export const WORKSHOP_CARD_MAX_SLOTS_GEMS = WORKSHOP_CARD_SLOT_GEM_COSTS.length as const
+export const WORKSHOP_CARD_MAX_SLOTS_HARMONY = 28 as const
+export const WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS = 1 as const
+export const WORKSHOP_CARD_PRESET_COUNT = 5 as const
+
+export const WORKSHOP_GAME_CARD_WIKI: Record<
+  WorkshopGameCardId,
+  WorkshopGameCardWikiDef
+> = {
+  damage: {
+    rarity: 'common',
+    description: 'Increase tower damage by ×#',
+    kind: 'mult',
+    stars: [1.5, 2, 2.4, 2.8, 3.2, 3.6, 4],
+  },
+  attackSpeed: {
+    rarity: 'common',
+    description: 'Increase tower attack speed by ×#',
+    kind: 'mult',
+    stars: [1.25, 1.4, 1.55, 1.7, 1.85, 2, 2.15],
+  },
+  health: {
+    rarity: 'common',
+    description: 'Increase tower health by ×#',
+    kind: 'mult',
+    stars: [1.5, 2, 2.4, 2.8, 3.2, 3.6, 4],
+  },
+  healthRegen: {
+    rarity: 'common',
+    description: 'Increase tower health regen by ×# / sec',
+    kind: 'mult',
+    stars: [1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6],
+  },
+  range: {
+    rarity: 'common',
+    description: 'Increase tower range by ×#',
+    kind: 'mult',
+    stars: [1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45],
+  },
+  cash: {
+    rarity: 'common',
+    description: 'Increase all cash earned by ×#',
+    kind: 'mult',
+    stars: [1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4],
+  },
+  coins: {
+    rarity: 'common',
+    description: 'Increase all coins earned by ×#',
+    kind: 'mult',
+    stars: [1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45],
+  },
+  slowAura: {
+    rarity: 'common',
+    description: 'All enemies in tower range speed decreased by #%',
+    kind: 'percent',
+    stars: [13, 16, 19, 22, 25, 28, 31],
+  },
+  criticalChance: {
+    rarity: 'common',
+    description: 'Increase critical chance by +#%',
+    kind: 'addPercent',
+    stars: [5, 6, 7, 8, 9, 10, 11],
+  },
+  enemyBalance: {
+    rarity: 'common',
+    description:
+      'Increase enemies spawned each wave; cash earned per kill increased by ×#',
+    kind: 'mult',
+    stars: [1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9],
+  },
+  extraDefense: {
+    rarity: 'common',
+    description: 'Increase defense percent by +#%',
+    kind: 'addPercent',
+    stars: [5, 6, 7, 8, 9, 10, 11],
+  },
+  fortress: {
+    rarity: 'common',
+    description: 'Increase defense absolute by ×#',
+    kind: 'mult',
+    stars: [1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2],
+  },
+  freeUpgrades: {
+    rarity: 'rare',
+    description: 'Increases all free upgrade chances per wave by #%',
+    kind: 'percent',
+    stars: [4, 5, 6, 7, 8, 9, 10],
+  },
+  extraOrb: {
+    rarity: 'rare',
+    description:
+      'A spinning orb with speed # that destroys enemies on contact (except bosses)',
+    kind: 'flat',
+    stars: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+  },
+  plasmaCannon: {
+    rarity: 'rare',
+    description: 'Fire one big plasma shot at a boss dropping its health by #%',
+    kind: 'percent',
+    stars: [30, 34, 38, 42, 46, 50, 54],
+  },
+  criticalCoin: {
+    rarity: 'rare',
+    description:
+      'If a basic enemy dies from a critical shot it has a chance to drop coins of #%',
+    kind: 'percent',
+    stars: [15, 18, 21, 24, 27, 30, 33],
+  },
+  waveSkip: {
+    rarity: 'rare',
+    description:
+      'Chance to skip a wave and earn coins and cash equal to the previous wave ×1.10 of #%',
+    kind: 'percent',
+    stars: [9, 10, 11, 13, 15, 17, 19],
+  },
+  introSprint: {
+    rarity: 'rare',
+    description:
+      'Waves increase by 10 each time for the first # waves (boss every 10 waves; no coins during sprint)',
+    kind: 'flat',
+    stars: [20, 30, 40, 50, 60, 80, 100],
+  },
+  landMineStun: {
+    rarity: 'rare',
+    description:
+      'Land mines have a 40% chance to stun enemies for # sec (except bosses)',
+    kind: 'sec',
+    stars: [1.4, 1.8, 2.2, 2.6, 3, 3.4, 3.8],
+    milestone: 'Tier 7 Wave 250',
+  },
+  recoveryPackageChance: {
+    rarity: 'rare',
+    description: 'Increase recovery package spawn chance by #%',
+    kind: 'percent',
+    stars: [15, 18, 21, 24, 27, 30, 33],
+    milestone: 'Tier 2 Wave 750',
+  },
+  deathRay: {
+    rarity: 'epic',
+    description:
+      'A powerful ray that destroys enemies on contact (except bosses), duration # sec',
+    kind: 'sec',
+    stars: [2.3, 2.7, 3.1, 3.5, 3.9, 4.4, 4.9],
+  },
+  energyNet: {
+    rarity: 'epic',
+    description: 'Fire a special net at a boss immobilizing it for # sec',
+    kind: 'sec',
+    stars: [2.5, 2.8, 3.1, 3.4, 3.7, 4, 4.3],
+  },
+  superTower: {
+    rarity: 'epic',
+    description:
+      'Tower becomes super for 15 sec; damage ×# (30 sec cooldown)',
+    kind: 'mult',
+    stars: [2.5, 2.9, 3.3, 3.7, 4.1, 4.5, 5],
+  },
+  secondWind: {
+    rarity: 'epic',
+    description:
+      'Revive the tower with half health once per round; invincible shield for # sec',
+    kind: 'sec',
+    stars: [10, 15, 20, 25, 30, 35, 40],
+  },
+  demonMode: {
+    rarity: 'epic',
+    description:
+      'Once per round: Demon mode — ×3 damage and invincible for # sec',
+    kind: 'sec',
+    stars: [180, 200, 220, 240, 260, 280, 300],
+  },
+  energyShield: {
+    rarity: 'epic',
+    description: 'Shield ignores a single attack; replenishes after # min',
+    kind: 'min',
+    stars: [20, 18, 16, 14, 12, 10, 8],
+  },
+  waveAccelerator: {
+    rarity: 'epic',
+    description: 'Reduce the cooldown between waves by #%',
+    kind: 'percent',
+    stars: [30, 34, 38, 42, 46, 50, 54],
+  },
+  berserker: {
+    rarity: 'epic',
+    description:
+      'Increase damage by #% of total damage absorbed this round (max ×8 tower damage)',
+    kind: 'addPercent',
+    stars: [0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4],
+  },
+  ultimateCrit: {
+    rarity: 'epic',
+    description:
+      'Ultimate weapons gain a #% chance to deal critical damage at tower critical factor',
+    kind: 'addPercent',
+    stars: [1, 1.33, 1.66, 2, 2.33, 2.66, 3],
+    milestone: 'Tier 14 Wave 50',
+  },
+  nuke: {
+    rarity: 'epic',
+    description: 'Destroys #% of enemies',
+    kind: 'percent',
+    stars: [25, 35, 45, 55, 65, 80, 100],
+    milestone: 'Tier 11 Wave 10',
+  },
+  areaOfEffect: {
+    rarity: 'epic',
+    description:
+      'Increase AoE damage for Inner Land Mine, Poison Swamp, Smart Missile, Flame Bot, and Land Mine by #%',
+    kind: 'percent',
+    stars: [5, 8, 11, 14, 17, 20, 25],
+    milestone: 'Tier 20 Wave 80',
+  },
+}
+
+export function workshopGameCardWiki(id: WorkshopGameCardId): WorkshopGameCardWikiDef {
+  return WORKSHOP_GAME_CARD_WIKI[id]
+}
+
+export function workshopGameCardStarValue(id: WorkshopGameCardId, stars: number): number | null {
+  const s = Math.trunc(stars)
+  if (s <= 0) return null
+  const row = WORKSHOP_GAME_CARD_WIKI[id].stars
+  if (s > row.length) return row[row.length - 1]!
+  return row[s - 1]!
+}
+
+function formatNum(n: number): string {
+  if (Number.isInteger(n)) return String(n)
+  const t = n.toFixed(2)
+  return t.replace(/\.?0+$/, '')
+}
+
+function formatWorkshopGameCardEffectValue(
+  id: WorkshopGameCardId,
+  value: number,
+): string {
+  const kind = WORKSHOP_GAME_CARD_WIKI[id].kind
+  switch (kind) {
+    case 'mult':
+      return `×${formatNum(value)}`
+    case 'percent':
+      return `${formatNum(value)}%`
+    case 'addPercent':
+      return `+${formatNum(value)}%`
+    case 'sec':
+      return `${formatNum(value)}s`
+    case 'min':
+      return `${formatNum(value)}m`
+    case 'flat':
+      return formatNum(value)
+    default:
+      return formatNum(value)
+  }
+}
+
+/** Display string for the wiki Lv.N effect (stars 1…7). */
+export function formatWorkshopGameCardStarEffect(
+  id: WorkshopGameCardId,
+  stars: number,
+): string {
+  const v = workshopGameCardStarValue(id, stars)
+  if (v == null) return ''
+  return formatWorkshopGameCardEffectValue(id, v)
+}
+
+/** Star effect scaled by Card Mastery tier (× labels from research). */
+export function formatWorkshopGameCardStarEffectWithMastery(
+  id: WorkshopGameCardId,
+  stars: number,
+  masteryMultiplier: number,
+): string {
+  const v = workshopGameCardStarValue(id, stars)
+  if (v == null) return ''
+  const mult =
+    masteryMultiplier > 0 && Number.isFinite(masteryMultiplier) ? masteryMultiplier : 1
+  if (mult === 1) return formatWorkshopGameCardEffectValue(id, v)
+  return formatWorkshopGameCardEffectValue(id, v * mult)
+}
+
+/** Berserker rate as fraction of damage taken (wiki % → sim). */
+export function workshopBerserkerCardRateFromStars(stars: number): number {
+  const v = workshopGameCardStarValue('berserker', stars)
+  return v == null ? 0 : v / 100
+}
+
+export function clampWorkshopCardEquipSlots(n: number): number {
+  if (!Number.isFinite(n)) return WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS
+  return Math.max(1, Math.min(WORKSHOP_CARD_MAX_SLOTS_HARMONY, Math.trunc(n)))
+}
+
+export function defaultCardPresetLoadouts(): WorkshopGameCardId[][] {
+  return Array.from({ length: WORKSHOP_CARD_PRESET_COUNT }, () => [])
+}
+
+export function sanitizeCardPresetLoadouts(raw: unknown): WorkshopGameCardId[][] {
+  const empty = defaultCardPresetLoadouts()
+  if (!Array.isArray(raw)) return empty
+  return empty.map((_, i) => {
+    const row = raw[i]
+    if (!Array.isArray(row)) return []
+    const ids = new Set<WorkshopGameCardId>()
+    const out: WorkshopGameCardId[] = []
+    for (const item of row) {
+      if (typeof item !== 'string') continue
+      const id = item as WorkshopGameCardId
+      if (!(id in WORKSHOP_GAME_CARD_WIKI) || ids.has(id)) continue
+      ids.add(id)
+      out.push(id)
+    }
+    return out
+  })
+}

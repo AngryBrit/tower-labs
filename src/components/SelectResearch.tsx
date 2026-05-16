@@ -466,6 +466,18 @@ export const SelectResearch = forwardRef<
     onLabLevelOverridesChange?.(levelOverrides)
   }, [levelOverrides, onLabLevelOverridesChange])
 
+  /** Keep the active build's stored workshop in sync with live edits (e.g. Reset Cards). */
+  useEffect(() => {
+    if (!hydrated || activePresetId == null) return
+    setPresets((prev) =>
+      prev.map((p) =>
+        p.id === activePresetId
+          ? { ...p, workshop: { ...workshopPersisted } }
+          : p,
+      ),
+    )
+  }, [workshopPersisted, activePresetId, hydrated])
+
   useEffect(() => {
     if (!hydrated) return
     try {
@@ -700,12 +712,10 @@ export const SelectResearch = forwardRef<
       prev.map((p) => ({
         ...p,
         levelOverrides: {},
-        workshop: defaultWorkshopPersisted(),
       })),
     )
-    setScratchWorkshopPersisted(defaultWorkshopPersisted())
     setImportNotice(t('sr_notice_reset_all'))
-  }, [setScratchWorkshopPersisted, t])
+  }, [t])
 
   const handleExportLevels = useCallback(() => {
     const date = new Date().toISOString().slice(0, 10)

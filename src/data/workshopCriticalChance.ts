@@ -25,8 +25,13 @@ export function workshopCriticalChancePercent(completedLevels: number): number {
 }
 
 /** Same as wiki **Value**, shown with a **`%`** suffix (`1%` … `80%`). */
-export function workshopCriticalChanceStatDisplay(completedLevels: number): string {
-  return `${workshopCriticalChancePercent(completedLevels)}%`
+export function workshopCriticalChanceStatDisplay(
+  completedLevels: number,
+  extraPercentPoints = 0,
+): string {
+  const extra = Number.isFinite(extraPercentPoints) ? extraPercentPoints : 0
+  const total = workshopCriticalChancePercent(completedLevels) + extra
+  return `${total}%`
 }
 
 function marginalCoinsPurchaseEndingAt(targetLevel: number): number | undefined {

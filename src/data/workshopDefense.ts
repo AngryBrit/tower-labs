@@ -227,6 +227,8 @@ export type WorkshopDefenseStatDisplayOpts = {
   landMineDamageLabPercentPoints?: number
   wallHealthLabPercentPoints?: number
   wallRebuildLabSecondsReduction?: number
+  /** Equipped Extra Defense card (additive % points). */
+  defensePercentCardPercentPoints?: number
 }
 
 export function workshopDefenseStatDisplay(
@@ -263,10 +265,11 @@ export function workshopDefenseStatDisplay(
       return workshopDefenseAbsoluteStatDisplay(completedLevels)
     }
     case 'defensePercentLevel': {
-      const labPts = opts?.defensePercentLabPercentPoints
-      if (labPts !== undefined && Number.isFinite(labPts)) {
+      const labPts = opts?.defensePercentLabPercentPoints ?? 0
+      const cardPts = opts?.defensePercentCardPercentPoints ?? 0
+      if (labPts !== 0 || cardPts !== 0) {
         const w = workshopDefensePercentStatPercentPoints(completedLevels)
-        return `+${(w + labPts).toFixed(2)}%`
+        return `+${(w + labPts + cardPts).toFixed(2)}%`
       }
       return workshopDefensePercentStatDisplay(completedLevels)
     }

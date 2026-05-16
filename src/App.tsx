@@ -14,6 +14,9 @@ import './App.css'
 
 type MainPanel = 'research' | 'workshop' | 'modules' | 'cards' | 'toolsSettings'
 
+/** Top-level Modules tab (panel + nav) — set true when ready to ship. */
+const MODULES_PANEL_ENABLED = false
+
 export default function App() {
   const { t, fmt } = useI18n()
   const [mainPanel, setMainPanel] = useState<MainPanel>('research')
@@ -43,9 +46,23 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const tab = workshopPersisted.mainTab
-    if (tab === 'modules') setMainPanel('modules')
-    else if (tab === 'cards') setMainPanel('cards')
+    if (!MODULES_PANEL_ENABLED && workshopPersisted.mainTab === 'modules') {
+      setWorkshopPersisted((w) =>
+        w.mainTab === 'modules' ? { ...w, mainTab: 'upgrade' } : w,
+      )
+    }
+  }, [workshopPersisted.mainTab])
+
+  useEffect(() => {
+    if (!MODULES_PANEL_ENABLED && mainPanel === 'modules') {
+      setMainPanel('workshop')
+    }
+  }, [mainPanel])
+
+  useEffect(() => {
+    if (workshopPersisted.mainTab === 'cards') {
+      setMainPanel('cards')
+    }
   }, [workshopPersisted.mainTab])
 
   useEffect(() => {
@@ -97,7 +114,11 @@ export default function App() {
                 aria-label={t('app_inpanel_tabs_aria')}
               >
                 <nav
-                  className="select-research__inpanel-tabs"
+                  className={
+                    MODULES_PANEL_ENABLED
+                      ? 'select-research__inpanel-tabs'
+                      : 'select-research__inpanel-tabs select-research__inpanel-tabs--four'
+                  }
                   role="tablist"
                 >
                   <button
@@ -137,24 +158,6 @@ export default function App() {
                     {t('app_nav_workshop')}
                   </button>
                   <button
-                    id="inpanel-tab-modules"
-                    type="button"
-                    role="tab"
-                    aria-selected={mainPanel === 'modules'}
-                    aria-controls="inpanel-panel-modules"
-                    className={
-                      mainPanel === 'modules'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
-                    }
-                    onClick={() => {
-                      setMainPanel('modules')
-                      setWorkshopPersisted({ ...workshopPersisted, mainTab: 'modules' })
-                    }}
-                  >
-                    {t('app_nav_modules')}
-                  </button>
-                  <button
                     id="inpanel-tab-cards"
                     type="button"
                     role="tab"
@@ -172,6 +175,26 @@ export default function App() {
                   >
                     {t('app_nav_cards')}
                   </button>
+                  {MODULES_PANEL_ENABLED ? (
+                    <button
+                      id="inpanel-tab-modules"
+                      type="button"
+                      role="tab"
+                      aria-selected={mainPanel === 'modules'}
+                      aria-controls="inpanel-panel-modules"
+                      className={
+                        mainPanel === 'modules'
+                          ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
+                          : 'select-research__inpanel-tab'
+                      }
+                      onClick={() => {
+                        setMainPanel('modules')
+                        setWorkshopPersisted({ ...workshopPersisted, mainTab: 'modules' })
+                      }}
+                    >
+                      {t('app_nav_modules')}
+                    </button>
+                  ) : null}
                   <button
                     id="inpanel-tab-tools-settings"
                     type="button"
@@ -203,7 +226,7 @@ export default function App() {
                 <div
                   ref={setInpanelWorkshopToolbarMount}
                   className="select-research__inpanel-workshop-toolbar-slot"
-                  hidden={mainPanel !== 'workshop'}
+                  hidden={mainPanel !== 'workshop' && mainPanel !== 'cards'}
                 />
 
                 <div
@@ -244,6 +267,24 @@ export default function App() {
                   />
                 </div>
                 <div
+                  id="inpanel-panel-cards"
+                  role="tabpanel"
+                  aria-labelledby="inpanel-tab-cards"
+                  hidden={mainPanel !== 'cards'}
+                >
+                  <CardsPage
+                    embeddedInPanel
+                    toolbarMount={
+                      mainPanel === 'cards' ? inpanelWorkshopToolbarMount : null
+                    }
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
+                    onScratchWorkshopPersistedChange={setScratchWorkshopPersisted}
+                    researchData={data}
+                    labLevelOverrides={labLevelOverrides}
+                  />
+                </div>
+                <div
                   id="inpanel-panel-modules"
                   role="tabpanel"
                   aria-labelledby="inpanel-tab-modules"
@@ -255,18 +296,6 @@ export default function App() {
                     onWorkshopPersistedChange={setWorkshopPersisted}
                     researchData={data}
                     labLevelOverrides={labLevelOverrides}
-                  />
-                </div>
-                <div
-                  id="inpanel-panel-cards"
-                  role="tabpanel"
-                  aria-labelledby="inpanel-tab-cards"
-                  hidden={mainPanel !== 'cards'}
-                >
-                  <CardsPage
-                    embeddedInPanel
-                    workshopPersisted={workshopPersisted}
-                    onWorkshopPersistedChange={setWorkshopPersisted}
                   />
                 </div>
                 <div

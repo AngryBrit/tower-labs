@@ -7,7 +7,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.1.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.2.0-2ea44f)
 
 ---
 
@@ -17,8 +17,9 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 - **Lab economics** — Upgrade costs and build times from [`src/data/tower-labs.json`](src/data/tower-labs.json), aligned with the in-game lab grid.
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
 - **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves).
-- **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, card stars (damage, attack speed, berserker), relics, perk quantity, and assist-module substats from your lab levels.
-- **Cards & modules simulators** — Star ratings and assist chassis selection feed the displayed-stat formulas; module substats pull from MODULES research labs when data is loaded.
+- **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
+- **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Equipped cards on the active preset feed workshop displayed-stat formulas.
+- **Modules simulator** — Assist chassis selection and cannon submodule effects; module substats pull from MODULES research labs when data is loaded.
 - **Unified CSV backup** — Export and import a single CSV that carries both lab `key,level` rows and a `ws,…` workshop snapshot (upgrade, enhance, sim, and tab state) via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
 - **Shareable builds** — Encode the current lab selection in the `?labs=` query string; optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
@@ -101,7 +102,8 @@ node scripts/write-research-overlay.mjs
 | [`src/types/research.ts`](src/types/research.ts) | Typed parsing and validation helpers for research JSON. |
 | [`src/loadResearchData.ts`](src/loadResearchData.ts) | Fetches manifest + sections and returns typed `ResearchData`. |
 | [`src/components/`](src/components/) | UI: research (`SelectResearch`, `ResearchCard`, …), workshop (`WorkshopPage`, enhance panels, cards/modules panels), `LabCompareDialog`, `ToolsSettingsPage`, and related pieces. |
-| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, card/module simulators, and Vitest coverage. |
+| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts (`workshopGameCards`, `workshopGameCardWiki`, `workshopCardMastery`, `workshopCardWorkshopDisplay`), module simulators, and Vitest coverage. |
+| [`public/*.webp`](public/) | Resource glyphs (coin, cash, …) and per-card art (`Damage.webp`, `Berserker.webp`, …) used by the Cards UI. |
 | [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish research overlay, and benefit translation helpers. |
 | [`src/labCompare.ts`](src/labCompare.ts), [`src/labBudgetAggregates.ts`](src/labBudgetAggregates.ts), [`src/workshopCompare.ts`](src/workshopCompare.ts), [`src/workshopBudgetAggregates.ts`](src/workshopBudgetAggregates.ts), … | Lab and workshop comparison, budgets, presets, slugs, share codec, and unified CSV. |
 | [`src/budgetPanelsVisibility.ts`](src/budgetPanelsVisibility.ts) | Toggle for showing lab and workshop budget summary panels (persisted). |

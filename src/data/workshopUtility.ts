@@ -29,16 +29,19 @@ import {
   WORKSHOP_FREE_ATTACK_UPGRADE_MAX_LEVEL,
   workshopFreeAttackUpgradeNextMarginalCoins,
   workshopFreeAttackUpgradeStatDisplay,
+  workshopFreeAttackUpgradeStatPercentPoints,
 } from './workshopFreeAttackUpgrade'
 import {
   WORKSHOP_FREE_DEFENSE_UPGRADE_MAX_LEVEL,
   workshopFreeDefenseUpgradeNextMarginalCoins,
   workshopFreeDefenseUpgradeStatDisplay,
+  workshopFreeDefenseUpgradeStatPercentPoints,
 } from './workshopFreeDefenseUpgrade'
 import {
   WORKSHOP_FREE_UTILITY_UPGRADE_MAX_LEVEL,
   workshopFreeUtilityUpgradeNextMarginalCoins,
   workshopFreeUtilityUpgradeStatDisplay,
+  workshopFreeUtilityUpgradeStatPercentPoints,
 } from './workshopFreeUtilityUpgrade'
 import {
   WORKSHOP_INTEREST_PER_WAVE_MAX_LEVEL,
@@ -222,12 +225,36 @@ export function workshopUtilityStatDisplay(
       }
       return workshopInterestPerWaveStatDisplay(completedLevels)
     }
-    case 'freeAttackUpgradeLevel':
+    case 'freeAttackUpgradeLevel': {
+      const card = opts?.freeUpgradesCardPercentPoints ?? 0
+      if (card > 0) {
+        return formatAdditivePercentPoints(
+          workshopFreeAttackUpgradeStatPercentPoints(completedLevels),
+          card,
+        )
+      }
       return workshopFreeAttackUpgradeStatDisplay(completedLevels)
-    case 'freeDefenseUpgradeLevel':
+    }
+    case 'freeDefenseUpgradeLevel': {
+      const card = opts?.freeUpgradesCardPercentPoints ?? 0
+      if (card > 0) {
+        return formatAdditivePercentPoints(
+          workshopFreeDefenseUpgradeStatPercentPoints(completedLevels),
+          card,
+        )
+      }
       return workshopFreeDefenseUpgradeStatDisplay(completedLevels)
-    case 'freeUtilityUpgradeLevel':
+    }
+    case 'freeUtilityUpgradeLevel': {
+      const card = opts?.freeUpgradesCardPercentPoints ?? 0
+      if (card > 0) {
+        return formatAdditivePercentPoints(
+          workshopFreeUtilityUpgradeStatPercentPoints(completedLevels),
+          card,
+        )
+      }
       return workshopFreeUtilityUpgradeStatDisplay(completedLevels)
+    }
     case 'recoveryAmountLevel': {
       const lab = opts?.recoveryAmountLabPercentPoints
       if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
@@ -250,9 +277,13 @@ export function workshopUtilityStatDisplay(
       return workshopMaxRecoveryStatDisplay(completedLevels)
     }
     case 'packageChanceLevel': {
-      const lab = opts?.packageChanceLabPercentPoints
-      if (lab !== undefined && Number.isFinite(lab) && lab > 0) {
-        return formatAdditivePercentPoints(workshopPackageChanceStatPercent(completedLevels), lab)
+      const lab = opts?.packageChanceLabPercentPoints ?? 0
+      const card = opts?.packageChanceCardPercentPoints ?? 0
+      if (lab > 0 || card > 0) {
+        return formatAdditivePercentPoints(
+          workshopPackageChanceStatPercent(completedLevels),
+          lab + card,
+        )
       }
       return workshopPackageChanceStatDisplay(completedLevels)
     }

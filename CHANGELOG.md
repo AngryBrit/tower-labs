@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-05-16
+
+### Added
+
+- **Full card inventory**: All **31 in-game cards** with wiki-aligned star tables (Lv.1–7), rarities, descriptions, and gem slot costs (`workshopGameCards`, `workshopGameCardWiki`); WebP art in `public/` for each card.
+- **Card loadouts**: Five **preset tabs**, per-preset equip lists, configurable **equip slots** (up to 28 with Harmony keys), and star controls on the **Cards** page (`WorkshopCardsPanel`, `CardsPage`).
+- **Card Mastery**: Card Mastery lab levels from the research `card-mastery` section scale equipped card effects via tier multipliers (`workshopCardMastery`).
+- **Workshop stat wiring**: Equipped cards on the active preset (stars × Card Mastery) feed **displayed damage**, **attack speed**, and other workshop upgrade readouts (`workshopCardWorkshopDisplay`).
+- **Reset cards**: Toolbar control and confirmation dialog to clear card stars, presets, and equip slots without touching workshop upgrade/enhance levels (`resetWorkshopCards`).
+- **Tests**: Vitest coverage for card wiki tables, mastery multipliers, equipped-star rules, preset loadouts, and displayed-stat merges.
+
+### Changed
+
+- **Persistence**: `WorkshopPersistedV1` adds `cardStars`, `cardPresetLoadouts`, `cardActivePresetIndex`, and `cardEquipSlots`; legacy `simDamageCardStars` / `simAttackSpeedCardStars` / `simBerserkerCardStars` migrate into the new card model on load.
+- **Workshop reset**: `resetWorkshopUpgradeLevels` now preserves card loadouts; card-only reset is separate from upgrade/enhance reset.
+- **Displayed stats**: Damage, attack speed, defense, and utility workshop modules merge lab multipliers with equipped-card products (`workshopCardMultProduct`, `workshopCardAddPercentPoints`).
+- **i18n**: EN/ES strings for all 31 card names, the Cards page, preset tabs, equip slots, and reset-cards affordances.
+
 ## [2.1.0] - 2026-05-16
 
 ### Added

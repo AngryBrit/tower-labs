@@ -24,6 +24,8 @@ export type WorkshopAttackLabDisplayOpts = {
   damagePerMeterLabMultiplier?: number
   superCritChanceLabPercentPoints?: number
   superCritMultLabMultiplier?: number
+  /** Equipped Critical Chance card (additive % points). */
+  criticalChanceCardPercentPoints?: number
 }
 
 export type WorkshopUtilityLabDisplayOpts = {
@@ -37,6 +39,10 @@ export type WorkshopUtilityLabDisplayOpts = {
   packageChanceLabPercentPoints?: number
   enemyAttackLevelSkipLabPercentPoints?: number
   enemyHealthLevelSkipLabPercentPoints?: number
+  /** Equipped Free Upgrades card (additive % to all free-upgrade rows). */
+  freeUpgradesCardPercentPoints?: number
+  /** Equipped Recovery Package Chance card (additive % points). */
+  packageChanceCardPercentPoints?: number
 }
 
 export function buildWorkshopDefenseLabDisplayOpts(

@@ -128,7 +128,10 @@ import { WorkshopEnhanceAttackPanel } from './WorkshopEnhanceAttackPanel'
 import { WorkshopEnhanceDefensePanel } from './WorkshopEnhanceDefensePanel'
 import { WorkshopEnhanceUtilityPanel } from './WorkshopEnhanceUtilityPanel'
 import { formatCoinAbbrev } from '../labCosts'
-import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
+import {
+  resetWorkshopUpgradeLevels,
+  type WorkshopPersistedV1,
+} from '../labPresetsStorage'
 import {
   computeWorkshopCoinAggregates,
   computeWorkshopStoneAggregates,
@@ -140,11 +143,17 @@ import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import {
+  workshopCardAddPercentPoints,
+  workshopCardMultProduct,
+  mergeLabAndCardMult,
+} from '../data/workshopCardWorkshopDisplay'
+import {
   buildWorkshopAttackLabDisplayOpts,
   buildWorkshopDefenseLabDisplayOpts,
   buildWorkshopUtilityLabDisplayOpts,
   type WorkshopAttackLabDisplayOpts,
 } from '../data/workshopLabDisplayOpts'
+import type { WorkshopGameCardId } from '../data/workshopGameCards'
 import {
   applyWorkshopDiscountToCoins,
   resolveEnhancementAttackDiscountPercent,
@@ -582,7 +591,11 @@ function WorkshopCriticalChanceCard({
     workshopCriticalChanceNextMarginalCoins(level),
     coinDiscountPercent,
   )
-  const statLabel = workshopCriticalChanceStatDisplay(level)
+  const attackLabOpts = useWorkshopAttackLabDisplayOpts()
+  const statLabel = workshopCriticalChanceStatDisplay(
+    level,
+    attackLabOpts?.criticalChanceCardPercentPoints ?? 0,
+  )
   const stepHint = `×${bulkStep}`
 
   return (
@@ -2272,20 +2285,89 @@ export function WorkshopPage({
   const workshopMainTab =
     mainTab === 'modules' || mainTab === 'cards' ? 'upgrade' : mainTab
 
-  const defenseStatLabDisplayOpts = useMemo(
-    () => buildWorkshopDefenseLabDisplayOpts(researchData, labLevelOverrides),
-    [researchData, labLevelOverrides],
-  )
+  const defenseStatLabDisplayOpts = useMemo((): WorkshopDefenseStatDisplayOpts | undefined => {
+    const lab = buildWorkshopDefenseLabDisplayOpts(researchData, labLevelOverrides)
+    const cardMult = (id: WorkshopGameCardId) =>
+      workshopCardMultProduct(workshopPersisted, researchData, labLevelOverrides, id)
+    const cardAdd = (id: WorkshopGameCardId) =>
+      workshopCardAddPercentPoints(workshopPersisted, researchData, labLevelOverrides, id)
+    const extraDefense = cardAdd('extraDefense')
+    const enriched: WorkshopDefenseStatDisplayOpts = {
+      ...(lab ?? {}),
+      healthLabMultiplier: mergeLabAndCardMult(lab?.healthLabMultiplier, cardMult('health')),
+      healthRegenLabMultiplier: mergeLabAndCardMult(
+        lab?.healthRegenLabMultiplier,
+        cardMult('healthRegen'),
+      ),
+      defenseAbsoluteLabMultiplier: mergeLabAndCardMult(
+        lab?.defenseAbsoluteLabMultiplier,
+        cardMult('fortress'),
+      ),
+      defensePercentCardPercentPoints: extraDefense > 0 ? extraDefense : undefined,
+    }
+    if (
+      lab == null &&
+      cardMult('health') === 1 &&
+      cardMult('healthRegen') === 1 &&
+      cardMult('fortress') === 1 &&
+      extraDefense === 0
+    ) {
+      return undefined
+    }
+    return enriched
+  }, [researchData, labLevelOverrides, workshopPersisted])
 
-  const attackStatLabDisplayOpts = useMemo(
-    () => buildWorkshopAttackLabDisplayOpts(researchData, labLevelOverrides),
-    [researchData, labLevelOverrides],
-  )
+  const attackStatLabDisplayOpts = useMemo((): WorkshopAttackLabDisplayOpts | undefined => {
+    const lab = buildWorkshopAttackLabDisplayOpts(researchData, labLevelOverrides)
+    const cardMult = (id: WorkshopGameCardId) =>
+      workshopCardMultProduct(workshopPersisted, researchData, labLevelOverrides, id)
+    const critCard = workshopCardAddPercentPoints(
+      workshopPersisted,
+      researchData,
+      labLevelOverrides,
+      'criticalChance',
+    )
+    const rangeMult = mergeLabAndCardMult(lab?.attackRangeLabMultiplier, cardMult('range'))
+    if (lab == null && critCard === 0 && rangeMult === undefined) {
+      return undefined
+    }
+    return {
+      ...(lab ?? {}),
+      attackRangeLabMultiplier: rangeMult,
+      criticalChanceCardPercentPoints: critCard > 0 ? critCard : undefined,
+    }
+  }, [researchData, labLevelOverrides, workshopPersisted])
 
-  const utilityStatLabDisplayOpts = useMemo(
-    () => buildWorkshopUtilityLabDisplayOpts(researchData, labLevelOverrides),
-    [researchData, labLevelOverrides],
-  )
+  const utilityStatLabDisplayOpts = useMemo((): WorkshopUtilityLabDisplayOpts | undefined => {
+    const lab = buildWorkshopUtilityLabDisplayOpts(researchData, labLevelOverrides)
+    const cardMult = (id: WorkshopGameCardId) =>
+      workshopCardMultProduct(workshopPersisted, researchData, labLevelOverrides, id)
+    const cardAdd = (id: WorkshopGameCardId) =>
+      workshopCardAddPercentPoints(workshopPersisted, researchData, labLevelOverrides, id)
+    const cash = cardMult('cash')
+    const coins = cardMult('coins')
+    const freeUpgrades = cardAdd('freeUpgrades')
+    const packageChance = cardAdd('recoveryPackageChance')
+    const enriched: WorkshopUtilityLabDisplayOpts = {
+      ...(lab ?? {}),
+      cashBonusLabMultiplier: mergeLabAndCardMult(lab?.cashBonusLabMultiplier, cash),
+      cashPerWaveLabMultiplier: mergeLabAndCardMult(lab?.cashPerWaveLabMultiplier, cash),
+      coinsKillBonusLabMultiplier: mergeLabAndCardMult(lab?.coinsKillBonusLabMultiplier, coins),
+      coinsWaveLabMultiplier: mergeLabAndCardMult(lab?.coinsWaveLabMultiplier, coins),
+      freeUpgradesCardPercentPoints: freeUpgrades > 0 ? freeUpgrades : undefined,
+      packageChanceCardPercentPoints: packageChance > 0 ? packageChance : undefined,
+    }
+    if (
+      lab == null &&
+      cash === 1 &&
+      coins === 1 &&
+      freeUpgrades === 0 &&
+      packageChance === 0
+    ) {
+      return undefined
+    }
+    return enriched
+  }, [researchData, labLevelOverrides, workshopPersisted])
 
   const damageDisplayOpts = useMemo(
     (): WorkshopDamageDisplayOpts | undefined =>
@@ -3050,9 +3132,9 @@ export function WorkshopPage({
 
   const performResetWorkshopDemo = useCallback(() => {
     setResetWorkshopConfirmOpen(false)
-    onWorkshopPersistedChange(defaultWorkshopPersisted())
+    onWorkshopPersistedChange(resetWorkshopUpgradeLevels(workshopPersisted))
     setMultiplierOpen(false)
-  }, [onWorkshopPersistedChange])
+  }, [onWorkshopPersistedChange, workshopPersisted])
 
   const openResetWorkshopConfirm = useCallback(() => {
     setMultiplierOpen(false)

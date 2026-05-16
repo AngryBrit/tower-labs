@@ -5,6 +5,7 @@
  * No intermediate rounding; format with `.toFixed(2)` only for display labels.
  */
 
+import { workshopCardMultProduct } from './workshopCardWorkshopDisplay'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 import { attackResearchAttackSpeedLabMultiplier, type ResearchData } from '../types/research'
 import { workshopEnhanceAttackSpeedMultiplier } from './workshopEnhanceAttack'
@@ -58,11 +59,13 @@ export function workshopAttackSpeedDisplayOptsFromPersisted(
   labOverrides: Record<string, number>,
 ): WorkshopAttackSpeedDisplayOpts | undefined {
   if (research == null) return undefined
+  const attackSpeedCardMultiplier =
+    ws.simAttackSpeedCardStars > 0
+      ? workshopCardMultProduct(ws, research, labOverrides, 'attackSpeed')
+      : 1
   return {
     labMultiplier: attackResearchAttackSpeedLabMultiplier(research, labOverrides),
-    attackSpeedCardMultiplier: workshopAttackSpeedCardMultiplier(
-      ws.simAttackSpeedCardStars,
-    ),
+    attackSpeedCardMultiplier,
     moduleSubEffect: ws.simAttackSpeedModuleSubEffect,
     enhancementsMultiplier: workshopEnhanceAttackSpeedMultiplier(
       ws.enhanceAttackSpeedLevel,

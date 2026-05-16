@@ -7,6 +7,8 @@
  * Berserker is a flat add after the product, capped at **+700%** of the pre-berserker product (**7×**).
  */
 
+import { workshopCardMasteryMultiplier } from './workshopCardMastery'
+import { workshopCardMultProduct } from './workshopCardWorkshopDisplay'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 import {
   attackResearchDamageLabMultiplier,
@@ -120,9 +122,17 @@ export function workshopDamageDisplayOptsFromPersisted(
   if (research == null) return undefined
 
   const workshop = workshopDamageStatAtLevel(ws.damageLevel)
+  const damageCardMultiplier =
+    ws.simDamageCardStars > 0
+      ? workshopCardMultProduct(ws, research, labOverrides, 'damage')
+      : 1
+  const berserkerMasteryMultiplier =
+    ws.simBerserkerCardStars > 0
+      ? workshopCardMasteryMultiplier('berserker', research, labOverrides)
+      : 1
   const base: WorkshopDamageDisplayOpts = {
     labMultiplier: attackResearchDamageLabMultiplier(research, labOverrides),
-    damageCardMultiplier: workshopDamageCardMultiplier(ws.simDamageCardStars),
+    damageCardMultiplier,
     relicsBonus: ws.simRelicsBonusFraction,
     cannonModulePercent: workshopCannonModulePercentFromLabs(
       research,
@@ -142,6 +152,7 @@ export function workshopDamageDisplayOptsFromPersisted(
       preBerserker,
       ws.simBerserkerDamageTaken,
       ws.simBerserkerCardStars,
+      berserkerMasteryMultiplier,
     ),
   }
 }

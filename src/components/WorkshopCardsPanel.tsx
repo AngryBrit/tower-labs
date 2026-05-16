@@ -1,127 +1,184 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
-  WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
-  WORKSHOP_BERSERKER_CARD_MAX_STARS,
-  WORKSHOP_DAMAGE_CARD_MAX_STARS,
-  workshopAttackSpeedCardMultiplier,
-  workshopBerserkerCardPercent,
-  workshopDamageCardMultiplier,
-} from '../data/workshopSimCards'
-import { formatCoinAbbrev } from '../labCosts'
+  clampWorkshopCardActivePresetIndex,
+  clampWorkshopGameCardStars,
+  WORKSHOP_GAME_CARD_COUNT,
+  WORKSHOP_GAME_CARD_ORDER,
+  workshopCardMirrorsPatch,
+  workshopGameCardArtVariant,
+  workshopGameCardGlow,
+  workshopGameCardDescription,
+  formatWorkshopGameCardStarEffectWithMastery,
+  workshopGameCardGlyph,
+  workshopGameCardImage,
+  workshopGameCardMaxStars,
+  workshopGameCardRarity,
+  workshopGameCardTitleId,
+  workshopGameCardWiki,
+  type WorkshopGameCardId,
+} from '../data/workshopGameCards'
+import {
+  clampWorkshopCardEquipSlots,
+  WORKSHOP_CARD_MAX_SLOTS_HARMONY,
+  WORKSHOP_CARD_PRESET_COUNT,
+} from '../data/workshopGameCardWiki'
+import {
+  workshopCardMasteryMultiplier,
+  workshopCardMasteryUnlockedSet,
+} from '../data/workshopCardMastery'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
+import type { ResearchData } from '../types/research'
 
 type WorkshopCardsPanelProps = {
   workshopPersisted: WorkshopPersistedV1
   onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
+  researchData: ResearchData | null
+  labLevelOverrides: Record<string, number>
 }
 
-function clampStars(n: number, max: number): number {
-  if (!Number.isFinite(n)) return 0
-  return Math.max(0, Math.min(max, Math.trunc(n)))
-}
+const CARD_PRESET_KEYS = [
+  'ws_cards_preset_1',
+  'ws_cards_preset_2',
+  'ws_cards_preset_3',
+  'ws_cards_preset_4',
+  'ws_cards_preset_5',
+] as const satisfies readonly StringId[]
 
-function WorkshopSimStarsCard({
-  labelId,
-  stars,
-  maxStars,
-  valueHint,
-  onBump,
-  onCommit,
+type CardArtVariant =
+  | 'damage'
+  | 'attackSpeed'
+  | 'berserker'
+  | 'cannon'
+  | 'relics'
+  | 'perk'
+  | 'taken'
+
+const CARDS_ACTIVE_SCROLL_ARROW_THRESHOLD = 4
+
+function CardsActiveScroller({
+  cardCount,
+  scrollKey,
+  children,
 }: {
-  labelId: StringId
-  stars: number
-  maxStars: number
-  valueHint: string
-  onBump: (dir: -1 | 1) => void
-  onCommit: (parsed: number) => void
+  cardCount: number
+  scrollKey: number
+  children: ReactNode
 }) {
   const { t } = useI18n()
-  const [draft, setDraft] = useState(String(stars))
+  const scrollRef = useRef<HTMLUListElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  const showArrows = cardCount > CARDS_ACTIVE_SCROLL_ARROW_THRESHOLD
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const maxScroll = el.scrollWidth - el.clientWidth
+    if (maxScroll <= 1) {
+      setCanScrollLeft(false)
+      setCanScrollRight(false)
+      return
+    }
+    setCanScrollLeft(el.scrollLeft > 2)
+    setCanScrollRight(el.scrollLeft < maxScroll - 2)
+  }, [])
 
   useEffect(() => {
-    setDraft(String(stars))
-  }, [stars])
+    const el = scrollRef.current
+    if (!el) return
+    updateScrollState()
+    if (!showArrows) return
+    el.addEventListener('scroll', updateScrollState, { passive: true })
+    const ro = new ResizeObserver(updateScrollState)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateScrollState)
+      ro.disconnect()
+    }
+  }, [cardCount, showArrows, updateScrollState])
 
-  const commit = () => {
-    const raw = draft.trim().replace(/,/g, '')
-    if (raw === '') {
-      setDraft(String(stars))
-      return
-    }
-    const n = Number(raw)
-    if (!Number.isFinite(n)) {
-      setDraft(String(stars))
-      return
-    }
-    onCommit(clampStars(n, maxStars))
-  }
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollLeft = 0
+    updateScrollState()
+  }, [scrollKey, updateScrollState])
+
+  const scrollActive = useCallback((dir: -1 | 1) => {
+    const el = scrollRef.current
+    if (!el) return
+    const tile = el.querySelector<HTMLElement>('.cards-tile')
+    const gap = Number.parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 0
+    const step = tile ? tile.offsetWidth + gap : el.clientWidth * 0.5
+    el.scrollBy({ left: dir * step, behavior: 'smooth' })
+  }, [])
 
   return (
-    <li className="workshop__card workshop__card--active workshop__card--sim">
-      <div className="workshop__card-damage-head">
-        <span className="workshop__card-name">{t(labelId)}</span>
-        <span className="workshop__card-value">{valueHint}</span>
-      </div>
-      <div className="workshop__card-level-row">
+    <div
+      className={
+        showArrows
+          ? 'cards-active-scroller cards-active-scroller--arrows'
+          : 'cards-active-scroller'
+      }
+    >
+      {showArrows ? (
         <button
           type="button"
-          className="workshop__level-step"
-          aria-label={t('ws_sim_stars_down_aria')}
-          disabled={stars <= 0}
-          onClick={() => onBump(-1)}
+          className="cards-active-scroller__btn cards-active-scroller__btn--prev"
+          aria-label={t('ws_cards_active_scroll_left')}
+          disabled={!canScrollLeft}
+          onClick={() => scrollActive(-1)}
         >
-          −
+          <span aria-hidden>‹</span>
         </button>
-        <div className="workshop__level-field">
-          <input
-            className="workshop__level-input"
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            aria-label={t('ws_sim_stars_input_aria')}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                commit()
-                ;(e.target as HTMLInputElement).blur()
-              }
-            }}
-          />
-        </div>
+      ) : null}
+      <ul ref={scrollRef} className="cards-active-row">
+        {children}
+      </ul>
+      {showArrows ? (
         <button
           type="button"
-          className="workshop__level-step"
-          aria-label={t('ws_sim_stars_up_aria')}
-          disabled={stars >= maxStars}
-          onClick={() => onBump(1)}
+          className="cards-active-scroller__btn cards-active-scroller__btn--next"
+          aria-label={t('ws_cards_active_scroll_right')}
+          disabled={!canScrollRight}
+          onClick={() => scrollActive(1)}
         >
-          +
+          <span aria-hidden>›</span>
         </button>
-      </div>
-      <p className="workshop__sim-foot">
-        {t('ws_sim_stars_max')} {maxStars}
-      </p>
-    </li>
+      ) : null}
+    </div>
   )
 }
 
-function WorkshopSimNumberCard({
-  labelId,
+function CardStars({ stars, maxStars }: { stars: number; maxStars: number }) {
+  return (
+    <div className="cards-tile__stars" aria-hidden>
+      {Array.from({ length: maxStars }, (_, i) => (
+        <span
+          key={i}
+          className={i < stars ? 'cards-tile__star cards-tile__star--on' : 'cards-tile__star'}
+        />
+      ))}
+    </div>
+  )
+}
+
+function CardsTileStepper({
   value,
-  hintId,
-  formatValue,
+  min,
+  max,
+  inputAria,
+  onBump,
   onCommit,
 }: {
-  labelId: StringId
   value: number
-  hintId: StringId
-  formatValue: (n: number) => string
-  onCommit: (n: number) => void
+  min: number
+  max: number
+  inputAria: StringId
+  onBump: (dir: -1 | 1) => void
+  onCommit: (parsed: number) => void
 }) {
   const { t } = useI18n()
   const [draft, setDraft] = useState(String(value))
@@ -141,37 +198,149 @@ function WorkshopSimNumberCard({
       setDraft(String(value))
       return
     }
-    onCommit(Math.max(0, n))
+    onCommit(Math.max(min, Math.min(max, Math.trunc(n))))
   }
 
   return (
-    <li className="workshop__card workshop__card--active workshop__card--sim">
-      <div className="workshop__card-damage-head">
-        <span className="workshop__card-name">{t(labelId)}</span>
-        <span className="workshop__card-value">{formatValue(value)}</span>
+    <div className="cards-tile__stepper">
+      <button
+        type="button"
+        className="cards-tile__step"
+        aria-label={t('ws_sim_stars_down_aria')}
+        disabled={value <= min}
+        onClick={() => onBump(-1)}
+      >
+        −
+      </button>
+      <input
+        className="cards-tile__input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={t(inputAria)}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+      />
+      <button
+        type="button"
+        className="cards-tile__step"
+        aria-label={t('ws_sim_stars_up_aria')}
+        disabled={value >= max}
+        onClick={() => onBump(1)}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+function CardsStarTile({
+  cardId,
+  titleId,
+  artVariant,
+  glow,
+  glyph,
+  stars,
+  maxStars,
+  valueHint = '',
+  equipped = false,
+  masteryUnlocked = false,
+  statsLocked = false,
+  onToggleEquip,
+  onBump,
+  onCommit,
+}: {
+  cardId: WorkshopGameCardId
+  titleId: StringId
+  artVariant: CardArtVariant
+  glow: ReturnType<typeof workshopGameCardGlow>
+  glyph: string
+  stars: number
+  maxStars: number
+  valueHint?: string
+  equipped?: boolean
+  masteryUnlocked?: boolean
+  statsLocked?: boolean
+  onToggleEquip?: () => void
+  onBump: (dir: -1 | 1) => void
+  onCommit: (parsed: number) => void
+}) {
+  const { t } = useI18n()
+  const atMax = stars >= maxStars
+  const starsGold = stars >= 5
+  const rarity = workshopGameCardRarity(cardId)
+  const wiki = workshopGameCardWiki(cardId)
+  const desc = workshopGameCardDescription(cardId)
+  const title = wiki.milestone ? `${desc}\n\n${t('ws_cards_milestone')}: ${wiki.milestone}` : desc
+  const imageSrc = workshopGameCardImage(cardId)
+
+  const tileClass = [
+    'cards-tile',
+    `cards-tile--${artVariant}`,
+    `cards-tile--glow-${glow}`,
+    `cards-tile--${rarity}`,
+    equipped ? 'cards-tile--equipped' : '',
+    starsGold ? 'cards-tile--stars-gold' : '',
+    atMax ? 'cards-tile--max' : '',
+    masteryUnlocked ? 'cards-tile--mastery' : '',
+    statsLocked ? 'cards-tile--stats-locked' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <li
+      className={tileClass}
+      title={title}
+      onClick={onToggleEquip}
+      onKeyDown={(e) => {
+        if (onToggleEquip && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onToggleEquip()
+        }
+      }}
+      role={onToggleEquip ? 'button' : undefined}
+      tabIndex={onToggleEquip ? 0 : undefined}
+    >
+      <div className="cards-tile__head">
+        <span className="cards-tile__name">{t(titleId)}</span>
       </div>
-      <div className="workshop__card-level-row workshop__card-level-row--solo">
-        <div className="workshop__level-field workshop__level-field--wide">
-          <input
-            className="workshop__level-input"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            aria-label={t('ws_sim_number_input_aria')}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                commit()
-                ;(e.target as HTMLInputElement).blur()
-              }
-            }}
+      <div
+        className={imageSrc ? 'cards-tile__art cards-tile__art--img' : 'cards-tile__art'}
+        aria-hidden
+      >
+        {imageSrc ? (
+          <img className="cards-tile__img" src={imageSrc} alt="" />
+        ) : (
+          <span className="cards-tile__glyph">{glyph}</span>
+        )}
+      </div>
+      <CardStars stars={stars} maxStars={maxStars} />
+      {statsLocked ? null : (
+        <div
+          className="cards-tile__controls"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <CardsTileStepper
+            value={stars}
+            min={0}
+            max={maxStars}
+            inputAria="ws_sim_stars_input_aria"
+            onBump={onBump}
+            onCommit={onCommit}
           />
         </div>
-      </div>
-      <p className="workshop__sim-foot">{t(hintId)}</p>
+      )}
+      {valueHint ? <p className="cards-tile__stat">{valueHint}</p> : null}
     </li>
   )
 }
@@ -179,102 +348,207 @@ function WorkshopSimNumberCard({
 export function WorkshopCardsPanel({
   workshopPersisted,
   onWorkshopPersistedChange,
+  researchData,
+  labLevelOverrides,
 }: WorkshopCardsPanelProps) {
+  const { t } = useI18n()
+  const presetIndex = clampWorkshopCardActivePresetIndex(
+    workshopPersisted.cardActivePresetIndex,
+  )
+
+  const masteryUnlocked = useMemo(
+    () => workshopCardMasteryUnlockedSet(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
+  )
+
+  const masteryMultiplierByCard = useMemo(() => {
+    const map = new Map<WorkshopGameCardId, number>()
+    for (const id of WORKSHOP_GAME_CARD_ORDER) {
+      map.set(id, workshopCardMasteryMultiplier(id, researchData, labLevelOverrides))
+    }
+    return map
+  }, [researchData, labLevelOverrides])
+
   const patch = useCallback(
     (partial: Partial<WorkshopPersistedV1>) => {
-      onWorkshopPersistedChange({ ...workshopPersisted, ...partial })
+      onWorkshopPersistedChange({
+        ...workshopPersisted,
+        ...workshopCardMirrorsPatch(workshopPersisted, partial),
+      })
     },
     [onWorkshopPersistedChange, workshopPersisted],
   )
 
-  const damageMult = useMemo(
-    () => workshopDamageCardMultiplier(workshopPersisted.simDamageCardStars),
-    [workshopPersisted.simDamageCardStars],
-  )
-  const attackSpeedMult = useMemo(
-    () => workshopAttackSpeedCardMultiplier(workshopPersisted.simAttackSpeedCardStars),
-    [workshopPersisted.simAttackSpeedCardStars],
-  )
-  const berserkerPct = useMemo(
-    () => workshopBerserkerCardPercent(workshopPersisted.simBerserkerCardStars),
-    [workshopPersisted.simBerserkerCardStars],
+  const selectPreset = useCallback(
+    (i: number) => {
+      patch({ cardActivePresetIndex: clampWorkshopCardActivePresetIndex(i) })
+    },
+    [patch],
   )
 
+  const setCardStar = useCallback(
+    (id: WorkshopGameCardId, stars: number) => {
+      const nextStars = clampWorkshopGameCardStars(stars, id)
+      const cardStars = {
+        ...workshopPersisted.cardStars,
+        [id]: nextStars,
+      }
+      const partial: Partial<WorkshopPersistedV1> = { cardStars }
+      if (nextStars <= 0) {
+        partial.cardPresetLoadouts = workshopPersisted.cardPresetLoadouts.map((row) =>
+          row.filter((c) => c !== id),
+        )
+      }
+      patch(partial)
+    },
+    [patch, workshopPersisted.cardPresetLoadouts, workshopPersisted.cardStars],
+  )
+
+  const bumpCardStar = useCallback(
+    (id: WorkshopGameCardId, dir: -1 | 1) => {
+      setCardStar(id, workshopPersisted.cardStars[id] + dir)
+    },
+    [setCardStar, workshopPersisted.cardStars],
+  )
+
+  const presetLoadout = useMemo(
+    () => workshopPersisted.cardPresetLoadouts[presetIndex] ?? [],
+    [presetIndex, workshopPersisted.cardPresetLoadouts],
+  )
+
+  const equippedSet = useMemo(() => new Set(presetLoadout), [presetLoadout])
+
+  const inventoryCardIds = useMemo(
+    () => WORKSHOP_GAME_CARD_ORDER.filter((id) => !equippedSet.has(id)),
+    [equippedSet],
+  )
+
+  const setPresetLoadout = useCallback(
+    (next: WorkshopGameCardId[]) => {
+      const loadouts = workshopPersisted.cardPresetLoadouts.map((row, i) =>
+        i === presetIndex ? next : row,
+      )
+      while (loadouts.length < WORKSHOP_CARD_PRESET_COUNT) {
+        loadouts.push([])
+      }
+      patch({ cardPresetLoadouts: loadouts })
+    },
+    [patch, presetIndex, workshopPersisted.cardPresetLoadouts],
+  )
+
+  const toggleEquip = useCallback(
+    (id: WorkshopGameCardId) => {
+      const stars = workshopPersisted.cardStars[id]
+      if (stars <= 0) return
+      if (equippedSet.has(id)) {
+        setPresetLoadout(presetLoadout.filter((c) => c !== id))
+        return
+      }
+      if (presetLoadout.length >= workshopPersisted.cardEquipSlots) return
+      setPresetLoadout([...presetLoadout, id])
+    },
+    [
+      equippedSet,
+      presetLoadout,
+      setPresetLoadout,
+      workshopPersisted.cardEquipSlots,
+      workshopPersisted.cardStars,
+    ],
+  )
+
+  const renderCardTile = (
+    id: WorkshopGameCardId,
+    opts: { inventory?: boolean; active?: boolean },
+  ) => {
+    const stars = workshopPersisted.cardStars[id]
+    return (
+      <CardsStarTile
+        key={id}
+        cardId={id}
+        titleId={workshopGameCardTitleId(id)}
+        artVariant={workshopGameCardArtVariant(id)}
+        glow={workshopGameCardGlow(id)}
+        glyph={workshopGameCardGlyph(id)}
+        stars={stars}
+        maxStars={workshopGameCardMaxStars(id)}
+        valueHint={formatWorkshopGameCardStarEffectWithMastery(
+          id,
+          stars,
+          masteryMultiplierByCard.get(id) ?? 1,
+        )}
+        equipped={equippedSet.has(id)}
+        masteryUnlocked={masteryUnlocked.has(id)}
+        statsLocked={opts.active === true}
+        onToggleEquip={
+          opts.inventory || opts.active ? () => toggleEquip(id) : undefined
+        }
+        onBump={(dir) => bumpCardStar(id, dir)}
+        onCommit={(n) => setCardStar(id, n)}
+      />
+    )
+  }
+
   return (
-    <ul className="workshop__grid workshop__grid--sim">
-      <WorkshopSimStarsCard
-        labelId="ws_sim_damage_card"
-        stars={workshopPersisted.simDamageCardStars}
-        maxStars={WORKSHOP_DAMAGE_CARD_MAX_STARS}
-        valueHint={`×${damageMult.toFixed(2)}`}
-        onBump={(dir) =>
-          patch({
-            simDamageCardStars: clampStars(
-              workshopPersisted.simDamageCardStars + dir,
-              WORKSHOP_DAMAGE_CARD_MAX_STARS,
-            ),
-          })
-        }
-        onCommit={(n) => patch({ simDamageCardStars: n })}
-      />
-      <WorkshopSimStarsCard
-        labelId="ws_sim_attack_speed_card"
-        stars={workshopPersisted.simAttackSpeedCardStars}
-        maxStars={WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS}
-        valueHint={`×${attackSpeedMult.toFixed(2)}`}
-        onBump={(dir) =>
-          patch({
-            simAttackSpeedCardStars: clampStars(
-              workshopPersisted.simAttackSpeedCardStars + dir,
-              WORKSHOP_ATTACK_SPEED_CARD_MAX_STARS,
-            ),
-          })
-        }
-        onCommit={(n) => patch({ simAttackSpeedCardStars: n })}
-      />
-      <WorkshopSimNumberCard
-        labelId="ws_sim_attack_speed_sub_effect"
-        value={workshopPersisted.simAttackSpeedModuleSubEffect}
-        hintId="ws_sim_attack_speed_sub_hint"
-        formatValue={(n) => `+${n.toFixed(2)}`}
-        onCommit={(n) => patch({ simAttackSpeedModuleSubEffect: Math.max(0, n) })}
-      />
-      <WorkshopSimStarsCard
-        labelId="ws_sim_berserker_card"
-        stars={workshopPersisted.simBerserkerCardStars}
-        maxStars={WORKSHOP_BERSERKER_CARD_MAX_STARS}
-        valueHint={`${(berserkerPct * 100).toFixed(1)}%`}
-        onBump={(dir) =>
-          patch({
-            simBerserkerCardStars: clampStars(
-              workshopPersisted.simBerserkerCardStars + dir,
-              WORKSHOP_BERSERKER_CARD_MAX_STARS,
-            ),
-          })
-        }
-        onCommit={(n) => patch({ simBerserkerCardStars: n })}
-      />
-      <WorkshopSimNumberCard
-        labelId="ws_sim_relics_bonus"
-        value={workshopPersisted.simRelicsBonusFraction * 100}
-        hintId="ws_sim_relics_hint"
-        formatValue={(n) => `+${n.toFixed(1)}%`}
-        onCommit={(n) => patch({ simRelicsBonusFraction: n / 100 })}
-      />
-      <WorkshopSimNumberCard
-        labelId="ws_sim_perk_damage_quantity"
-        value={workshopPersisted.simPerkDamageQuantity}
-        hintId="ws_sim_perk_quantity_hint"
-        formatValue={(n) => String(Math.trunc(n))}
-        onCommit={(n) => patch({ simPerkDamageQuantity: Math.trunc(n) })}
-      />
-      <WorkshopSimNumberCard
-        labelId="ws_sim_berserker_damage_taken"
-        value={workshopPersisted.simBerserkerDamageTaken}
-        hintId="ws_sim_berserker_taken_hint"
-        formatValue={(n) => formatCoinAbbrev(n)}
-        onCommit={(n) => patch({ simBerserkerDamageTaken: n })}
-      />
-    </ul>
+    <div className="cards-layout">
+      <div className="cards-presets" role="toolbar" aria-label={t('ws_cards_presets_aria')}>
+        {CARD_PRESET_KEYS.map((key, i) => (
+          <button
+            key={key}
+            type="button"
+            className={
+              presetIndex === i ? 'cards-preset cards-preset--on' : 'cards-preset'
+            }
+            aria-pressed={presetIndex === i}
+            onClick={() => selectPreset(i)}
+          >
+            {t(key)}
+          </button>
+        ))}
+      </div>
+
+      <section className="cards-zone" aria-labelledby="cards-zone-active-title">
+        <header className="cards-zone__head">
+          <h3 id="cards-zone-active-title" className="cards-zone__title">
+            {t('ws_cards_active')}
+          </h3>
+          <p className="cards-zone__count cards-zone__count--slots" aria-live="polite">
+            <span className="cards-zone__count-equipped">{presetLoadout.length}</span>
+            <span className="cards-zone__count-sep" aria-hidden>
+              /
+            </span>
+            <input
+              className="cards-zone__count-input"
+              type="number"
+              min={1}
+              max={WORKSHOP_CARD_MAX_SLOTS_HARMONY}
+              value={workshopPersisted.cardEquipSlots}
+              aria-label={t('ws_cards_slots_aria')}
+              onChange={(e) =>
+                patch({
+                  cardEquipSlots: clampWorkshopCardEquipSlots(Number(e.target.value)),
+                })
+              }
+            />
+          </p>
+        </header>
+        <CardsActiveScroller cardCount={presetLoadout.length} scrollKey={presetIndex}>
+          {presetLoadout.map((id) => renderCardTile(id, { active: true }))}
+        </CardsActiveScroller>
+      </section>
+
+      <section className="cards-zone" aria-labelledby="cards-zone-inventory-title">
+        <header className="cards-zone__head">
+          <h3 id="cards-zone-inventory-title" className="cards-zone__title">
+            {t('ws_cards_inventory')}
+          </h3>
+          <p className="cards-zone__count" aria-live="polite">
+            {inventoryCardIds.length}/{WORKSHOP_GAME_CARD_COUNT}
+          </p>
+        </header>
+        <ul className="cards-inventory-grid">
+          {inventoryCardIds.map((id) => renderCardTile(id, { inventory: true }))}
+        </ul>
+      </section>
+    </div>
   )
 }
