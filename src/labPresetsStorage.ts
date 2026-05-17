@@ -903,7 +903,7 @@ export function buildLabPresetsPayload(
         : { ...workshopPersisted },
     ...(themes
       ? {
-          themeSelection: { ...themes.selection },
+          ...(themes.selection ? { themeSelection: { ...themes.selection } } : {}),
           themeOwnedIds: [...themes.ownedIds],
         }
       : {}),

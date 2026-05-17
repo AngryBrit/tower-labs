@@ -73,6 +73,10 @@ describe('towerUnifiedCsv', () => {
       ownedIds: ['tower-plasma', 'bg-interstellar'],
     }
     const csv = serializeTowerUnifiedCsv({ '2-2': 4 }, ws, undefined, themes)
+    expect(csv).toContain('theme,ownedIds,')
+    expect(csv).not.toContain('theme,selection,')
+    expect(csv).not.toContain('theme,owned,')
+    expect(csv).not.toContain('theme,sel.')
     const parsed = parseTowerUnifiedCsv(csv)
     expect(parsed.tag).toBe('ok')
     if (parsed.tag === 'ok') {
@@ -80,12 +84,27 @@ describe('towerUnifiedCsv', () => {
       expect(b.overrides['2-2']).toBe(4)
       expect(b.workshop.simAssistModuleSlot).toBe('armor')
       expect(b.workshop.cardStars.damage).toBe(5)
-      expect(parsed.themes?.selection.tower).toBe('tower-plasma')
+      expect(parsed.themes?.selection).toBeUndefined()
       expect(parsed.themes?.ownedIds).toContain('tower-plasma')
     }
   })
 
-  it('returns none for legacy lab-only CSV', () => {
+  it('rejects non-ownedIds theme rows', () => {
+    const lines = [
+      TOWER_UNIFIED_CSV_MAGIC,
+      'type,key,value',
+      'theme,sel.tower,tower-plasma',
+    ]
+    expect(parseTowerUnifiedCsv(lines.join('\n')).tag).toBe('invalid')
+    const selectionJson = [
+      TOWER_UNIFIED_CSV_MAGIC,
+      'type,key,value',
+      'theme,selection,{"tower":"tower-plasma"}',
+    ]
+    expect(parseTowerUnifiedCsv(selectionJson.join('\n')).tag).toBe('invalid')
+  })
+
+  it('returns none for non-tower CSV', () => {
     const r = parseTowerUnifiedCsv('key,level\n0-0,1\n')
     expect(r.tag).toBe('none')
   })

@@ -4,50 +4,26 @@ import type { TowerThemesSnapshot } from './towerDataThemes'
 /** Query param name for encoded share payloads (`?tower=…`). */
 export const TOWER_SHARE_SEARCH_PARAM = 'tower'
 
-/** Legacy query param; still accepted when importing pasted URLs. */
-export const LABS_SHARE_SEARCH_PARAM_LEGACY = 'labs'
-
-/** @deprecated Use {@link TOWER_SHARE_SEARCH_PARAM}. */
-export const LABS_SHARE_SEARCH_PARAM = TOWER_SHARE_SEARCH_PARAM
-
-/** Read share payload from URL search params (`tower`, then legacy `labs`). */
 export function readShareEncodedFromUrlSearchParams(
   params: URLSearchParams,
 ): string | null {
-  return (
-    params.get(TOWER_SHARE_SEARCH_PARAM) ??
-    params.get(LABS_SHARE_SEARCH_PARAM_LEGACY)
-  )
+  return params.get(TOWER_SHARE_SEARCH_PARAM)
 }
 
 /** Remove share params from a URL after applying an imported link. */
 export function clearShareEncodedFromUrl(url: URL): void {
   url.searchParams.delete(TOWER_SHARE_SEARCH_PARAM)
-  url.searchParams.delete(LABS_SHARE_SEARCH_PARAM_LEGACY)
 }
 
-export type LabsShareFileV1 = { v: 1; o: Record<string, number> }
-export type LabsShareFileV2 = { v: 2; o: Record<string, number>; w?: unknown }
-export type LabsShareFileV3 = {
-  v: 3
+export type LabsShareFile = {
+  v: 4
   o: Record<string, number>
   w?: unknown
   /** Optional saved build name for display when the link is opened. */
   n?: string
+  /** Owned theme catalog IDs. */
+  t?: { owned: string[] }
 }
-export type LabsShareFileV4 = {
-  v: 4
-  o: Record<string, number>
-  w?: unknown
-  n?: string
-  /** Theme selection + owned catalog. */
-  t?: { sel: TowerThemesSnapshot['selection']; owned: string[] }
-}
-export type LabsShareFile =
-  | LabsShareFileV1
-  | LabsShareFileV2
-  | LabsShareFileV3
-  | LabsShareFileV4
 
 /**
  * Builds share URLs for the current share payload.
@@ -59,7 +35,6 @@ export function buildLabsShareUrls(
   pageHref: string,
 ): { clean: string; full: string } {
   const full = new URL(pageHref)
-  full.searchParams.delete(LABS_SHARE_SEARCH_PARAM_LEGACY)
   full.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
   const clean = new URL(full.origin + full.pathname)
   clean.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
@@ -70,19 +45,19 @@ export function isLabsShareFile(x: unknown): x is LabsShareFile {
   if (!x || typeof x !== 'object') return false
   const v = (x as { v?: unknown }).v
   const o = (x as { o?: unknown }).o
-  if (v !== 1 && v !== 2 && v !== 3 && v !== 4) return false
+  if (v !== 4) return false
   if (o === null || typeof o !== 'object' || Array.isArray(o)) return false
-  if ((v === 2 || v === 3) && 'w' in x) {
+  if ('w' in x) {
     const w = (x as { w?: unknown }).w
     if (w !== undefined && (w === null || typeof w !== 'object' || Array.isArray(w))) {
       return false
     }
   }
-  if ((v === 3 || v === 4) && 'n' in x) {
+  if ('n' in x) {
     const n = (x as { n?: unknown }).n
     if (n !== undefined && typeof n !== 'string') return false
   }
-  if (v === 4 && 't' in x) {
+  if ('t' in x) {
     const t = (x as { t?: unknown }).t
     if (t !== undefined && (t === null || typeof t !== 'object' || Array.isArray(t))) {
       return false
@@ -117,7 +92,6 @@ function fromBase64Url(s: string): Uint8Array {
 /**
  * Encodes lab overrides for use in `?tower=`. Uses raw DEFLATE when supported,
  * otherwise base64url JSON with an `u` prefix.
- * When `workshop` differs from defaults, uses **v:2** and embeds `w` so links restore workshop too.
  */
 export async function encodeLabsShareQueryValue(
   levelOverrides: Record<string, number>,
@@ -127,21 +101,16 @@ export async function encodeLabsShareQueryValue(
 ): Promise<string> {
   const trimmedName = buildName?.trim()
   const includeName = trimmedName != null && trimmedName.length > 0
-  const includeThemes = themes != null
+  const includeThemes = themes != null && themes.ownedIds.length > 0
   const includeWorkshop = workshop != null
 
-  const file: LabsShareFile =
-    includeThemes || includeWorkshop || includeName
-      ? {
-          v: 4,
-          o: levelOverrides,
-          ...(includeWorkshop ? { w: workshop } : {}),
-          ...(includeName ? { n: trimmedName } : {}),
-          ...(includeThemes
-            ? { t: { sel: themes.selection, owned: themes.ownedIds } }
-            : {}),
-        }
-      : { v: 1, o: levelOverrides }
+  const file: LabsShareFile = {
+    v: 4,
+    o: levelOverrides,
+    ...(includeWorkshop ? { w: workshop } : {}),
+    ...(includeName ? { n: trimmedName } : {}),
+    ...(includeThemes ? { t: { owned: themes.ownedIds } } : {}),
+  }
   const json = JSON.stringify(file)
   const bytes = new TextEncoder().encode(json)
 
@@ -181,7 +150,7 @@ export async function decodeLabsShareQueryValue(
     }
     const parsed: unknown = JSON.parse(json)
     if (!isLabsShareFile(parsed)) return null
-    return parsed as LabsShareFile
+    return parsed
   } catch {
     return null
   }

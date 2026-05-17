@@ -5,7 +5,6 @@ import {
   workshopAssistModuleLabPercentPoints,
   workshopAssistModuleLevel,
   workshopCannonModulePercentFromLabs,
-  clampWorkshopAssistModuleLevel,
   type WorkshopAssistModuleSlot,
 } from '../data/workshopSimModules'
 import {
@@ -89,59 +88,13 @@ type WorkshopModulesPanelProps = {
   labLevelOverrides: Record<string, number>
 }
 
-function ModuleLevelInput({
-  slot,
-  value,
-  onCommit,
-}: {
-  slot: WorkshopAssistModuleSlot
-  value: number
-  onCommit: (level: number) => void
-}) {
+function ModuleLevelDisplay({ value }: { value: number }) {
   const { t } = useI18n()
-  const [draft, setDraft] = useState(String(value))
-
-  useEffect(() => {
-    setDraft(String(value))
-  }, [value])
-
-  const commit = () => {
-    const raw = draft.trim().replace(/,/g, '')
-    if (raw === '') {
-      setDraft(String(value))
-      return
-    }
-    const n = Number(raw)
-    if (!Number.isFinite(n)) {
-      setDraft(String(value))
-      return
-    }
-    onCommit(clampWorkshopAssistModuleLevel(n))
-  }
-
   return (
-    <label className="modules-slot__level">
+    <span className="modules-slot__level" aria-hidden>
       <span className="modules-slot__level-prefix">{t('ws_modules_level_prefix')}</span>
-      <input
-        className="modules-slot__level-input"
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
-        aria-label={`${t('ws_modules_level_input_aria')} ${t(SLOT_LABEL[slot])}`}
-        value={draft}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          e.stopPropagation()
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            commit()
-            ;(e.target as HTMLInputElement).blur()
-          }
-        }}
-      />
-    </label>
+      <span className="modules-slot__level-value">{value}</span>
+    </span>
   )
 }
 
@@ -206,16 +159,12 @@ function ModuleSlotMetaBelow({
   name,
   moduleRarity,
   frameRole,
-  slot,
   moduleLevel,
-  onModuleLevelCommit,
 }: {
   name: string
   moduleRarity: WorkshopChassisModuleRarity
   frameRole: 'main' | 'assist'
-  slot: WorkshopAssistModuleSlot
   moduleLevel?: number
-  onModuleLevelCommit?: (level: number) => void
 }) {
   return (
     <span className="modules-slot__meta-below">
@@ -233,9 +182,7 @@ function ModuleSlotMetaBelow({
       >
         {name}
       </span>
-      {moduleLevel != null && onModuleLevelCommit != null ? (
-        <ModuleLevelInput slot={slot} value={moduleLevel} onCommit={onModuleLevelCommit} />
-      ) : null}
+      {moduleLevel != null ? <ModuleLevelDisplay value={moduleLevel} /> : null}
     </span>
   )
 }
@@ -335,7 +282,6 @@ function ModuleSlotFrame({
           name={equipped.name}
           moduleRarity={moduleRarity}
           frameRole={frameRole}
-          slot={slot}
         />
       ) : null}
     </span>
@@ -683,9 +629,7 @@ export function WorkshopModulesPanel({
                       name={equippedName}
                       moduleRarity={chassis.rarity}
                       frameRole="main"
-                      slot={key}
                       moduleLevel={level}
-                      onModuleLevelCommit={(next) => setModuleLevel(key, next)}
                     />
                   ) : null}
                 </div>
@@ -795,6 +739,7 @@ export function WorkshopModulesPanel({
               : workshopAssistChassisModuleSelection(workshopPersisted, pickerTarget.slot).rarity
           }
           moduleLevel={workshopAssistModuleLevel(workshopPersisted, pickerTarget.slot)}
+          onModuleLevelCommit={(next) => setModuleLevel(pickerTarget.slot, next)}
           heroStatContext={buildTowerHealthHeroStatContext(
             workshopPersisted,
             researchData,

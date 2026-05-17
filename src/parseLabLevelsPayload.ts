@@ -1,22 +1,16 @@
 import {
   decodeLabsShareQueryValue,
   isLabsShareFile,
-  LABS_SHARE_SEARCH_PARAM_LEGACY,
   TOWER_SHARE_SEARCH_PARAM,
   type LabsShareFile,
 } from './labsShareCodec'
-import { parseLabLevelOverridesCsv } from './labLevelOverridesCsv'
 import { sanitizeLevelOverrides } from './labLevelOverridesSanitize'
 import {
   sanitizeWorkshopPersisted,
   type WorkshopPersistedV1,
 } from './labPresetsStorage'
 import type { ResearchData } from './types/research'
-import {
-  sanitizeThemeOwnedIds,
-  sanitizeThemeSelection,
-  type TowerThemesSnapshot,
-} from './towerDataThemes'
+import { sanitizeThemeOwnedIds, type TowerThemesSnapshot } from './towerDataThemes'
 import { parseTowerUnifiedCsv, towerUnifiedPrimaryBuild } from './towerUnifiedCsv'
 
 export type ParseLabLevelsError =
@@ -34,23 +28,20 @@ export type ParseLabLevelsResult =
     }
   | { ok: false; error: ParseLabLevelsError }
 
-/** Extract `tower` (or legacy `labs`) query value from a pasted URL (percent-decoded). */
+/** Extract `tower` query value from a pasted URL (percent-decoded). */
 export function extractLabsShareEncodedFromText(text: string): string | null {
   const t = text.trim()
-  for (const param of [TOWER_SHARE_SEARCH_PARAM, LABS_SHARE_SEARCH_PARAM_LEGACY]) {
-    const escaped = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const m =
-      t.match(new RegExp(`[?&]${escaped}=([^&\\s#]+)`, 'i')) ??
-      t.match(new RegExp(`^${escaped}=([^&\\s#]+)`, 'i'))
-    const raw = m?.[1]?.trim()
-    if (!raw) continue
-    try {
-      return decodeURIComponent(raw)
-    } catch {
-      return raw
-    }
+  const escaped = TOWER_SHARE_SEARCH_PARAM.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const m =
+    t.match(new RegExp(`[?&]${escaped}=([^&\\s#]+)`, 'i')) ??
+    t.match(new RegExp(`^${escaped}=([^&\\s#]+)`, 'i'))
+  const raw = m?.[1]?.trim()
+  if (!raw) return null
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
   }
-  return null
 }
 
 function packShareParse(
@@ -59,16 +50,10 @@ function packShareParse(
 ): Extract<ParseLabLevelsResult, { ok: true }> {
   const overrides = sanitizeLevelOverrides(data, dec.o as Record<string, unknown>)
   const workshop =
-    (dec.v === 2 || dec.v === 3 || dec.v === 4) && dec.w !== undefined
-      ? sanitizeWorkshopPersisted(dec.w)
-      : undefined
-  const themes =
-    dec.v === 4 && dec.t
-      ? {
-          selection: sanitizeThemeSelection(dec.t.sel),
-          ownedIds: sanitizeThemeOwnedIds(dec.t.owned),
-        }
-      : undefined
+    dec.w !== undefined ? sanitizeWorkshopPersisted(dec.w) : undefined
+  const themes = dec.t
+    ? { ownedIds: sanitizeThemeOwnedIds(dec.t.owned) }
+    : undefined
   return {
     ok: true,
     overrides,
@@ -78,8 +63,8 @@ function packShareParse(
 }
 
 /**
- * Parse a page URL with `?tower=…` (or legacy `?labs=…`), a raw `u…` / `z…` share payload, inline JSON `{ "v":1|2|3, "o":…, "w"? , "n"? }`,
- * combined **tower CSV** (`tower_csv_v1` first line), or legacy lab-only CSV (`key,level` rows).
+ * Parse a page URL with `?tower=…`, a raw `u…` / `z…` share payload, inline JSON `{ "v":4, … }`,
+ * or **tower CSV** (`tower_csv_v1` first line).
  */
 export async function parseLabLevelsPayload(
   raw: string,
@@ -110,8 +95,9 @@ export async function parseLabLevelsPayload(
         return packShareParse(data, j)
       }
     } catch {
-      /* fall through */
+      return { ok: false, error: 'invalid_payload' }
     }
+    return { ok: false, error: 'invalid_payload' }
   }
 
   const fromUrl = extractLabsShareEncodedFromText(text)
@@ -129,16 +115,7 @@ export async function parseLabLevelsPayload(
     return { ok: false, error: 'share_decode_failed' }
   }
 
-  const csvLo = parseLabLevelOverridesCsv(text)
-  if (csvLo !== null) {
-    const hasData = Object.keys(csvLo).length > 0
-    if (hasData || text.includes(',')) {
-      return {
-        ok: true,
-        overrides: sanitizeLevelOverrides(data, csvLo),
-      }
-    }
-  } else if (text.includes(',')) {
+  if (text.includes(',')) {
     return { ok: false, error: 'invalid_csv' }
   }
 

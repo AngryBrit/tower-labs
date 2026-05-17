@@ -14,7 +14,10 @@ import {
   CHASSIS_MODULE_ORDERS,
   workshopChassisModuleDefForSlot,
 } from '../data/workshopChassisModuleSelection'
-import type { WorkshopAssistModuleSlot } from '../data/workshopSimModules'
+import {
+  clampWorkshopAssistModuleLevel,
+  type WorkshopAssistModuleSlot,
+} from '../data/workshopSimModules'
 import {
   workshopChassisModuleDedicatedImageUrl,
   workshopChassisModuleHasDedicatedArt,
@@ -67,6 +70,7 @@ type ChassisModulePickerDialogProps = {
   selectedModuleId: string | null
   selectedRarity: WorkshopChassisModuleRarity
   moduleLevel: number
+  onModuleLevelCommit: (level: number) => void
   heroStatContext: WorkshopChassisModuleHeroStatContext
   submoduleSelections: WorkshopSubmoduleSelectionMap
   onSelect: (moduleId: string, rarity: WorkshopChassisModuleRarity) => void
@@ -81,6 +85,63 @@ type ChassisModulePickerDialogProps = {
 
 const ABILITY_VALUE_HIGHLIGHT =
   /^(\d+(?:\.\d+)?(?:s|%|x|m)|×\d+(?:\.\d+)?|\+\d+(?:\.\d+)?m)$/i
+
+function PickerModuleLevelInput({
+  slot,
+  value,
+  onCommit,
+}: {
+  slot: WorkshopAssistModuleSlot
+  value: number
+  onCommit: (level: number) => void
+}) {
+  const { t } = useI18n()
+  const [draft, setDraft] = useState(String(value))
+
+  useEffect(() => {
+    setDraft(String(value))
+  }, [value])
+
+  const commit = () => {
+    const raw = draft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setDraft(String(value))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setDraft(String(value))
+      return
+    }
+    onCommit(clampWorkshopAssistModuleLevel(n))
+  }
+
+  return (
+    <label className="modules-picker__hero-level">
+      <span className="modules-picker__hero-level-prefix">{t('ws_modules_level_prefix')}</span>
+      <input
+        className="modules-picker__hero-level-input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={`${t('ws_modules_level_input_aria')} ${t(SLOT_LABEL[slot])}`}
+        value={draft}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+      />
+      <span className="modules-picker__hero-level-suffix">/ {WORKSHOP_MODULE_LEVEL_MAX}</span>
+    </label>
+  )
+}
 
 function ModuleAbilityUniqueText({ text }: { text: string }) {
   const parts = text.split(/(\d+(?:\.\d+)?(?:s|%|x|m)|×\d+(?:\.\d+)?|\+\d+(?:\.\d+)?m)/gi)
@@ -129,6 +190,7 @@ export function ChassisModulePickerDialog({
   selectedModuleId,
   selectedRarity,
   moduleLevel,
+  onModuleLevelCommit,
   heroStatContext,
   submoduleSelections,
   onSelect,
@@ -219,9 +281,11 @@ export function ChassisModulePickerDialog({
             ) : (
               <span className="modules-picker__hero-icon modules-picker__hero-icon--empty" aria-hidden />
             )}
-            <span className="modules-picker__hero-level">
-              {t('ws_modules_level_prefix')} {moduleLevel} / {WORKSHOP_MODULE_LEVEL_MAX}
-            </span>
+            <PickerModuleLevelInput
+              slot={slot}
+              value={moduleLevel}
+              onCommit={onModuleLevelCommit}
+            />
           </div>
           <div className="modules-picker__hero-body">
             <p

@@ -10,7 +10,8 @@ import {
 } from './themeSelectionStorage'
 
 export type TowerThemesSnapshot = {
-  selection: ThemeSelectionState
+  /** Omitted when only owned catalog is imported (e.g. tower CSV). */
+  selection?: ThemeSelectionState
   ownedIds: string[]
 }
 
@@ -32,7 +33,7 @@ export function readTowerThemesSnapshot(): TowerThemesSnapshot {
 
 export function applyTowerThemes(snapshot: TowerThemesSnapshot | undefined): void {
   if (!snapshot) return
-  writeThemeSelection(snapshot.selection)
+  if (snapshot.selection !== undefined) writeThemeSelection(snapshot.selection)
   writeThemeOwnedIds(new Set(snapshot.ownedIds))
 }
 
@@ -55,7 +56,11 @@ export function sanitizeThemeOwnedIds(raw: unknown): string[] {
 }
 
 export function themesEqual(a: TowerThemesSnapshot, b: TowerThemesSnapshot): boolean {
-  if (JSON.stringify(a.selection) !== JSON.stringify(b.selection)) return false
+  if (a.selection !== undefined && b.selection !== undefined) {
+    if (JSON.stringify(a.selection) !== JSON.stringify(b.selection)) return false
+  } else if (a.selection !== undefined || b.selection !== undefined) {
+    return false
+  }
   if (a.ownedIds.length !== b.ownedIds.length) return false
   for (let i = 0; i < a.ownedIds.length; i++) {
     if (a.ownedIds[i] !== b.ownedIds[i]) return false

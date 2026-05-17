@@ -27,7 +27,6 @@ import {
   formatSimulatorCoinAggregates,
 } from '../labBudgetAggregates'
 import {
-  parseLabLevelOverridesCsv,
 } from '../labLevelOverridesCsv'
 import {
   parseTowerUnifiedCsv,
@@ -39,7 +38,6 @@ import {
   applyTowerThemes,
   readTowerThemesSnapshot,
   sanitizeThemeOwnedIds,
-  sanitizeThemeSelection,
 } from '../towerDataThemes'
 import { sanitizeLevelOverrides } from '../labLevelOverridesSanitize'
 import {
@@ -431,13 +429,9 @@ export const SelectResearch = forwardRef<
               data,
               payload.o as Record<string, unknown>,
             )
-            const workshopFromLink =
-              (payload.v === 2 || payload.v === 3 || payload.v === 4) &&
-              payload.w !== undefined
+            const workshopFromLink = payload.w !== undefined
             const sharedBuildName =
-              (payload.v === 3 || payload.v === 4) && typeof payload.n === 'string'
-                ? payload.n.trim()
-                : undefined
+              typeof payload.n === 'string' ? payload.n.trim() : undefined
             let nextWorkshop = persistedLabs.workshopPersisted
             let nextScratchWorkshop = persistedLabs.scratchWorkshopPersisted
             if (workshopFromLink) {
@@ -445,9 +439,8 @@ export const SelectResearch = forwardRef<
               nextWorkshop = ws
               nextScratchWorkshop = ws
             }
-            if (payload.v === 4 && payload.t) {
+            if (payload.t) {
               applyTowerThemes({
-                selection: sanitizeThemeSelection(payload.t.sel),
                 ownedIds: sanitizeThemeOwnedIds(payload.t.owned),
               })
             }
@@ -907,17 +900,7 @@ export const SelectResearch = forwardRef<
           )
           return
         }
-        const raw = parseLabLevelOverridesCsv(text)
-        if (raw === null) {
-          setImportNotice(t('sr_notice_import_invalid_csv'))
-          return
-        }
-        const sanitized = sanitizeLevelOverrides(data, raw)
-        setActivePresetId(null)
-        setScratchSnapshot(sanitized)
-        setLevelOverrides(sanitized)
-        const n = Object.keys(sanitized).length
-        setImportNotice(fmt.importedLevels(n))
+        setImportNotice(t('sr_notice_import_invalid_tower_csv'))
       } catch {
         setImportNotice(t('sr_notice_import_read_fail'))
       }

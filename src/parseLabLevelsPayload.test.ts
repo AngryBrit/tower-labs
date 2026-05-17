@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest'
 import { encodeLabsShareQueryValue } from './labsShareCodec'
 import { compareLabLevelOverrides, formatSignedCoinDelta } from './labCompare'
 import { defaultWorkshopPersisted } from './labPresetsStorage'
-import { serializeLabLevelOverridesCsv } from './labLevelOverridesCsv'
 import {
   extractLabsShareEncodedFromText,
   parseLabLevelsPayload,
@@ -43,12 +42,12 @@ describe('extractLabsShareEncodedFromText', () => {
     ).toBe('ueyJ2IjoxLCJvIjp7fX0')
   })
 
-  it('reads legacy labs param from full URL', () => {
+  it('ignores old labs query param', () => {
     expect(
       extractLabsShareEncodedFromText(
         'https://example.com/app/?utm=1&labs=ueyJ2IjoxLCJvIjp7fX0',
       ),
-    ).toBe('ueyJ2IjoxLCJvIjp7fX0')
+    ).toBeNull()
   })
 
   it('percent-decodes payload', () => {
@@ -78,35 +77,17 @@ describe('parseLabLevelsPayload', () => {
     }
   })
 
-  it('parses CSV export shape', async () => {
-    const csv = serializeLabLevelOverridesCsv({ '0-0': 2 })
-    const r = await parseLabLevelsPayload(csv, data)
-    expect(r.ok && r.overrides['0-0']).toBe(2)
-  })
-
-  it('accepts UTF-8 BOM on CSV', async () => {
-    const csv = `\uFEFF${serializeLabLevelOverridesCsv({ '0-0': 3 })}`
-    const r = await parseLabLevelsPayload(csv, data)
-    expect(r.ok && r.overrides['0-0']).toBe(3)
-  })
-
-  it('parses header-only CSV as empty overrides', async () => {
-    const r = await parseLabLevelsPayload('key,level\n', data)
-    expect(r.ok).toBe(true)
-    if (r.ok) expect(Object.keys(r.overrides).length).toBe(0)
+  it('rejects lab-only key,level CSV', async () => {
+    expect(await parseLabLevelsPayload('key,level\n0-0,2\n', data)).toEqual({
+      ok: false,
+      error: 'invalid_csv',
+    })
   })
 
   it('rejects empty', async () => {
     expect(await parseLabLevelsPayload('   ', data)).toEqual({
       ok: false,
       error: 'empty',
-    })
-  })
-
-  it('rejects invalid CSV rows when comma present', async () => {
-    expect(await parseLabLevelsPayload('key,level\nbad,1\n', data)).toEqual({
-      ok: false,
-      error: 'invalid_csv',
     })
   })
 
@@ -129,14 +110,14 @@ describe('parseLabLevelsPayload', () => {
     })
   })
 
-  it('accepts inline labs share JSON with empty overrides', async () => {
-    expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
+  it('accepts inline v4 JSON with empty overrides', async () => {
+    expect(await parseLabLevelsPayload('{"v":4,"o":{}}', data)).toEqual({
       ok: true,
       overrides: {},
     })
   })
 
-  it('parses inline v2 JSON with workshop snapshot', async () => {
+  it('parses inline v4 JSON with workshop snapshot', async () => {
     const w = {
       hideMaxed: true,
       mainTab: 'upgrade' as const,
@@ -147,7 +128,7 @@ describe('parseLabLevelsPayload', () => {
       critChanceLevel: 0,
       critFactorLevel: 0,
     }
-    const raw = JSON.stringify({ v: 2, o: { '0-0': 2 }, w })
+    const raw = JSON.stringify({ v: 4, o: { '0-0': 2 }, w })
     const r = await parseLabLevelsPayload(raw, data)
     expect(r.ok).toBe(true)
     if (r.ok) {
@@ -156,6 +137,13 @@ describe('parseLabLevelsPayload', () => {
       expect(r.workshop?.damageLevel).toBe(3)
       expect(r.workshop?.hideMaxed).toBe(true)
     }
+  })
+
+  it('rejects pre-v4 inline JSON', async () => {
+    expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
+      ok: false,
+      error: 'invalid_payload',
+    })
   })
 
   it('rejects non-CSV text without comma as invalid_payload', async () => {

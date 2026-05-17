@@ -752,10 +752,10 @@ export const STRINGS_EN = {
   sr_compare_launcher: 'Compare builds…',
   sr_compare_title: 'Compare two lab snapshots',
   sr_compare_intro:
-    'Paste a tower CSV (first line tower_csv_v1; lab, ws, card, theme, and build rows), legacy lab CSV (key,level), a page URL with ?tower=… (or legacy ?labs=…), a raw share payload (u… / z…), or JSON { "v":4, "o", "w", "t", "n" }. Imports restore lab, workshop, cards, modules sim, and themes. Each compare side uses its own Labs Coin Discount level.',
+    'Paste a tower CSV (first line tower_csv_v1; lab, ws, card, theme, and build rows), a page URL with ?tower=…, a raw share payload (u… / z…), or JSON { "v":4, "o", "w", "t", "n" }. Imports restore lab, workshop, cards, modules sim, and owned themes. Each compare side uses its own Labs Coin Discount level.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
-  sr_compare_placeholder: 'Tower CSV, legacy CSV, URL, payload, or JSON…',
+  sr_compare_placeholder: 'Tower CSV, URL, share payload, or JSON…',
   sr_compare_use_current: 'Insert current tower CSV',
   sr_compare_ws_title: 'Workshop snapshot',
   sr_compare_ws_identical: 'No workshop field differences (or both sides used defaults).',
@@ -781,7 +781,7 @@ export const STRINGS_EN = {
   sr_compare_table_delta: 'ΔLv.',
   sr_compare_parse_empty: 'That side is empty.',
   sr_compare_parse_invalid_csv:
-    'Invalid CSV: use legacy key,level rows, or a valid tower CSV (first line tower_csv_v1).',
+    'Invalid CSV: first line must be tower_csv_v1, then type,key,value rows.',
   sr_compare_parse_invalid_payload:
     'Could not parse as CSV or share text.',
   sr_compare_parse_share_fail: 'Could not decode the ?tower= / share payload.',
@@ -863,10 +863,8 @@ export const STRINGS_EN = {
   sr_notice_import_many: 'Imported {{count}} lab levels.',
   sr_notice_import_read_fail:
     'Could not read file. Use a valid CSV export from this app.',
-  sr_notice_import_invalid_csv:
-    'Invalid CSV: use a header row key,level and one row per lab (e.g. 0-3,12), or a valid tower CSV (first line tower_csv_v1).',
   sr_notice_import_invalid_tower_csv:
-    'Invalid tower CSV: first line must be tower_csv_v1, then type,key,value rows (build / lab / ws).',
+    'Invalid tower CSV: first line must be tower_csv_v1, then type,key,value rows (build / lab / ws / card / theme).',
   sr_notice_import_tower_ok: 'Imported lab levels and workshop from tower CSV.',
   sr_notice_import_tower_named:
     'Imported tower CSV for build “{{name}}” (loaded into scratch workspace).',
@@ -1661,10 +1659,10 @@ export const STRINGS_ES = {
   sr_compare_launcher: 'Comparar builds…',
   sr_compare_title: 'Comparar dos instantáneas de labs',
   sr_compare_intro:
-    'Pega un CSV tower (tower_csv_v1; filas lab, ws, card, theme, build), CSV lab antiguo, URL con ?tower=… (o ?labs=… antiguo), payload u…/z… o JSON { "v":4, "o", "w", "t" }. Restaura lab, taller, cartas, módulos y temas. Cada lado usa su propio Labs Coin Discount.',
+    'Pega un CSV tower (tower_csv_v1; filas lab, ws, card, theme, build), URL con ?tower=…, payload u…/z… o JSON { "v":4, "o", "w", "t", "n" }. Restaura lab, taller, cartas, módulos y temas en posesión. Cada lado usa su propio Labs Coin Discount.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
-  sr_compare_placeholder: 'CSV tower, CSV antiguo, URL, payload o JSON…',
+  sr_compare_placeholder: 'CSV tower, URL, payload o JSON…',
   sr_compare_use_current: 'Insertar CSV tower actual',
   sr_compare_ws_title: 'Instantánea del taller',
   sr_compare_ws_identical:
@@ -1691,7 +1689,7 @@ export const STRINGS_ES = {
   sr_compare_table_delta: 'ΔNv.',
   sr_compare_parse_empty: 'Ese lado está vacío.',
   sr_compare_parse_invalid_csv:
-    'CSV no válido: usa key,level como en exportaciones antiguas, o un CSV tower válido (primera línea tower_csv_v1).',
+    'CSV no válido: la primera línea debe ser tower_csv_v1 y luego filas type,key,value.',
   sr_compare_parse_invalid_payload:
     'No se pudo interpretar como CSV o texto de compartir.',
   sr_compare_parse_share_fail: 'No se pudo decodificar ?tower= / el payload.',
@@ -1776,10 +1774,8 @@ export const STRINGS_ES = {
   sr_notice_import_many: 'Se importaron {{count}} niveles de lab.',
   sr_notice_import_read_fail:
     'No se pudo leer el archivo. Usa una exportación CSV válida de esta app.',
-  sr_notice_import_invalid_csv:
-    'CSV no válido: cabecera key,level y una fila por lab (p. ej. 0-3,12), o un CSV tower válido (primera línea tower_csv_v1).',
   sr_notice_import_invalid_tower_csv:
-    'CSV tower no válido: la primera línea debe ser tower_csv_v1 y luego filas type,key,value (build / lab / ws).',
+    'CSV tower no válido: la primera línea debe ser tower_csv_v1 y luego filas type,key,value (build / lab / ws / card / theme).',
   sr_notice_import_tower_ok: 'Se importaron niveles de lab y taller desde CSV tower.',
   sr_notice_import_tower_named:
     'CSV tower importado para el build “{{name}}” (cargado en el borrador).',

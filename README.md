@@ -7,7 +7,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, mode
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.4.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.4.1-2ea44f)
 
 ---
 
@@ -23,7 +23,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, mode
 - **Relics** — **Relics** tab tracks owned relic IDs from the wiki catalog and optional displayed-damage bonus for workshop sim formulas.
 - **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
 - **Unified CSV backup** — Export and import a single CSV with one or more **named builds** (lab levels, workshop snapshot, card stars/presets) plus optional global **theme** selection and owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
-- **Shareable builds** — Encode the current lab selection in the `?tower=` query string; optional QR code for sharing. Legacy `?labs=` links still import.
+- **Shareable builds** — Encode lab levels, workshop snapshot, optional build name, and owned theme IDs in the `?tower=` query string (share codec **v4**); optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
 - **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Modules, Cards, Relics, Themes, Tools), workshop snapshot (including chassis modules, relics, and submodule picks), lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`).
 
@@ -120,7 +120,7 @@ After you edit files under `public/research/` or `src/data/`, save and refresh t
 
 ## Sharing lab builds
 
-The app can serialize the selected lab levels into the **`tower`** query parameter (`?tower=…`). Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same selection (within the limits of the codec and data). Older links that use `?labs=` still import.
+The app serializes lab levels (and optional workshop, build name, and owned theme catalog) into the **`tower`** query parameter (`?tower=…`). Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same payload (within codec limits). Import/compare accepts tower CSV and `?tower=` share links only.
 
 ---
 

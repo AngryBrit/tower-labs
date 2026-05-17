@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-05-17
+
+### Changed
+
+- **Share codec v4-only**: `?tower=` payloads use a single `LabsShareFile` shape (`v: 4`); theme data in links carries **owned catalog IDs** only (active skin selection is not encoded).
+- **Import/compare**: Lab compare and file import accept **tower CSV** (`tower_csv_v1`) and share payloads only; legacy `key,level` CSV and `?labs=` URLs are no longer parsed.
+- **Theme apply**: `TowerThemesSnapshot.selection` is optional so CSV/share imports can update owned skins without overwriting the current selection.
+- **Modules UI**: Chassis module picker and workshop modules panel layout tweaks.
+
+### Removed
+
+- Share codec versions **v1–v3** and the legacy **`?labs=`** query parameter.
+
 ## [2.4.0] - 2026-05-17
 
 ### Added

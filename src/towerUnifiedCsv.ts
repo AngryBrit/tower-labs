@@ -13,12 +13,7 @@ import {
 } from './data/workshopGameCards'
 import { WORKSHOP_CARD_PRESET_COUNT } from './data/workshopGameCardWiki'
 import { sanitizeWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
-import type { ThemeCategory } from './data/gameThemes'
-import {
-  sanitizeThemeOwnedIds,
-  sanitizeThemeSelection,
-  type TowerThemesSnapshot,
-} from './towerDataThemes'
+import { sanitizeThemeOwnedIds, type TowerThemesSnapshot } from './towerDataThemes'
 
 /** First line of a combined tower backup CSV. */
 export const TOWER_UNIFIED_CSV_MAGIC = 'tower_csv_v1'
@@ -26,15 +21,6 @@ export const TOWER_UNIFIED_CSV_MAGIC = 'tower_csv_v1'
 const HEADER = 'type,key,value'
 
 const LAB_KEY_RE = /^\d+-\d+$/
-
-const THEME_CATEGORIES: readonly ThemeCategory[] = [
-  'tower',
-  'background',
-  'music',
-  'menus',
-  'banners',
-  'guardian',
-]
 
 const WS_BOOL_FIELDS = new Set<keyof WorkshopPersistedV1>([
   'hideMaxed',
@@ -169,7 +155,7 @@ export type ParseTowerUnifiedCsv =
   | { tag: 'invalid' }
   | { tag: 'ok'; builds: TowerUnifiedCsvBuild[]; themes?: TowerThemesSnapshot }
 
-/** First build in a parsed file (compare / legacy single-build callers). */
+/** First build in a parsed file (compare / single-build callers). */
 export function towerUnifiedPrimaryBuild(
   parsed: Extract<ParseTowerUnifiedCsv, { tag: 'ok' }>,
 ): TowerUnifiedCsvBuild {
@@ -202,12 +188,7 @@ function appendCardRows(lines: string[], workshop: WorkshopPersistedV1): void {
 }
 
 function appendThemeRows(lines: string[], themes: TowerThemesSnapshot): void {
-  for (const cat of THEME_CATEGORIES) {
-    lines.push(`theme,sel.${cat},${escapeCsvCell(themes.selection[cat])}`)
-  }
-  for (const id of themes.ownedIds) {
-    lines.push(`theme,owned,${escapeCsvCell(id)},1`)
-  }
+  lines.push(`theme,ownedIds,${escapeCsvCell(JSON.stringify(themes.ownedIds))}`)
 }
 
 function appendBuildRows(
@@ -395,7 +376,7 @@ function parseWsRow(wsRaw: Record<string, unknown>, wsKey: keyof WorkshopPersist
 }
 
 /**
- * Parse combined tower CSV. `none` if the file is not this format (e.g. legacy `key,level` only).
+ * Parse combined tower CSV. `none` if the file is not this format.
  */
 export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
   const content = text.replace(/^\uFEFF/, '')
@@ -423,7 +404,6 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
 
   const builds: TowerUnifiedCsvBuild[] = []
   let acc = newBuildAccumulator()
-  const themeSelection: Partial<ThemeSelectionState> = {}
   const themeOwned = new Set<string>()
 
   for (let i = start; i < lines.length; i += 1) {
@@ -433,20 +413,21 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
       .trim()
       .toLowerCase()
     const key = String(r[1] ?? '').trim()
-    const valCell = String(r[2] ?? '').trim()
+    const valCell =
+      r.length > 3 ? r.slice(2).join(',') : String(r[2] ?? '').trim()
     if (!kind || !key) return { tag: 'invalid' }
 
     if (kind === 'theme') {
-      if (key.startsWith('sel.')) {
-        const cat = key.slice(4) as ThemeCategory
-        if (!(THEME_CATEGORIES as readonly string[]).includes(cat)) return { tag: 'invalid' }
-        if (!valCell) return { tag: 'invalid' }
-        themeSelection[cat] = valCell
-        continue
-      }
-      if (key === 'owned') {
-        if (!valCell) return { tag: 'invalid' }
-        themeOwned.add(valCell)
+      if (key === 'ownedIds') {
+        let parsed: unknown
+        try {
+          parsed = JSON.parse(valCell)
+        } catch {
+          return { tag: 'invalid' }
+        }
+        for (const id of sanitizeThemeOwnedIds(parsed)) {
+          themeOwned.add(id)
+        }
         continue
       }
       return { tag: 'invalid' }
@@ -516,13 +497,9 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
     })
   }
 
-  const hasThemes =
-    Object.keys(themeSelection).length > 0 || themeOwned.size > 0
+  const hasThemes = themeOwned.size > 0
   const themes: TowerThemesSnapshot | undefined = hasThemes
-    ? {
-        selection: sanitizeThemeSelection(themeSelection),
-        ownedIds: sanitizeThemeOwnedIds([...themeOwned]),
-      }
+    ? { ownedIds: sanitizeThemeOwnedIds([...themeOwned]) }
     : undefined
 
   return { tag: 'ok', builds, ...(themes ? { themes } : {}) }
