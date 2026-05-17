@@ -1,6 +1,6 @@
 import { useId } from 'react'
 
-/** Inline power-stone glyph matching `public/power-stone.webp` (neon triangle + inner circle). */
+/** Inline power-stone glyph matching `public/icons/power-stone.webp` (neon triangle + inner circle). */
 export function PowerStoneGlyph({ className }: { className?: string }) {
   const uid = useId().replace(/:/g, '')
   const filterGlow = `power-stone-glow-${uid}`

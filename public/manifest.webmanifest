@@ -1,7 +1,7 @@
 {
-  "name": "Tower Labs",
-  "short_name": "Tower Labs",
-  "description": "Browse research trees, compare lab builds, and share Tower configurations.",
+  "name": "The Armoury",
+  "short_name": "The Armoury",
+  "description": "Workshop upgrades, card loadouts, lab research, and shareable Tower builds.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

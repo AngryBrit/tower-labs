@@ -11,7 +11,7 @@ import {
 describe('workshopGameCards images', () => {
   it('maps every card to a public webp asset', () => {
     for (const id of WORKSHOP_GAME_CARD_ORDER) {
-      expect(workshopGameCardImage(id), id).toMatch(/^\/[A-Za-z0-9_]+\.webp$/)
+      expect(workshopGameCardImage(id), id).toMatch(/^\/cards\/[A-Za-z0-9_]+\.webp$/)
     }
     expect(WORKSHOP_GAME_CARD_ORDER.length).toBe(31)
   })

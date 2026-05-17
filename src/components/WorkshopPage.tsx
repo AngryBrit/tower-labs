@@ -189,10 +189,10 @@ const WORKSHOP_CATEGORY_ORDER: readonly WorkshopCategory[] = [
 ]
 
 const WORKSHOP_CATEGORY_ICON_SRC: Record<WorkshopCategory, string> = {
-  attack: '/Workshop_Attack.webp',
-  defense: '/Workshop_Defense.webp',
-  utility: '/Workshop_Utility.webp',
-  ultimate: '/Ultimate_Weapons.webp',
+  attack: '/icons/Workshop_Attack.webp',
+  defense: '/icons/Workshop_Defense.webp',
+  utility: '/icons/Workshop_Utility.webp',
+  ultimate: '/icons/Ultimate_Weapons.webp',
 }
 
 const BULK_MULTIPLIERS = [100, 10, 5, 1] as const
