@@ -22,14 +22,40 @@ describe('labsShareCodec', () => {
     expect(dec).toEqual({ v: 1, o })
   })
 
-  it('roundtrips v2 with workshop when not default snapshot', async () => {
+  it('roundtrips v4 with workshop when provided', async () => {
     const ws = { ...defaultWorkshopPersisted(), damageLevel: 4, category: 'utility' as const }
     const enc = await encodeLabsShareQueryValue({ '0-0': 1 }, ws)
     const dec = await decodeLabsShareQueryValue(enc)
-    expect(dec?.v).toBe(2)
-    if (dec && dec.v === 2) {
+    expect(dec?.v).toBe(4)
+    if (dec && dec.v === 4) {
       expect(dec.o['0-0']).toBe(1)
       expect(dec.w).toEqual(ws)
+    }
+  })
+
+  it('roundtrips v4 with optional build name', async () => {
+    const enc = await encodeLabsShareQueryValue({ '1-1': 2 }, undefined, 'Raid DPS')
+    const dec = await decodeLabsShareQueryValue(enc)
+    expect(dec).toEqual({ v: 4, o: { '1-1': 2 }, n: 'Raid DPS' })
+  })
+
+  it('roundtrips v4 with themes', async () => {
+    const themes = {
+      selection: {
+        tower: 'tower-shuriken',
+        background: 'bg-interstellar',
+        music: 'music-default',
+        menus: 'menu-default',
+        banners: 'banner-default',
+        guardian: 'guardian-default',
+      },
+      ownedIds: ['tower-shuriken', 'bg-custom'],
+    }
+    const enc = await encodeLabsShareQueryValue({ '0-0': 1 }, undefined, undefined, themes)
+    const dec = await decodeLabsShareQueryValue(enc)
+    expect(dec?.v).toBe(4)
+    if (dec && dec.v === 4) {
+      expect(dec.t).toEqual({ sel: themes.selection, owned: themes.ownedIds })
     }
   })
 

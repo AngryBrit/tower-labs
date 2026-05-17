@@ -5,6 +5,8 @@ type TowerEventRow = {
   nameId: StringId
   eventNameId: StringId
   icon: string
+  /** Preview art in `public/themes/tower/`. */
+  image?: string
 }
 
 type TowerGuildRow = {
@@ -12,6 +14,8 @@ type TowerGuildRow = {
   nameId: StringId
   icon: string
   guildSeason: number
+  /** Preview art in `public/themes/tower/`. */
+  image?: string
 }
 
 export const TOWER_EVENT_SKIN_ROWS: readonly TowerEventRow[] = [
@@ -20,12 +24,14 @@ export const TOWER_EVENT_SKIN_ROWS: readonly TowerEventRow[] = [
     nameId: 'theme_skin_plasma_ball',
     eventNameId: 'theme_event_plasma_returns',
     icon: 'plasma-ball',
+    image: '/themes/tower/plasma_ball.webp',
   },
   {
     id: 'tower-event-north-spirit',
     nameId: 'theme_skin_north_spirit',
     eventNameId: 'theme_event_aurora',
     icon: 'north-spirit',
+    image: '/themes/tower/north_spirit.webp',
   },
   {
     id: 'tower-event-alien',
@@ -281,47 +287,55 @@ export const TOWER_GUILD_SKIN_ROWS: readonly TowerGuildRow[] = [
     nameId: 'theme_skin_crown',
     icon: 'menu-crown',
     guildSeason: 1,
+    image: '/themes/tower/crown.webp',
   },
   {
     id: 'tower-guild-mech-warrior',
     nameId: 'theme_skin_mech_warrior',
     icon: 'menu-mech',
     guildSeason: 2,
+    image: '/themes/tower/mech_warrior.webp',
   },
   {
     id: 'tower-guild-dj',
     nameId: 'theme_skin_dj',
     icon: 'menu-party',
     guildSeason: 3,
+    image: '/themes/tower/dj.webp',
   },
   {
     id: 'tower-guild-pixel-soldier',
     nameId: 'theme_skin_pixel_soldier',
     icon: 'menu-pixel',
     guildSeason: 4,
+    image: '/themes/tower/pixel_soldier.webp',
   },
   {
     id: 'tower-guild-restless-eye',
     nameId: 'theme_skin_restless_eye',
     icon: 'menu-horror',
     guildSeason: 5,
+    image: '/themes/tower/restless_eye.webp',
   },
   {
     id: 'tower-guild-shining-star',
     nameId: 'theme_skin_shining_star',
     icon: 'interstellar',
     guildSeason: 6,
+    image: '/themes/tower/shining_star.webp',
   },
   {
     id: 'tower-guild-space-telescope',
     nameId: 'theme_skin_space_telescope',
     icon: 'plasma-ball',
     guildSeason: 7,
+    image: '/themes/tower/space_telescope.webp',
   },
   {
     id: 'tower-guild-bear',
     nameId: 'theme_skin_bear',
     icon: 'sheep',
     guildSeason: 8,
+    image: '/themes/tower/bear.webp',
   },
 ]

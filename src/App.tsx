@@ -11,22 +11,21 @@ import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresets
 import { useI18n } from './i18n'
 import { loadResearchData } from './loadResearchData'
 import type { ResearchData } from './types/research'
+import {
+  readMainPanel,
+  writeMainPanel,
+  type MainPanel,
+} from './mainPanelStorage'
 import './App.css'
-
-type MainPanel =
-  | 'research'
-  | 'workshop'
-  | 'modules'
-  | 'cards'
-  | 'themes'
-  | 'toolsSettings'
 
 /** Top-level Modules tab (panel + nav) — set true when ready to ship. */
 const MODULES_PANEL_ENABLED = false
 
 export default function App() {
   const { t, fmt } = useI18n()
-  const [mainPanel, setMainPanel] = useState<MainPanel>('research')
+  const [mainPanel, setMainPanel] = useState<MainPanel>(() =>
+    readMainPanel(MODULES_PANEL_ENABLED),
+  )
   const [inpanelPresetsMount, setInpanelPresetsMount] =
     useState<HTMLDivElement | null>(null)
   const [inpanelWorkshopToolbarMount, setInpanelWorkshopToolbarMount] =
@@ -63,14 +62,10 @@ export default function App() {
   useEffect(() => {
     if (!MODULES_PANEL_ENABLED && mainPanel === 'modules') {
       setMainPanel('workshop')
+      return
     }
+    writeMainPanel(mainPanel)
   }, [mainPanel])
-
-  useEffect(() => {
-    if (workshopPersisted.mainTab === 'cards') {
-      setMainPanel('cards')
-    }
-  }, [workshopPersisted.mainTab])
 
   useEffect(() => {
     let cancelled = false

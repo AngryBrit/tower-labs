@@ -1,11 +1,31 @@
-import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
+import type { WorkshopPersistedV1 } from './labPresetsStorage'
+import type { TowerThemesSnapshot } from './towerDataThemes'
 
 /** Query param name for encoded lab level overrides (`?labs=…`). */
 export const LABS_SHARE_SEARCH_PARAM = 'labs'
 
 export type LabsShareFileV1 = { v: 1; o: Record<string, number> }
 export type LabsShareFileV2 = { v: 2; o: Record<string, number>; w?: unknown }
-export type LabsShareFile = LabsShareFileV1 | LabsShareFileV2
+export type LabsShareFileV3 = {
+  v: 3
+  o: Record<string, number>
+  w?: unknown
+  /** Optional saved build name for display when the link is opened. */
+  n?: string
+}
+export type LabsShareFileV4 = {
+  v: 4
+  o: Record<string, number>
+  w?: unknown
+  n?: string
+  /** Theme selection + owned catalog. */
+  t?: { sel: TowerThemesSnapshot['selection']; owned: string[] }
+}
+export type LabsShareFile =
+  | LabsShareFileV1
+  | LabsShareFileV2
+  | LabsShareFileV3
+  | LabsShareFileV4
 
 /**
  * Builds share URLs for the current `labs` payload.
@@ -27,11 +47,21 @@ export function isLabsShareFile(x: unknown): x is LabsShareFile {
   if (!x || typeof x !== 'object') return false
   const v = (x as { v?: unknown }).v
   const o = (x as { o?: unknown }).o
-  if (v !== 1 && v !== 2) return false
+  if (v !== 1 && v !== 2 && v !== 3 && v !== 4) return false
   if (o === null || typeof o !== 'object' || Array.isArray(o)) return false
-  if (v === 2 && 'w' in x) {
+  if ((v === 2 || v === 3) && 'w' in x) {
     const w = (x as { w?: unknown }).w
     if (w !== undefined && (w === null || typeof w !== 'object' || Array.isArray(w))) {
+      return false
+    }
+  }
+  if ((v === 3 || v === 4) && 'n' in x) {
+    const n = (x as { n?: unknown }).n
+    if (n !== undefined && typeof n !== 'string') return false
+  }
+  if (v === 4 && 't' in x) {
+    const t = (x as { t?: unknown }).t
+    if (t !== undefined && (t === null || typeof t !== 'object' || Array.isArray(t))) {
       return false
     }
   }
@@ -69,13 +99,26 @@ function fromBase64Url(s: string): Uint8Array {
 export async function encodeLabsShareQueryValue(
   levelOverrides: Record<string, number>,
   workshop?: WorkshopPersistedV1,
+  buildName?: string,
+  themes?: TowerThemesSnapshot,
 ): Promise<string> {
-  const def = defaultWorkshopPersisted()
-  const includeWorkshop =
-    workshop != null && JSON.stringify(workshop) !== JSON.stringify(def)
-  const file: LabsShareFile = includeWorkshop
-    ? { v: 2, o: levelOverrides, w: workshop }
-    : { v: 1, o: levelOverrides }
+  const trimmedName = buildName?.trim()
+  const includeName = trimmedName != null && trimmedName.length > 0
+  const includeThemes = themes != null
+  const includeWorkshop = workshop != null
+
+  const file: LabsShareFile =
+    includeThemes || includeWorkshop || includeName
+      ? {
+          v: 4,
+          o: levelOverrides,
+          ...(includeWorkshop ? { w: workshop } : {}),
+          ...(includeName ? { n: trimmedName } : {}),
+          ...(includeThemes
+            ? { t: { sel: themes.selection, owned: themes.ownedIds } }
+            : {}),
+        }
+      : { v: 1, o: levelOverrides }
   const json = JSON.stringify(file)
   const bytes = new TextEncoder().encode(json)
 

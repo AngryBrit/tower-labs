@@ -28,7 +28,18 @@ import {
 import {
   parseLabLevelOverridesCsv,
 } from '../labLevelOverridesCsv'
-import { serializeTowerUnifiedCsv, parseTowerUnifiedCsv } from '../towerUnifiedCsv'
+import {
+  parseTowerUnifiedCsv,
+  serializeTowerUnifiedCsv,
+  serializeTowerUnifiedCsvBuilds,
+  towerUnifiedPrimaryBuild,
+} from '../towerUnifiedCsv'
+import {
+  applyTowerThemes,
+  readTowerThemesSnapshot,
+  sanitizeThemeOwnedIds,
+  sanitizeThemeSelection,
+} from '../towerDataThemes'
 import { sanitizeLevelOverrides } from '../labLevelOverridesSanitize'
 import {
   buildLabPresetsPayload,
@@ -329,6 +340,12 @@ export const SelectResearch = forwardRef<
               const workshopPersisted = activePreset
                 ? sanitizeWorkshopPersisted(activePreset.workshop)
                 : scratchWorkshopPersisted
+              if (parsed.themeSelection && parsed.themeOwnedIds) {
+                applyTowerThemes({
+                  selection: parsed.themeSelection,
+                  ownedIds: parsed.themeOwnedIds,
+                })
+              }
               return {
                 presets,
                 activePresetId,
@@ -414,13 +431,24 @@ export const SelectResearch = forwardRef<
               payload.o as Record<string, unknown>,
             )
             const workshopFromLink =
-              payload.v === 2 && payload.w !== undefined
+              (payload.v === 2 || payload.v === 3 || payload.v === 4) &&
+              payload.w !== undefined
+            const sharedBuildName =
+              (payload.v === 3 || payload.v === 4) && typeof payload.n === 'string'
+                ? payload.n.trim()
+                : undefined
             let nextWorkshop = persistedLabs.workshopPersisted
             let nextScratchWorkshop = persistedLabs.scratchWorkshopPersisted
             if (workshopFromLink) {
               const ws = sanitizeWorkshopPersisted(payload.w)
               nextWorkshop = ws
               nextScratchWorkshop = ws
+            }
+            if (payload.v === 4 && payload.t) {
+              applyTowerThemes({
+                selection: sanitizeThemeSelection(payload.t.sel),
+                ownedIds: sanitizeThemeOwnedIds(payload.t.owned),
+              })
             }
             setPresets(persistedLabs.presets)
             setActivePresetId(null)
@@ -433,7 +461,9 @@ export const SelectResearch = forwardRef<
             url.searchParams.delete(LABS_SHARE_SEARCH_PARAM)
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
             const n = Object.keys(sanitized).length
-            setImportNotice(fmt.shareOpenedLevels(n, workshopFromLink))
+            setImportNotice(
+              fmt.shareOpenedLevels(n, workshopFromLink, sharedBuildName),
+            )
             setHydrated(true)
             return
           }
@@ -488,6 +518,7 @@ export const SelectResearch = forwardRef<
         scratchSnapshot,
         workshopPersisted,
         scratchWorkshopPersisted,
+        readTowerThemesSnapshot(),
       )
       localStorage.setItem(
         LAB_PRESETS_STORAGE_KEY,
@@ -719,7 +750,25 @@ export const SelectResearch = forwardRef<
 
   const handleExportLevels = useCallback(() => {
     const date = new Date().toISOString().slice(0, 10)
-    const csv = serializeTowerUnifiedCsv(levelOverrides, workshopPersisted)
+    const themes = readTowerThemesSnapshot()
+    const csv =
+      presets.length > 0
+        ? serializeTowerUnifiedCsvBuilds(
+            presets.map((p) => ({
+              name: p.name,
+              levelOverrides: p.levelOverrides,
+              workshop: sanitizeWorkshopPersisted(p.workshop),
+            })),
+            themes,
+          )
+        : serializeTowerUnifiedCsv(
+            levelOverrides,
+            workshopPersisted,
+            activePresetId
+              ? presets.find((p) => p.id === activePresetId)?.name
+              : undefined,
+            themes,
+          )
     const blob = new Blob([`\uFEFF${csv}`], {
       type: 'text/csv;charset=utf-8',
     })
@@ -730,13 +779,34 @@ export const SelectResearch = forwardRef<
     a.rel = 'noopener'
     a.click()
     URL.revokeObjectURL(url)
-  }, [levelOverrides, workshopPersisted])
+  }, [activePresetId, levelOverrides, presets, workshopPersisted])
+
+  const handleCopyBuildShareLink = useCallback(async (): Promise<boolean> => {
+    const buildName = activePresetId
+      ? presets.find((p) => p.id === activePresetId)?.name
+      : undefined
+    try {
+      const encoded = await encodeLabsShareQueryValue(
+        levelOverrides,
+        workshopPersisted,
+        buildName,
+        readTowerThemesSnapshot(),
+      )
+      const { clean } = buildLabsShareUrls(encoded, window.location.href)
+      await navigator.clipboard.writeText(clean)
+      return true
+    } catch {
+      return false
+    }
+  }, [activePresetId, levelOverrides, presets, workshopPersisted])
 
   const handleCopyCleanShareLink = useCallback(async () => {
     try {
       const encoded = await encodeLabsShareQueryValue(
         levelOverrides,
         workshopPersisted,
+        undefined,
+        readTowerThemesSnapshot(),
       )
       const { clean } = buildLabsShareUrls(encoded, window.location.href)
       await navigator.clipboard.writeText(clean)
@@ -751,6 +821,8 @@ export const SelectResearch = forwardRef<
       const encoded = await encodeLabsShareQueryValue(
         levelOverrides,
         workshopPersisted,
+        undefined,
+        readTowerThemesSnapshot(),
       )
       const { full } = buildLabsShareUrls(encoded, window.location.href)
       await navigator.clipboard.writeText(full)
@@ -765,6 +837,8 @@ export const SelectResearch = forwardRef<
       const encoded = await encodeLabsShareQueryValue(
         levelOverrides,
         workshopPersisted,
+        undefined,
+        readTowerThemesSnapshot(),
       )
       const { clean } = buildLabsShareUrls(encoded, window.location.href)
       const QRCode = (await import('qrcode')).default
@@ -793,16 +867,43 @@ export const SelectResearch = forwardRef<
           return
         }
         if (tower.tag === 'ok') {
+          if (tower.themes) applyTowerThemes(tower.themes)
+          if (tower.builds.length > 1) {
+            const imported: LabPreset[] = tower.builds.map((b) => ({
+              id: newPresetId(),
+              name: b.name?.trim() || t('sr_preset_import_default_name'),
+              levelOverrides: sanitizeLevelOverrides(
+                data,
+                b.overrides as Record<string, unknown>,
+              ),
+              workshop: b.workshop,
+            }))
+            setPresets((prev) => [...prev, ...imported])
+            const first = imported[0]!
+            setActivePresetId(first.id)
+            setLevelOverrides({ ...first.levelOverrides })
+            setWorkshopPersisted(first.workshop)
+            setScratchSnapshot({ ...first.levelOverrides })
+            setScratchWorkshopPersisted({ ...first.workshop })
+            setImportNotice(fmt.importedTowerBuilds(imported.length))
+            return
+          }
+          const primary = towerUnifiedPrimaryBuild(tower)
           const sanitized = sanitizeLevelOverrides(
             data,
-            tower.overrides as Record<string, unknown>,
+            primary.overrides as Record<string, unknown>,
           )
           setActivePresetId(null)
           setScratchSnapshot(sanitized)
           setLevelOverrides(sanitized)
-          setWorkshopPersisted(tower.workshop)
-          setScratchWorkshopPersisted(tower.workshop)
-          setImportNotice(t('sr_notice_import_tower_ok'))
+          setWorkshopPersisted(primary.workshop)
+          setScratchWorkshopPersisted(primary.workshop)
+          const buildName = primary.name?.trim()
+          setImportNotice(
+            buildName
+              ? fmt.importedTowerBuildNamed(buildName)
+              : t('sr_notice_import_tower_ok'),
+          )
           return
         }
         const raw = parseLabLevelOverridesCsv(text)
@@ -982,6 +1083,7 @@ export const SelectResearch = forwardRef<
             activePresetId={activePresetId}
             onPresetSelect={handlePresetSelect}
             onSaveAs={openPresetSaveDialog}
+            onCopyShareLink={handleCopyBuildShareLink}
             onDeleteBuild={handleDeleteActivePreset}
           />
         ) : null}
@@ -1076,6 +1178,7 @@ export const SelectResearch = forwardRef<
               activePresetId={activePresetId}
               onPresetSelect={handlePresetSelect}
               onSaveAs={openPresetSaveDialog}
+              onCopyShareLink={handleCopyBuildShareLink}
               onDeleteBuild={handleDeleteActivePreset}
             />,
             embeddedPresetsMount,

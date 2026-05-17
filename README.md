@@ -1,13 +1,13 @@
-# Tower Labs — research & lab reference
+# The Armoury — workshop, cards, labs & themes
 
-Static web app for **The Tower**: browse research trees from exported JSON, see lab upgrade costs and timings, compare builds, and share lab configurations from the browser.
+Static web app for **The Tower**: browse research trees from exported JSON, model workshop upgrades and card loadouts, track cosmetic themes, compare builds, and share lab configurations from the browser.
 
 **Repository:** [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs)
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.2.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.3.0-2ea44f)
 
 ---
 
@@ -20,10 +20,11 @@ Static web app for **The Tower**: browse research trees from exported JSON, see 
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
 - **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Equipped cards on the active preset feed workshop displayed-stat formulas.
 - **Modules simulator** — Assist chassis selection and cannon submodule effects; module substats pull from MODULES research labs when data is loaded.
-- **Unified CSV backup** — Export and import a single CSV that carries both lab `key,level` rows and a `ws,…` workshop snapshot (upgrade, enhance, sim, and tab state) via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
+- **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
+- **Unified CSV backup** — Export and import a single CSV with one or more **named builds** (lab levels, workshop snapshot, card stars/presets) plus optional global **theme** selection and owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
 - **Shareable builds** — Encode the current lab selection in the `?labs=` query string; optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
-- **Persistence** — Section collapse state, locale, workshop snapshot, lab presets, and optional budget-panel visibility survive reloads (`localStorage`).
+- **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Cards, Themes, Tools), workshop snapshot, lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`).
 
 For release history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -101,7 +102,9 @@ node scripts/write-research-overlay.mjs
 | [`src/data/card-mastery-tier-labels.json`](src/data/card-mastery-tier-labels.json) | Tier labels for card mastery display. |
 | [`src/types/research.ts`](src/types/research.ts) | Typed parsing and validation helpers for research JSON. |
 | [`src/loadResearchData.ts`](src/loadResearchData.ts) | Fetches manifest + sections and returns typed `ResearchData`. |
-| [`src/components/`](src/components/) | UI: research (`SelectResearch`, `ResearchCard`, …), workshop (`WorkshopPage`, enhance panels, cards/modules panels), `LabCompareDialog`, `ToolsSettingsPage`, and related pieces. |
+| [`src/components/`](src/components/) | UI: research (`SelectResearch`, `ResearchCard`, …), workshop (`WorkshopPage`, enhance panels, cards/modules panels), `ThemesPage`, `LabCompareDialog`, `ToolsSettingsPage`, and related pieces. |
+| [`public/themes/`](public/themes/) | Theme preview art (tower, background, banners, menus, guardian). |
+| [`src/towerDataThemes.ts`](src/towerDataThemes.ts) | Theme selection/owned snapshot helpers for CSV and presets. |
 | [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts (`workshopGameCards`, `workshopGameCardWiki`, `workshopCardMastery`, `workshopCardWorkshopDisplay`), module simulators, and Vitest coverage. |
 | [`public/*.webp`](public/) | Resource glyphs (coin, cash, …) and per-card art (`Damage.webp`, `Berserker.webp`, …) used by the Cards UI. |
 | [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish research overlay, and benefit translation helpers. |

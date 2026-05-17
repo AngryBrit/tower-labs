@@ -299,6 +299,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
       icon: row.icon as ThemeIconKey,
       towerGroup: 'event',
       eventNameId: row.eventNameId,
+      image: row.image,
     }),
   ),
 
@@ -310,6 +311,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
       icon: row.icon as ThemeIconKey,
       towerGroup: 'guild',
       guildSeason: row.guildSeason,
+      image: row.image,
     }),
   ),
 
@@ -333,6 +335,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
       icon: row.icon as ThemeIconKey,
       backgroundGroup: 'guild',
       guildSeason: row.guildSeason,
+      image: row.image,
       ownedDefault: row.ownedDefault,
     }),
   ),
@@ -375,6 +378,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
       nameId: row.nameId,
       icon: row.icon as ThemeIconKey,
       guildSeason: row.guildSeason,
+      image: row.image,
     }),
   ),
 
@@ -384,6 +388,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_butter',
     icon: 'guardian',
+    guildSeason: 1,
     image: GUARDIAN_THEME_IMAGES['guardian-butter'],
   },
   {
@@ -391,12 +396,14 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_muse',
     icon: 'guardian',
+    guildSeason: 2,
   },
   {
     id: 'guardian-finn',
     category: 'guardian',
     nameId: 'theme_guardian_finn',
     icon: 'guardian',
+    guildSeason: 2,
     image: GUARDIAN_THEME_IMAGES['guardian-finn'],
     ownedDefault: true,
   },
@@ -405,6 +412,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_nyra',
     icon: 'guardian',
+    guildSeason: 3,
     image: GUARDIAN_THEME_IMAGES['guardian-nyra'],
     ownedDefault: true,
   },
@@ -413,6 +421,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_rolo',
     icon: 'guardian',
+    guildSeason: 3,
     image: GUARDIAN_THEME_IMAGES['guardian-rolo'],
     ownedDefault: true,
   },
@@ -421,6 +430,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_glenn',
     icon: 'guardian',
+    guildSeason: 4,
     ownedDefault: true,
   },
   {
@@ -428,6 +438,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_zepe',
     icon: 'guardian',
+    guildSeason: 4,
     ownedDefault: true,
   },
   {
@@ -435,6 +446,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_iris',
     icon: 'guardian',
+    guildSeason: 5,
     ownedDefault: true,
   },
   {
@@ -442,6 +454,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_silk',
     icon: 'guardian',
+    guildSeason: 5,
     ownedDefault: true,
   },
   {
@@ -449,6 +462,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_mickey',
     icon: 'guardian',
+    guildSeason: 6,
     ownedDefault: true,
   },
   {
@@ -456,6 +470,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_gaia',
     icon: 'guardian',
+    guildSeason: 6,
     ownedDefault: true,
   },
   {
@@ -463,6 +478,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_arwing',
     icon: 'guardian',
+    guildSeason: 7,
     ownedDefault: true,
   },
   {
@@ -470,6 +486,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_frank',
     icon: 'guardian',
+    guildSeason: 7,
     ownedDefault: true,
   },
   {
@@ -477,6 +494,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_earl',
     icon: 'guardian',
+    guildSeason: 8,
     ownedDefault: true,
   },
   {
@@ -484,6 +502,7 @@ export const GAME_THEMES: readonly GameThemeEntry[] = [
     category: 'guardian',
     nameId: 'theme_guardian_mei',
     icon: 'guardian',
+    guildSeason: 8,
     ownedDefault: true,
   },
 ] as const

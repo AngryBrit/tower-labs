@@ -56,6 +56,11 @@ import {
   sanitizeCardPresetLoadouts,
   WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
 } from './data/workshopGameCardWiki'
+import {
+  sanitizeThemeOwnedIds,
+  sanitizeThemeSelection,
+  type TowerThemesSnapshot,
+} from './towerDataThemes'
 
 type WorkshopUltimateLevels = { [K in WorkshopUltimateUpgradeKey]: number }
 
@@ -591,6 +596,10 @@ export type LabPresetsFileV1 = {
    * when scratch is active, mirrors the persisted workshop row (same as lab scratch pattern).
    */
   scratchWorkshop?: WorkshopPersistedV1
+  /** Active theme picks (tower, background, music, …). */
+  themeSelection?: TowerThemesSnapshot['selection']
+  /** Owned theme catalog ids. */
+  themeOwnedIds?: string[]
 }
 
 export function newPresetId(): string {
@@ -641,6 +650,15 @@ export function parseLabPresetsFile(raw: unknown): LabPresetsFileV1 | null {
     return base
   })
 
+  const themeSelection =
+    o.themeSelection !== undefined && o.themeSelection !== null
+      ? sanitizeThemeSelection(o.themeSelection)
+      : undefined
+  const themeOwnedIds =
+    o.themeOwnedIds !== undefined && o.themeOwnedIds !== null
+      ? sanitizeThemeOwnedIds(o.themeOwnedIds)
+      : undefined
+
   return {
     v: 1,
     activePresetId: typeof active === 'string' ? active : null,
@@ -650,6 +668,8 @@ export function parseLabPresetsFile(raw: unknown): LabPresetsFileV1 | null {
         ? (scratch as Record<string, number>)
         : {},
     ...(scratchWorkshop !== undefined ? { scratchWorkshop } : {}),
+    ...(themeSelection !== undefined ? { themeSelection } : {}),
+    ...(themeOwnedIds !== undefined ? { themeOwnedIds } : {}),
   }
 }
 
@@ -661,6 +681,7 @@ export function buildLabPresetsPayload(
   scratchSnapshot: Record<string, number>,
   workshopPersisted: WorkshopPersistedV1,
   scratchWorkshopPersisted: WorkshopPersistedV1,
+  themes?: TowerThemesSnapshot,
 ): LabPresetsFileV1 {
   const mergedPresets = activePresetId
     ? presets.map((p) =>
@@ -683,5 +704,11 @@ export function buildLabPresetsPayload(
       activePresetId != null
         ? { ...scratchWorkshopPersisted }
         : { ...workshopPersisted },
+    ...(themes
+      ? {
+          themeSelection: { ...themes.selection },
+          themeOwnedIds: [...themes.ownedIds],
+        }
+      : {}),
   }
 }

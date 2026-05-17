@@ -7,14 +7,34 @@ import {
   WORKSHOP_ULTIMATE_ACTIVE_ORDER,
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
 } from './data/workshopUltimate'
+import {
+  WORKSHOP_GAME_CARD_ORDER,
+  type WorkshopGameCardId,
+} from './data/workshopGameCards'
+import { WORKSHOP_CARD_PRESET_COUNT } from './data/workshopGameCardWiki'
 import { sanitizeWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
+import type { ThemeCategory } from './data/gameThemes'
+import {
+  sanitizeThemeOwnedIds,
+  sanitizeThemeSelection,
+  type TowerThemesSnapshot,
+} from './towerDataThemes'
 
-/** First line of a combined lab + workshop backup CSV. */
+/** First line of a combined tower backup CSV. */
 export const TOWER_UNIFIED_CSV_MAGIC = 'tower_csv_v1'
 
 const HEADER = 'type,key,value'
 
 const LAB_KEY_RE = /^\d+-\d+$/
+
+const THEME_CATEGORIES: readonly ThemeCategory[] = [
+  'tower',
+  'background',
+  'music',
+  'menus',
+  'banners',
+  'guardian',
+]
 
 const WS_BOOL_FIELDS = new Set<keyof WorkshopPersistedV1>([
   'hideMaxed',
@@ -92,10 +112,7 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'enhanceFreeUpgradesLevel',
   'enhanceRecoveryPackageLevel',
   'enhanceEnemyLevelSkipLevel',
-  'simDamageCardStars',
-  'simAttackSpeedCardStars',
   'simAttackSpeedModuleSubEffect',
-  'simBerserkerCardStars',
   'simBerserkerDamageTaken',
   'simRelicsBonusFraction',
   'simPerkDamageQuantity',
@@ -104,10 +121,26 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]
 
+const CARD_STAR_PREFIX = 'star.'
+const CARD_PRESET_PREFIX = 'preset.'
+
+export type TowerUnifiedCsvBuild = {
+  name?: string
+  overrides: Record<string, number>
+  workshop: WorkshopPersistedV1
+}
+
 export type ParseTowerUnifiedCsv =
   | { tag: 'none' }
   | { tag: 'invalid' }
-  | { tag: 'ok'; overrides: Record<string, number>; workshop: WorkshopPersistedV1 }
+  | { tag: 'ok'; builds: TowerUnifiedCsvBuild[]; themes?: TowerThemesSnapshot }
+
+/** First build in a parsed file (compare / legacy single-build callers). */
+export function towerUnifiedPrimaryBuild(
+  parsed: Extract<ParseTowerUnifiedCsv, { tag: 'ok' }>,
+): TowerUnifiedCsvBuild {
+  return parsed.builds[0]!
+}
 
 function sortLabKeys(keys: string[]): string[] {
   return sortOverrideKeys(keys)
@@ -119,19 +152,76 @@ function serializeWsValue(v: WorkshopPersistedV1, k: keyof WorkshopPersistedV1):
   return String(x)
 }
 
-/** Lab levels + workshop snapshot as one CSV (UTF-8 with CRLF; BOM added by caller if desired). */
+function appendCardRows(lines: string[], workshop: WorkshopPersistedV1): void {
+  for (const id of WORKSHOP_GAME_CARD_ORDER) {
+    lines.push(`card,${CARD_STAR_PREFIX}${id},${workshop.cardStars[id] ?? 0}`)
+  }
+  for (let i = 0; i < WORKSHOP_CARD_PRESET_COUNT; i++) {
+    const ids = workshop.cardPresetLoadouts[i] ?? []
+    lines.push(`card,${CARD_PRESET_PREFIX}${i},${escapeCsvCell(ids.join('|'))}`)
+  }
+  lines.push(`card,activePresetIndex,${workshop.cardActivePresetIndex}`)
+  lines.push(`card,equipSlots,${workshop.cardEquipSlots}`)
+}
+
+function appendThemeRows(lines: string[], themes: TowerThemesSnapshot): void {
+  for (const cat of THEME_CATEGORIES) {
+    lines.push(`theme,sel.${cat},${escapeCsvCell(themes.selection[cat])}`)
+  }
+  for (const id of themes.ownedIds) {
+    lines.push(`theme,owned,${escapeCsvCell(id)},1`)
+  }
+}
+
+function appendBuildRows(
+  lines: string[],
+  build: {
+    name?: string
+    levelOverrides: Record<string, number>
+    workshop: WorkshopPersistedV1
+  },
+): void {
+  const trimmedName = build.name?.trim()
+  if (trimmedName) {
+    lines.push(`build,name,${escapeCsvCell(trimmedName)}`)
+  }
+  for (const k of sortLabKeys(Object.keys(build.levelOverrides))) {
+    lines.push(`lab,${escapeCsvCell(k)},${build.levelOverrides[k] ?? 0}`)
+  }
+  for (const k of WS_FIELDS) {
+    lines.push(`ws,${k},${serializeWsValue(build.workshop, k)}`)
+  }
+  appendCardRows(lines, build.workshop)
+}
+
+/** One or more named builds plus optional global themes in a single tower CSV file. */
+export function serializeTowerUnifiedCsvBuilds(
+  builds: readonly {
+    name?: string
+    levelOverrides: Record<string, number>
+    workshop: WorkshopPersistedV1
+  }[],
+  themes?: TowerThemesSnapshot,
+): string {
+  const lines: string[] = [TOWER_UNIFIED_CSV_MAGIC, HEADER]
+  if (themes) appendThemeRows(lines, themes)
+  for (const b of builds) {
+    appendBuildRows(lines, b)
+  }
+  return `${lines.join('\r\n')}\r\n`
+}
+
+/** Lab + workshop + cards (+ optional build name) as one CSV. */
 export function serializeTowerUnifiedCsv(
   levelOverrides: Record<string, number>,
   workshop: WorkshopPersistedV1,
+  buildName?: string,
+  themes?: TowerThemesSnapshot,
 ): string {
-  const lines: string[] = [TOWER_UNIFIED_CSV_MAGIC, HEADER]
-  for (const k of sortLabKeys(Object.keys(levelOverrides))) {
-    lines.push(`lab,${escapeCsvCell(k)},${levelOverrides[k] ?? 0}`)
-  }
-  for (const k of WS_FIELDS) {
-    lines.push(`ws,${k},${serializeWsValue(workshop, k)}`)
-  }
-  return `${lines.join('\r\n')}\r\n`
+  return serializeTowerUnifiedCsvBuilds(
+    [{ name: buildName, levelOverrides, workshop }],
+    themes,
+  )
 }
 
 function parseBoolCell(s: string): boolean | null {
@@ -139,6 +229,100 @@ function parseBoolCell(s: string): boolean | null {
   if (t === 'true' || t === '1' || t === 'yes') return true
   if (t === 'false' || t === '0' || t === 'no' || t === '') return false
   return null
+}
+
+function isWorkshopGameCardId(s: string): s is WorkshopGameCardId {
+  return (WORKSHOP_GAME_CARD_ORDER as readonly string[]).includes(s)
+}
+
+type BuildAccumulator = {
+  name?: string
+  overrides: Record<string, number>
+  wsRaw: Record<string, unknown>
+  cardStars: Record<string, number>
+  cardPresetLoadouts: string[][]
+}
+
+function newBuildAccumulator(): BuildAccumulator {
+  return {
+    overrides: {},
+    wsRaw: {},
+    cardStars: {},
+    cardPresetLoadouts: Array.from({ length: WORKSHOP_CARD_PRESET_COUNT }, () => []),
+  }
+}
+
+function flushBuildAccumulator(
+  builds: TowerUnifiedCsvBuild[],
+  acc: BuildAccumulator,
+): BuildAccumulator {
+  if (
+    Object.keys(acc.overrides).length === 0 &&
+    Object.keys(acc.wsRaw).length === 0 &&
+    Object.keys(acc.cardStars).length === 0
+  ) {
+    return newBuildAccumulator()
+  }
+  const wsRaw = { ...acc.wsRaw }
+  if (Object.keys(acc.cardStars).length > 0) {
+    wsRaw.cardStars = acc.cardStars
+  }
+  if (acc.cardPresetLoadouts.some((tab) => tab.length > 0)) {
+    wsRaw.cardPresetLoadouts = acc.cardPresetLoadouts
+  }
+  builds.push({
+    name: acc.name,
+    overrides: { ...acc.overrides },
+    workshop: sanitizeWorkshopPersisted(wsRaw),
+  })
+  return newBuildAccumulator()
+}
+
+function parseWsRow(wsRaw: Record<string, unknown>, wsKey: keyof WorkshopPersistedV1, valCell: string): boolean {
+  if (WS_BOOL_FIELDS.has(wsKey)) {
+    const b = parseBoolCell(valCell)
+    if (b === null) return false
+    wsRaw[wsKey] = b
+    return true
+  }
+  if (wsKey === 'mainTab') {
+    const t = valCell.toLowerCase()
+    if (t !== 'upgrade' && t !== 'enhance' && t !== 'modules' && t !== 'cards') return false
+    wsRaw[wsKey] = t
+    return true
+  }
+  if (wsKey === 'simAssistModuleSlot') {
+    const t = valCell.toLowerCase()
+    if (t !== 'cannon' && t !== 'armor' && t !== 'generator' && t !== 'core') return false
+    wsRaw[wsKey] = t
+    return true
+  }
+  if (
+    wsKey === 'simRelicsBonusFraction' ||
+    wsKey === 'simBerserkerDamageTaken' ||
+    wsKey === 'simAttackSpeedModuleSubEffect'
+  ) {
+    const n = valCell === '' ? 0 : Number(valCell)
+    if (!Number.isFinite(n) || n < 0) return false
+    wsRaw[wsKey] = n
+    return true
+  }
+  if (wsKey === 'category') {
+    const t = valCell.toLowerCase()
+    if (!['attack', 'defense', 'utility', 'ultimate'].includes(t)) return false
+    wsRaw[wsKey] = t
+    return true
+  }
+  if (wsKey === 'multiplier') {
+    const n = Number(valCell)
+    if (![1, 5, 10, 100].includes(n)) return false
+    wsRaw[wsKey] = n
+    return true
+  }
+  const n = valCell === '' ? 0 : Number(valCell)
+  if (!Number.isFinite(n) || !Number.isInteger(n)) return false
+  wsRaw[wsKey] = n
+  return true
 }
 
 /**
@@ -168,8 +352,10 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
     if (h0 === 'type' && h1 === 'key' && h2 === 'value') start = 2
   }
 
-  const overrides: Record<string, number> = {}
-  const wsRaw: Record<string, unknown> = {}
+  const builds: TowerUnifiedCsvBuild[] = []
+  let acc = newBuildAccumulator()
+  const themeSelection: Partial<ThemeSelectionState> = {}
+  const themeOwned = new Set<string>()
 
   for (let i = start; i < lines.length; i += 1) {
     const r = parseCsvLine(lines[i]!)
@@ -181,58 +367,94 @@ export function parseTowerUnifiedCsv(text: string): ParseTowerUnifiedCsv {
     const valCell = String(r[2] ?? '').trim()
     if (!kind || !key) return { tag: 'invalid' }
 
+    if (kind === 'theme') {
+      if (key.startsWith('sel.')) {
+        const cat = key.slice(4) as ThemeCategory
+        if (!(THEME_CATEGORIES as readonly string[]).includes(cat)) return { tag: 'invalid' }
+        if (!valCell) return { tag: 'invalid' }
+        themeSelection[cat] = valCell
+        continue
+      }
+      if (key === 'owned') {
+        if (!valCell) return { tag: 'invalid' }
+        themeOwned.add(valCell)
+        continue
+      }
+      return { tag: 'invalid' }
+    }
+
+    if (kind === 'build') {
+      if (key !== 'name') return { tag: 'invalid' }
+      acc = flushBuildAccumulator(builds, acc)
+      const trimmed = valCell.trim()
+      acc.name = trimmed.length > 0 ? trimmed : undefined
+      continue
+    }
+
     if (kind === 'lab') {
       if (!LAB_KEY_RE.test(key)) return { tag: 'invalid' }
       const n = valCell === '' ? 0 : Number(valCell)
       if (!Number.isFinite(n)) return { tag: 'invalid' }
-      overrides[key] = n
+      acc.overrides[key] = n
       continue
     }
+
     if (kind === 'ws') {
       const allowed = new Set<keyof WorkshopPersistedV1>(WS_FIELDS)
       if (!allowed.has(key as keyof WorkshopPersistedV1)) return { tag: 'invalid' }
       const wsKey = key as keyof WorkshopPersistedV1
-      if (WS_BOOL_FIELDS.has(wsKey)) {
-        const b = parseBoolCell(valCell)
-        if (b === null) return { tag: 'invalid' }
-        wsRaw[wsKey] = b
-      } else if (wsKey === 'mainTab') {
-        const t = valCell.toLowerCase()
-        if (t !== 'upgrade' && t !== 'enhance' && t !== 'modules' && t !== 'cards') {
-          return { tag: 'invalid' }
-        }
-        wsRaw[wsKey] = t
-      } else if (wsKey === 'simAssistModuleSlot') {
-        const t = valCell.toLowerCase()
-        if (t !== 'cannon' && t !== 'armor' && t !== 'generator' && t !== 'core') {
-          return { tag: 'invalid' }
-        }
-        wsRaw[wsKey] = t
-      } else if (
-        wsKey === 'simRelicsBonusFraction' ||
-        wsKey === 'simBerserkerDamageTaken'
-      ) {
-        const n = valCell === '' ? 0 : Number(valCell)
-        if (!Number.isFinite(n) || n < 0) return { tag: 'invalid' }
-        wsRaw[wsKey] = n
-      } else if (wsKey === 'category') {
-        const t = valCell.toLowerCase()
-        if (!['attack', 'defense', 'utility', 'ultimate'].includes(t)) return { tag: 'invalid' }
-        wsRaw[wsKey] = t
-      } else if (wsKey === 'multiplier') {
-        const n = Number(valCell)
-        if (![1, 5, 10, 100].includes(n)) return { tag: 'invalid' }
-        wsRaw[wsKey] = n
-      } else {
-        const n = valCell === '' ? 0 : Number(valCell)
-        if (!Number.isFinite(n) || !Number.isInteger(n)) return { tag: 'invalid' }
-        wsRaw[wsKey] = n
-      }
+      if (!parseWsRow(acc.wsRaw, wsKey, valCell)) return { tag: 'invalid' }
       continue
     }
+
+    if (kind === 'card') {
+      if (key.startsWith(CARD_STAR_PREFIX)) {
+        const cardId = key.slice(CARD_STAR_PREFIX.length)
+        if (!isWorkshopGameCardId(cardId)) return { tag: 'invalid' }
+        const n = valCell === '' ? 0 : Number(valCell)
+        if (!Number.isFinite(n) || n < 0) return { tag: 'invalid' }
+        acc.cardStars[cardId] = n
+        continue
+      }
+      if (key.startsWith(CARD_PRESET_PREFIX)) {
+        const tab = Number(key.slice(CARD_PRESET_PREFIX.length))
+        if (!Number.isInteger(tab) || tab < 0 || tab >= WORKSHOP_CARD_PRESET_COUNT) {
+          return { tag: 'invalid' }
+        }
+        const ids = valCell
+          ? valCell.split('|').map((s) => s.trim()).filter(isWorkshopGameCardId)
+          : []
+        acc.cardPresetLoadouts[tab] = ids
+        continue
+      }
+      if (key === 'activePresetIndex' || key === 'equipSlots') {
+        const n = valCell === '' ? 0 : Number(valCell)
+        if (!Number.isFinite(n) || !Number.isInteger(n)) return { tag: 'invalid' }
+        acc.wsRaw[key] = n
+        continue
+      }
+      return { tag: 'invalid' }
+    }
+
     return { tag: 'invalid' }
   }
 
-  const workshop = sanitizeWorkshopPersisted(wsRaw)
-  return { tag: 'ok', overrides, workshop }
+  acc = flushBuildAccumulator(builds, acc)
+  if (builds.length === 0) {
+    builds.push({
+      overrides: {},
+      workshop: sanitizeWorkshopPersisted({}),
+    })
+  }
+
+  const hasThemes =
+    Object.keys(themeSelection).length > 0 || themeOwned.size > 0
+  const themes: TowerThemesSnapshot | undefined = hasThemes
+    ? {
+        selection: sanitizeThemeSelection(themeSelection),
+        ownedIds: sanitizeThemeOwnedIds([...themeOwned]),
+      }
+    : undefined
+
+  return { tag: 'ok', builds, ...(themes ? { themes } : {}) }
 }

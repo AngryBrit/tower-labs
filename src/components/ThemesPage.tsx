@@ -154,6 +154,16 @@ function tabPassivePercent(category: ThemeCategory): number | undefined {
   return undefined
 }
 
+function themesPanelClassName(category: ThemeCategory): string {
+  if (category === 'tower' || category === 'background') {
+    return 'themes-page__tower-panels'
+  }
+  if (category === 'banners') {
+    return 'themes-page__grid themes-page__grid--banners'
+  }
+  return 'themes-page__grid'
+}
+
 export function ThemesPage({
   embeddedInPanel = false,
   toolbarMount = null,
@@ -403,11 +413,7 @@ export function ThemesPage({
         id={`themes-panel-${activeCategory}`}
         role="tabpanel"
         aria-labelledby={`themes-tab-${activeCategory}`}
-        className={
-          activeCategory === 'tower' || activeCategory === 'background'
-            ? 'themes-page__tower-panels'
-            : 'themes-page__grid'
-        }
+        className={themesPanelClassName(activeCategory)}
       >
         {activeCategory === 'background' ? (
           <>

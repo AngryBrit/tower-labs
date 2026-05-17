@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type { I18nFormatters, StringId } from '../i18n/dictionary'
 import { compareLabLevelOverrides, type LabCompareResult } from '../labCompare'
+import { readTowerThemesSnapshot } from '../towerDataThemes'
 import { serializeTowerUnifiedCsv } from '../towerUnifiedCsv'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
 import { parseLabLevelsPayload, type ParseLabLevelsError } from '../parseLabLevelsPayload'
@@ -221,7 +222,12 @@ export function LabCompareDialog({
 
   const fillCurrentCsv = useCallback(
     (side: 'a' | 'b') => {
-      const csv = serializeTowerUnifiedCsv(currentOverrides, currentWorkshop)
+      const csv = serializeTowerUnifiedCsv(
+        currentOverrides,
+        currentWorkshop,
+        undefined,
+        readTowerThemesSnapshot(),
+      )
       if (side === 'a') {
         setTextA(csv)
         setErrorA(null)

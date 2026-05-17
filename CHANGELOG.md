@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-05-17
+
+### Added
+
+- **Themes tab**: Dedicated in-panel **Themes** navigation with tower, background, music, menus, banners, and guardian categories; coin-bonus summary, owned catalog, selection per category, and reset (`ThemesPage`, `gameThemes.ts`).
+- **Theme catalog & art**: Event and guild tower skins, background events, menu guild seasons, banner guild rows, and guardian entries with WebP previews under `public/themes/` (`towerEventGuildSkins`, `backgroundEventGuildSkins`, `bannerGuildSkins`, `menuGuildSkins`, `guardianThemeImages`).
+- **Multi-build CSV**: `serializeTowerUnifiedCsvBuilds` exports several named lab + workshop + card builds in one file; `towerUnifiedPrimaryBuild` for single-build callers.
+- **Themes in backup**: `theme,sel.*` and `theme,owned` rows in unified CSV; `TowerThemesSnapshot` read/apply/sanitize helpers (`towerDataThemes.ts`).
+- **Share codec v4**: `?labs=` payloads can include theme selection and owned catalog IDs (`LabsShareFileV4`).
+- **Lab presets UX**: Share-link copy with success notice, delete build, and themes folded into `buildLabPresetsPayload`.
+- **Main panel persistence**: Last-selected top-level panel (research, workshop, modules, cards, themes, tools) survives reload (`mainPanelStorage`).
+- **Tests**: Vitest coverage for multi-build CSV, theme roundtrip, share v4, main panel sanitization, and preset payload themes.
+
+### Changed
+
+- **Lab compare / import**: Unified CSV and share URLs apply themes when present; parsing aligned with multi-build tower CSV format.
+- **Guardian previews**: Updated Finn, Nyra, Orbie, and Rolo guardian theme art.
+- **i18n**: EN/ES strings for themes navigation, skin groups, coin bonus, and preset share/delete affordances.
+
 ## [2.2.0] - 2026-05-16
 
 ### Added

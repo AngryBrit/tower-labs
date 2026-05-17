@@ -16,6 +16,7 @@ export const MENU_GUILD_ROWS: readonly MenuGuildRow[] = [
     nameId: 'theme_menu_dark_being',
     icon: 'menu-dark-being',
     guildSeason: 1,
+    image: '/themes/menus/dark_being.webp',
   },
   {
     id: 'menu-mech',

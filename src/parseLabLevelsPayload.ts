@@ -11,7 +11,12 @@ import {
   type WorkshopPersistedV1,
 } from './labPresetsStorage'
 import type { ResearchData } from './types/research'
-import { parseTowerUnifiedCsv } from './towerUnifiedCsv'
+import {
+  sanitizeThemeOwnedIds,
+  sanitizeThemeSelection,
+  type TowerThemesSnapshot,
+} from './towerDataThemes'
+import { parseTowerUnifiedCsv, towerUnifiedPrimaryBuild } from './towerUnifiedCsv'
 
 export type ParseLabLevelsError =
   | 'empty'
@@ -20,7 +25,12 @@ export type ParseLabLevelsError =
   | 'invalid_payload'
 
 export type ParseLabLevelsResult =
-  | { ok: true; overrides: Record<string, number>; workshop?: WorkshopPersistedV1 }
+  | {
+      ok: true
+      overrides: Record<string, number>
+      workshop?: WorkshopPersistedV1
+      themes?: TowerThemesSnapshot
+    }
   | { ok: false; error: ParseLabLevelsError }
 
 /** Extract `labs` query value from a pasted URL or `labs=…` fragment (percent-decoded). */
@@ -44,18 +54,27 @@ function packShareParse(
   dec: LabsShareFile,
 ): Extract<ParseLabLevelsResult, { ok: true }> {
   const overrides = sanitizeLevelOverrides(data, dec.o as Record<string, unknown>)
-  if (dec.v === 2 && dec.w !== undefined) {
-    return {
-      ok: true,
-      overrides,
-      workshop: sanitizeWorkshopPersisted(dec.w),
-    }
+  const workshop =
+    (dec.v === 2 || dec.v === 3 || dec.v === 4) && dec.w !== undefined
+      ? sanitizeWorkshopPersisted(dec.w)
+      : undefined
+  const themes =
+    dec.v === 4 && dec.t
+      ? {
+          selection: sanitizeThemeSelection(dec.t.sel),
+          ownedIds: sanitizeThemeOwnedIds(dec.t.owned),
+        }
+      : undefined
+  return {
+    ok: true,
+    overrides,
+    ...(workshop !== undefined ? { workshop } : {}),
+    ...(themes !== undefined ? { themes } : {}),
   }
-  return { ok: true, overrides }
 }
 
 /**
- * Parse a page URL with `?labs=…`, a raw `u…` / `z…` share payload, inline JSON `{ "v":1|2, "o":…, "w"? }`,
+ * Parse a page URL with `?labs=…`, a raw `u…` / `z…` share payload, inline JSON `{ "v":1|2|3, "o":…, "w"? , "n"? }`,
  * combined **tower CSV** (`tower_csv_v1` first line), or legacy lab-only CSV (`key,level` rows).
  */
 export async function parseLabLevelsPayload(
@@ -68,13 +87,15 @@ export async function parseLabLevelsPayload(
   const tower = parseTowerUnifiedCsv(text)
   if (tower.tag === 'invalid') return { ok: false, error: 'invalid_csv' }
   if (tower.tag === 'ok') {
+    const primary = towerUnifiedPrimaryBuild(tower)
     return {
       ok: true,
       overrides: sanitizeLevelOverrides(
         data,
-        tower.overrides as Record<string, unknown>,
+        primary.overrides as Record<string, unknown>,
       ),
-      workshop: tower.workshop,
+      workshop: primary.workshop,
+      ...(tower.themes ? { themes: tower.themes } : {}),
     }
   }
 

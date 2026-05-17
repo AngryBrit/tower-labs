@@ -13,6 +13,8 @@ type BackgroundGuildRow = {
   nameId: StringId
   icon: string
   guildSeason: number
+  /** Preview art in `public/themes/background/`. */
+  image?: string
   ownedDefault?: boolean
 }
 
@@ -308,12 +310,14 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_throne_room',
     icon: 'menu-crown',
     guildSeason: 1,
+    image: '/themes/background/throne_room.webp',
   },
   {
     id: 'bg-guild-mech-world',
     nameId: 'theme_bg_mech_world',
     icon: 'menu-mech',
     guildSeason: 2,
+    image: '/themes/background/mech_world.webp',
     ownedDefault: true,
   },
   {
@@ -321,6 +325,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_party',
     icon: 'menu-party',
     guildSeason: 3,
+    image: '/themes/background/party.webp',
     ownedDefault: true,
   },
   {
@@ -328,6 +333,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_pixel_alien_war',
     icon: 'menu-pixel',
     guildSeason: 4,
+    image: '/themes/background/pixel_alien_war.webp',
     ownedDefault: true,
   },
   {
@@ -335,6 +341,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_crimson_horror',
     icon: 'menu-horror',
     guildSeason: 5,
+    image: '/themes/background/crimson_horror.webp',
     ownedDefault: true,
   },
   {
@@ -342,6 +349,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_cozy_cosmos',
     icon: 'menu-cosmos',
     guildSeason: 6,
+    image: '/themes/background/cozy_cosmos.webp',
     ownedDefault: true,
   },
   {
@@ -349,6 +357,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_supernova',
     icon: 'menu-supernova',
     guildSeason: 7,
+    image: '/themes/background/supernova.webp',
     ownedDefault: true,
   },
   {
@@ -356,6 +365,7 @@ export const BACKGROUND_GUILD_ROWS: readonly BackgroundGuildRow[] = [
     nameId: 'theme_bg_claw_machine',
     icon: 'menu-claw',
     guildSeason: 8,
+    image: '/themes/background/claw_machine.webp',
     ownedDefault: true,
   },
 ]

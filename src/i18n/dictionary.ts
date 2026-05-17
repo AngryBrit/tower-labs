@@ -598,6 +598,9 @@ export const STRINGS_EN = {
   sr_preset_scratch_option: 'Scratch (unsaved workspace)',
   sr_preset_select_aria: 'Load a saved build (lab + workshop) or the scratch workspace',
   sr_preset_save_as: 'Save as…',
+  sr_preset_share_link: 'Copy link',
+  sr_preset_share_link_aria:
+    'Copy a URL that opens this build (lab levels and workshop)',
   sr_preset_delete_build: 'Delete build',
   sr_preset_delete_aria: 'Delete the active saved build',
   sr_hide_completed: 'Hide Completed',
@@ -617,7 +620,7 @@ export const STRINGS_EN = {
 
   sr_lab_data_title: 'Tower Backup & Sharing',
   sr_lab_data_intro:
-    'Use one CSV for lab levels and workshop together (first line tower_csv_v1), or copy / QR a share link.',
+    'Export/import one CSV with lab, workshop, cards, modules, themes, and all saved builds (tower_csv_v1), or copy / QR a share link with the same data.',
   sr_lab_data_files: 'Tower CSV (lab + workshop)',
   sr_lab_data_share: 'Share link',
   sr_lab_import_file: 'Import tower from CSV',
@@ -625,7 +628,7 @@ export const STRINGS_EN = {
   sr_compare_launcher: 'Compare builds…',
   sr_compare_title: 'Compare two lab snapshots',
   sr_compare_intro:
-    'Paste a tower CSV (first line tower_csv_v1), legacy lab CSV (key,level), a page URL with ?labs=…, a raw share payload (u… / z…), or JSON { "v":2, "o":{…}, "w"? }. Coin totals match the simulator budget (Card Mastery omitted). Workshop rows use defaults when a side has no embedded w. Each side uses its own Labs Coin Discount level.',
+    'Paste a tower CSV (first line tower_csv_v1; lab, ws, card, theme, and build rows), legacy lab CSV (key,level), a page URL with ?labs=…, a raw share payload (u… / z…), or JSON { "v":4, "o", "w", "t", "n" }. Imports restore lab, workshop, cards, modules sim, and themes. Each compare side uses its own Labs Coin Discount level.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
   sr_compare_placeholder: 'Tower CSV, legacy CSV, URL, payload, or JSON…',
@@ -704,7 +707,12 @@ export const STRINGS_EN = {
   sr_notice_share_many:
     'Share link opened: loaded {{count}} custom lab levels.',
   sr_notice_share_ws_suffix: 'Workshop snapshot from the link was applied.',
+  sr_notice_share_build_suffix: 'Shared build: “{{name}}”.',
   sr_notice_reset_all: 'Lab levels reset to defaults in this browser.',
+  sr_notice_copy_build_ok:
+    'Share link copied — open the URL to load lab, workshop, cards, modules, and themes.',
+  sr_notice_copy_build_fail:
+    'Could not copy link (clipboard blocked or unavailable).',
   sr_notice_copy_short_ok:
     'Short share link copied (includes workshop when it is not the default snapshot).',
   sr_notice_copy_short_fail:
@@ -722,8 +730,13 @@ export const STRINGS_EN = {
   sr_notice_import_invalid_csv:
     'Invalid CSV: use a header row key,level and one row per lab (e.g. 0-3,12), or a valid tower CSV (first line tower_csv_v1).',
   sr_notice_import_invalid_tower_csv:
-    'Invalid tower CSV: first line must be tower_csv_v1, then type,key,value rows (lab / ws).',
+    'Invalid tower CSV: first line must be tower_csv_v1, then type,key,value rows (build / lab / ws).',
   sr_notice_import_tower_ok: 'Imported lab levels and workshop from tower CSV.',
+  sr_notice_import_tower_named:
+    'Imported tower CSV for build “{{name}}” (loaded into scratch workspace).',
+  sr_notice_import_tower_many:
+    'Imported {{count}} builds from tower CSV (first build is now active).',
+  sr_preset_import_default_name: 'Imported build',
   sr_preset_prompt_title: 'Name this build — lab + workshop (saved in this browser only)',
   sr_preset_name_label: 'Build name',
   sr_preset_dialog_save: 'Save build',
@@ -1356,6 +1369,9 @@ export const STRINGS_ES = {
   sr_preset_scratch_option: 'Borrador (espacio de trabajo sin guardar)',
   sr_preset_select_aria: 'Cargar un build guardado (lab + taller) o el espacio de trabajo',
   sr_preset_save_as: 'Guardar como…',
+  sr_preset_share_link: 'Copiar enlace',
+  sr_preset_share_link_aria:
+    'Copiar una URL que abre este build (niveles del lab y taller)',
   sr_preset_delete_build: 'Eliminar build',
   sr_preset_delete_aria: 'Eliminar el build guardado activo',
   sr_hide_completed: 'Ocultar completados',
@@ -1375,7 +1391,7 @@ export const STRINGS_ES = {
 
   sr_lab_data_title: 'Tower — copia de seguridad y compartir',
   sr_lab_data_intro:
-    'Un solo CSV reúne lab y taller (primera línea tower_csv_v1), o copia / QR un enlace.',
+    'Un CSV exporta/importa lab, taller, cartas, módulos, temas y todos los builds (tower_csv_v1), o copia / QR un enlace con los mismos datos.',
   sr_lab_data_files: 'CSV Tower (lab + taller)',
   sr_lab_data_share: 'Enlace para compartir',
   sr_lab_import_file: 'Importar tower desde CSV',
@@ -1383,7 +1399,7 @@ export const STRINGS_ES = {
   sr_compare_launcher: 'Comparar builds…',
   sr_compare_title: 'Comparar dos instantáneas de labs',
   sr_compare_intro:
-    'Pega un CSV tower (primera línea tower_csv_v1), CSV de lab antiguo (key,level), URL con ?labs=…, payload u…/z… o JSON { "v":2, "o":{…}, "w"? }. Las monedas coinciden con el simulador (sin Card Mastery). El taller usa valores predeterminados si un lado no trae w. Cada lado usa su propio nivel de Labs Coin Discount.',
+    'Pega un CSV tower (tower_csv_v1; filas lab, ws, card, theme, build), CSV lab antiguo, URL con ?labs=…, payload u…/z… o JSON { "v":4, "o", "w", "t" }. Restaura lab, taller, cartas, módulos y temas. Cada lado usa su propio Labs Coin Discount.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
   sr_compare_placeholder: 'CSV tower, CSV antiguo, URL, payload o JSON…',
@@ -1464,6 +1480,11 @@ export const STRINGS_ES = {
   sr_notice_share_many:
     'Enlace abierto: se cargaron {{count}} niveles de lab personalizados.',
   sr_notice_share_ws_suffix: 'Se aplicó la instantánea del taller del enlace.',
+  sr_notice_share_build_suffix: 'Build compartido: “{{name}}”.',
+  sr_notice_copy_build_ok:
+    'Enlace copiado — abre la URL en un navegador para cargar este build.',
+  sr_notice_copy_build_fail:
+    'No se pudo copiar el enlace (portapapeles bloqueado o no disponible).',
   sr_notice_reset_all:
     'Niveles de lab restablecidos a los valores predeterminados en este navegador.',
   sr_notice_copy_short_ok:
@@ -1483,8 +1504,13 @@ export const STRINGS_ES = {
   sr_notice_import_invalid_csv:
     'CSV no válido: cabecera key,level y una fila por lab (p. ej. 0-3,12), o un CSV tower válido (primera línea tower_csv_v1).',
   sr_notice_import_invalid_tower_csv:
-    'CSV tower no válido: la primera línea debe ser tower_csv_v1 y luego filas type,key,value (lab / ws).',
+    'CSV tower no válido: la primera línea debe ser tower_csv_v1 y luego filas type,key,value (build / lab / ws).',
   sr_notice_import_tower_ok: 'Se importaron niveles de lab y taller desde CSV tower.',
+  sr_notice_import_tower_named:
+    'CSV tower importado para el build “{{name}}” (cargado en el borrador).',
+  sr_notice_import_tower_many:
+    'Se importaron {{count}} builds desde CSV tower (el primero quedó activo).',
+  sr_preset_import_default_name: 'Build importado',
   sr_preset_prompt_title: 'Nombre del build — lab + taller (solo en este navegador)',
   sr_preset_name_label: 'Nombre del build',
   sr_preset_dialog_save: 'Guardar build',
@@ -1525,7 +1551,11 @@ function replaceParams(
 }
 
 export type I18nFormatters = {
-  shareOpenedLevels: (count: number, workshopFromLink?: boolean) => string
+  shareOpenedLevels: (
+    count: number,
+    workshopFromLink?: boolean,
+    buildName?: string,
+  ) => string
   importedLevels: (count: number) => string
   deleteBuildConfirm: (nameOrId: string) => string
   savedPreset: (name: string) => string
@@ -1539,18 +1569,26 @@ export type I18nFormatters = {
   versionAria: (version: string) => string
   compareDifferingLabsCount: (count: number) => string
   compareDifferingWorkshopFields: (count: number) => string
+  importedTowerBuildNamed: (name: string) => string
+  importedTowerBuilds: (count: number) => string
 }
 
 function formatters(s: Record<StringId, string>): I18nFormatters {
   return {
-    shareOpenedLevels(count, workshopFromLink = false) {
+    shareOpenedLevels(count, workshopFromLink = false, buildName?: string) {
       const base =
         count === 0
           ? s.sr_notice_share_cleared
           : count === 1
             ? s.sr_notice_share_one
             : replaceParams(s.sr_notice_share_many, { count })
-      return workshopFromLink ? `${base} ${s.sr_notice_share_ws_suffix}` : base
+      const trimmedName = buildName?.trim()
+      const buildSuffix =
+        trimmedName != null && trimmedName.length > 0
+          ? ` ${replaceParams(s.sr_notice_share_build_suffix, { name: trimmedName })}`
+          : ''
+      const workshopSuffix = workshopFromLink ? ` ${s.sr_notice_share_ws_suffix}` : ''
+      return `${base}${workshopSuffix}${buildSuffix}`
     },
     importedLevels(count) {
       if (count === 0) return s.sr_notice_import_cleared
@@ -1595,6 +1633,12 @@ function formatters(s: Record<StringId, string>): I18nFormatters {
     compareDifferingWorkshopFields(count) {
       if (count === 1) return s.sr_compare_ws_diff_one
       return replaceParams(s.sr_compare_ws_diff_many, { count })
+    },
+    importedTowerBuildNamed(name) {
+      return replaceParams(s.sr_notice_import_tower_named, { name })
+    },
+    importedTowerBuilds(count) {
+      return replaceParams(s.sr_notice_import_tower_many, { count })
     },
   }
 }
