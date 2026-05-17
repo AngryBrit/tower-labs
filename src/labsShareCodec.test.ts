@@ -3,7 +3,8 @@ import {
   buildLabsShareUrls,
   decodeLabsShareQueryValue,
   encodeLabsShareQueryValue,
-  LABS_SHARE_SEARCH_PARAM,
+  LABS_SHARE_SEARCH_PARAM_LEGACY,
+  TOWER_SHARE_SEARCH_PARAM,
 } from './labsShareCodec'
 import { defaultWorkshopPersisted } from './labPresetsStorage'
 
@@ -73,9 +74,10 @@ describe('labsShareCodec', () => {
       'https://example.com/tower/?utm=1&x=y#section',
     )
     expect(clean).toBe(
-      `https://example.com/tower/?${LABS_SHARE_SEARCH_PARAM}=uTEST`,
+      `https://example.com/tower/?${TOWER_SHARE_SEARCH_PARAM}=uTEST`,
     )
-    expect(full).toContain(`${LABS_SHARE_SEARCH_PARAM}=uTEST`)
+    expect(full).toContain(`${TOWER_SHARE_SEARCH_PARAM}=uTEST`)
+    expect(full).not.toContain(`${LABS_SHARE_SEARCH_PARAM_LEGACY}=`)
     expect(full).toContain('utm=1')
     expect(full).toContain('#section')
   })

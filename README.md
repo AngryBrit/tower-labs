@@ -22,7 +22,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, mode
 - **Modules simulator** — Assist chassis selection and cannon submodule effects; module substats pull from MODULES research labs when data is loaded.
 - **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
 - **Unified CSV backup** — Export and import a single CSV with one or more **named builds** (lab levels, workshop snapshot, card stars/presets) plus optional global **theme** selection and owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
-- **Shareable builds** — Encode the current lab selection in the `?labs=` query string; optional QR code for sharing.
+- **Shareable builds** — Encode the current lab selection in the `?tower=` query string; optional QR code for sharing. Legacy `?labs=` links still import.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
 - **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Cards, Themes, Tools), workshop snapshot, lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`).
 
@@ -118,7 +118,7 @@ After you edit files under `public/research/` or `src/data/`, save and refresh t
 
 ## Sharing lab builds
 
-The app can serialize the selected lab levels into the **`labs`** query parameter. Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same selection (within the limits of the codec and data).
+The app can serialize the selected lab levels into the **`tower`** query parameter (`?tower=…`). Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same selection (within the limits of the codec and data). Older links that use `?labs=` still import.
 
 ---
 

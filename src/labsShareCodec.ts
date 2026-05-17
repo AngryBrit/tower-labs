@@ -1,8 +1,30 @@
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
 import type { TowerThemesSnapshot } from './towerDataThemes'
 
-/** Query param name for encoded lab level overrides (`?labs=…`). */
-export const LABS_SHARE_SEARCH_PARAM = 'labs'
+/** Query param name for encoded share payloads (`?tower=…`). */
+export const TOWER_SHARE_SEARCH_PARAM = 'tower'
+
+/** Legacy query param; still accepted when importing pasted URLs. */
+export const LABS_SHARE_SEARCH_PARAM_LEGACY = 'labs'
+
+/** @deprecated Use {@link TOWER_SHARE_SEARCH_PARAM}. */
+export const LABS_SHARE_SEARCH_PARAM = TOWER_SHARE_SEARCH_PARAM
+
+/** Read share payload from URL search params (`tower`, then legacy `labs`). */
+export function readShareEncodedFromUrlSearchParams(
+  params: URLSearchParams,
+): string | null {
+  return (
+    params.get(TOWER_SHARE_SEARCH_PARAM) ??
+    params.get(LABS_SHARE_SEARCH_PARAM_LEGACY)
+  )
+}
+
+/** Remove share params from a URL after applying an imported link. */
+export function clearShareEncodedFromUrl(url: URL): void {
+  url.searchParams.delete(TOWER_SHARE_SEARCH_PARAM)
+  url.searchParams.delete(LABS_SHARE_SEARCH_PARAM_LEGACY)
+}
 
 export type LabsShareFileV1 = { v: 1; o: Record<string, number> }
 export type LabsShareFileV2 = { v: 2; o: Record<string, number>; w?: unknown }
@@ -28,18 +50,19 @@ export type LabsShareFile =
   | LabsShareFileV4
 
 /**
- * Builds share URLs for the current `labs` payload.
- * - **clean**: `origin` + `pathname` + `?labs=…` only (drops hash and other query params).
- * - **full**: current `href` with `labs` set (keeps other params and hash).
+ * Builds share URLs for the current share payload.
+ * - **clean**: `origin` + `pathname` + `?tower=…` only (drops hash and other query params).
+ * - **full**: current `href` with `tower` set (keeps other params and hash).
  */
 export function buildLabsShareUrls(
   encoded: string,
   pageHref: string,
 ): { clean: string; full: string } {
   const full = new URL(pageHref)
-  full.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  full.searchParams.delete(LABS_SHARE_SEARCH_PARAM_LEGACY)
+  full.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
   const clean = new URL(full.origin + full.pathname)
-  clean.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  clean.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
   return { clean: clean.toString(), full: full.toString() }
 }
 
@@ -92,7 +115,7 @@ function fromBase64Url(s: string): Uint8Array {
 }
 
 /**
- * Encodes lab overrides for use in `?labs=`. Uses raw DEFLATE when supported,
+ * Encodes lab overrides for use in `?tower=`. Uses raw DEFLATE when supported,
  * otherwise base64url JSON with an `u` prefix.
  * When `workshop` differs from defaults, uses **v:2** and embeds `w` so links restore workshop too.
  */

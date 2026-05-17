@@ -628,7 +628,7 @@ export const STRINGS_EN = {
   sr_compare_launcher: 'Compare builds…',
   sr_compare_title: 'Compare two lab snapshots',
   sr_compare_intro:
-    'Paste a tower CSV (first line tower_csv_v1; lab, ws, card, theme, and build rows), legacy lab CSV (key,level), a page URL with ?labs=…, a raw share payload (u… / z…), or JSON { "v":4, "o", "w", "t", "n" }. Imports restore lab, workshop, cards, modules sim, and themes. Each compare side uses its own Labs Coin Discount level.',
+    'Paste a tower CSV (first line tower_csv_v1; lab, ws, card, theme, and build rows), legacy lab CSV (key,level), a page URL with ?tower=… (or legacy ?labs=…), a raw share payload (u… / z…), or JSON { "v":4, "o", "w", "t", "n" }. Imports restore lab, workshop, cards, modules sim, and themes. Each compare side uses its own Labs Coin Discount level.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
   sr_compare_placeholder: 'Tower CSV, legacy CSV, URL, payload, or JSON…',
@@ -660,7 +660,7 @@ export const STRINGS_EN = {
     'Invalid CSV: use legacy key,level rows, or a valid tower CSV (first line tower_csv_v1).',
   sr_compare_parse_invalid_payload:
     'Could not parse as CSV or share text.',
-  sr_compare_parse_share_fail: 'Could not decode the ?labs= / share payload.',
+  sr_compare_parse_share_fail: 'Could not decode the ?tower= / share payload.',
   sr_compare_diff_count_none:
     'No level differences — effective levels match for every lab.',
   sr_compare_diff_count_one: '1 lab has a different level.',
@@ -1399,7 +1399,7 @@ export const STRINGS_ES = {
   sr_compare_launcher: 'Comparar builds…',
   sr_compare_title: 'Comparar dos instantáneas de labs',
   sr_compare_intro:
-    'Pega un CSV tower (tower_csv_v1; filas lab, ws, card, theme, build), CSV lab antiguo, URL con ?labs=…, payload u…/z… o JSON { "v":4, "o", "w", "t" }. Restaura lab, taller, cartas, módulos y temas. Cada lado usa su propio Labs Coin Discount.',
+    'Pega un CSV tower (tower_csv_v1; filas lab, ws, card, theme, build), CSV lab antiguo, URL con ?tower=… (o ?labs=… antiguo), payload u…/z… o JSON { "v":4, "o", "w", "t" }. Restaura lab, taller, cartas, módulos y temas. Cada lado usa su propio Labs Coin Discount.',
   sr_compare_build_a: 'Build A',
   sr_compare_build_b: 'Build B',
   sr_compare_placeholder: 'CSV tower, CSV antiguo, URL, payload o JSON…',
@@ -1432,7 +1432,7 @@ export const STRINGS_ES = {
     'CSV no válido: usa key,level como en exportaciones antiguas, o un CSV tower válido (primera línea tower_csv_v1).',
   sr_compare_parse_invalid_payload:
     'No se pudo interpretar como CSV o texto de compartir.',
-  sr_compare_parse_share_fail: 'No se pudo decodificar ?labs= / el payload.',
+  sr_compare_parse_share_fail: 'No se pudo decodificar ?tower= / el payload.',
   sr_compare_diff_count_none:
     'Sin diferencias de nivel: los niveles efectivos coinciden en todos los labs.',
   sr_compare_diff_count_one: '1 lab tiene un nivel distinto.',

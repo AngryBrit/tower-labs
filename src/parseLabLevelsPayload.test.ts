@@ -35,7 +35,15 @@ function loadResearchDataSync(): ResearchData {
 }
 
 describe('extractLabsShareEncodedFromText', () => {
-  it('reads labs param from full URL', () => {
+  it('reads tower param from full URL', () => {
+    expect(
+      extractLabsShareEncodedFromText(
+        'https://example.com/app/?utm=1&tower=ueyJ2IjoxLCJvIjp7fX0',
+      ),
+    ).toBe('ueyJ2IjoxLCJvIjp7fX0')
+  })
+
+  it('reads legacy labs param from full URL', () => {
     expect(
       extractLabsShareEncodedFromText(
         'https://example.com/app/?utm=1&labs=ueyJ2IjoxLCJvIjp7fX0',
@@ -45,7 +53,7 @@ describe('extractLabsShareEncodedFromText', () => {
 
   it('percent-decodes payload', () => {
     expect(
-      extractLabsShareEncodedFromText('https://x.test/t?labs=u%2Bfoo'),
+      extractLabsShareEncodedFromText('https://x.test/t?tower=u%2Bfoo'),
     ).toBe('u+foo')
   })
 })
@@ -53,9 +61,9 @@ describe('extractLabsShareEncodedFromText', () => {
 describe('parseLabLevelsPayload', () => {
   const data = loadResearchDataSync()
 
-  it('parses URL with labs param', async () => {
+  it('parses URL with tower param', async () => {
     const enc = await encodeLabsShareQueryValue({ '0-0': 4 })
-    const url = `https://host.example/path/page?labs=${enc}`
+    const url = `https://host.example/path/page?tower=${enc}`
     const r = await parseLabLevelsPayload(url, data)
     expect(r.ok && r.overrides['0-0']).toBe(4)
   })

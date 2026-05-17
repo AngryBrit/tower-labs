@@ -1,7 +1,8 @@
 import {
   decodeLabsShareQueryValue,
   isLabsShareFile,
-  LABS_SHARE_SEARCH_PARAM,
+  LABS_SHARE_SEARCH_PARAM_LEGACY,
+  TOWER_SHARE_SEARCH_PARAM,
   type LabsShareFile,
 } from './labsShareCodec'
 import { parseLabLevelOverridesCsv } from './labLevelOverridesCsv'
@@ -33,20 +34,23 @@ export type ParseLabLevelsResult =
     }
   | { ok: false; error: ParseLabLevelsError }
 
-/** Extract `labs` query value from a pasted URL or `labs=…` fragment (percent-decoded). */
+/** Extract `tower` (or legacy `labs`) query value from a pasted URL (percent-decoded). */
 export function extractLabsShareEncodedFromText(text: string): string | null {
   const t = text.trim()
-  const param = LABS_SHARE_SEARCH_PARAM.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const m =
-    t.match(new RegExp(`[?&]${param}=([^&\\s#]+)`, 'i')) ??
-    t.match(new RegExp(`^${param}=([^&\\s#]+)`, 'i'))
-  const raw = m?.[1]?.trim()
-  if (!raw) return null
-  try {
-    return decodeURIComponent(raw)
-  } catch {
-    return raw
+  for (const param of [TOWER_SHARE_SEARCH_PARAM, LABS_SHARE_SEARCH_PARAM_LEGACY]) {
+    const escaped = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const m =
+      t.match(new RegExp(`[?&]${escaped}=([^&\\s#]+)`, 'i')) ??
+      t.match(new RegExp(`^${escaped}=([^&\\s#]+)`, 'i'))
+    const raw = m?.[1]?.trim()
+    if (!raw) continue
+    try {
+      return decodeURIComponent(raw)
+    } catch {
+      return raw
+    }
   }
+  return null
 }
 
 function packShareParse(
@@ -74,7 +78,7 @@ function packShareParse(
 }
 
 /**
- * Parse a page URL with `?labs=…`, a raw `u…` / `z…` share payload, inline JSON `{ "v":1|2|3, "o":…, "w"? , "n"? }`,
+ * Parse a page URL with `?tower=…` (or legacy `?labs=…`), a raw `u…` / `z…` share payload, inline JSON `{ "v":1|2|3, "o":…, "w"? , "n"? }`,
  * combined **tower CSV** (`tower_csv_v1` first line), or legacy lab-only CSV (`key,level` rows).
  */
 export async function parseLabLevelsPayload(

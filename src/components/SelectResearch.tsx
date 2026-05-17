@@ -19,7 +19,8 @@ import {
   buildLabsShareUrls,
   decodeLabsShareQueryValue,
   encodeLabsShareQueryValue,
-  LABS_SHARE_SEARCH_PARAM,
+  clearShareEncodedFromUrl,
+  readShareEncodedFromUrlSearchParams,
 } from '../labsShareCodec'
 import {
   computeSimulatorCoinAggregates,
@@ -422,7 +423,7 @@ export const SelectResearch = forwardRef<
 
       try {
         const params = new URLSearchParams(window.location.search)
-        const share = params.get(LABS_SHARE_SEARCH_PARAM)
+        const share = readShareEncodedFromUrlSearchParams(params)
         if (share) {
           const payload = await decodeLabsShareQueryValue(share)
           if (payload?.o && !cancelled) {
@@ -458,7 +459,7 @@ export const SelectResearch = forwardRef<
             setScratchWorkshopPersisted(nextScratchWorkshop)
             applySectionCollapsedFromStorage()
             const url = new URL(window.location.href)
-            url.searchParams.delete(LABS_SHARE_SEARCH_PARAM)
+            clearShareEncodedFromUrl(url)
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
             const n = Object.keys(sanitized).length
             setImportNotice(
