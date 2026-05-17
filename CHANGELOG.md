@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-05-17
+
+### Added
+
+- **Relics tab**: Top-level **Relics** navigation with owned-catalog toggles, displayed-damage relic bonus, toolbar reset, and wiki-aligned stat rollups (`RelicsPage`, `WorkshopRelicsPanel`, `workshopRelics`, `workshopRelicStats`).
+- **Chassis modules**: Cannon, armor, core, and generator module catalogs with epic→ancestral tier tables, ability text, and WebP art under `public/modules/` (`workshopCannonModules`, `workshopArmorModules`, `workshopCoreModules`, `workshopGeneratorModules`, `workshopChassisModuleShared`).
+- **Module UX**: Equip picker dialog, browsable chassis catalog, and submodule-effects reference (`ChassisModulePickerDialog`, `ChassisModulesCatalog`, `SubmoduleEffectsCatalog`); assist chassis selection with hero-stat readout (`workshopAssistChassisModule`, `workshopChassisModuleHeroStat`).
+- **Submodule picks**: Per-slot cannon sub-module effect selections wired into attack-speed sim (`workshopSubmoduleSelection`, `workshopSubmoduleCatalog`).
+- **Module art helpers**: Rarity frame sprites and per-module image paths (`workshopModuleArt`, `workshopModuleImages`).
+- **Resets**: Separate **reset modules** and **reset relics** flows that preserve other workshop, card, and theme state (`resetWorkshopModules`, `resetWorkshopRelics`).
+- **Unified CSV**: Workshop rows for `relicOwnedIds`, equipped chassis module ids, assist chassis, and `simSubmoduleSelections` round-trip in tower CSV import/export.
+- **Tests**: Vitest coverage for chassis catalogs, submodule selection, relic stats, module images, assist chassis, and sim-module merges.
+
+### Changed
+
+- **Modules page & panel**: Expanded `ModulesPage` and `WorkshopModulesPanel` for chassis equip, assist levels, submodule picks, and catalog visibility toggles (`modulesCatalogVisibility`, `submodulesCatalogVisibility`).
+- **Displayed stats**: Chassis modules, relic bonus, and submodule attack-speed effects fold into workshop sim and compare paths (`workshopSimModules`, `workshopCompare`).
+- **Persistence**: `WorkshopPersistedV1` adds relic ownership, chassis equip fields, assist chassis, and submodule selections; presets and compare import apply the expanded snapshot.
+- **i18n**: EN/ES strings for Relics navigation, module catalogs, chassis picker, submodule effects, and reset affordances.
+
 ## [2.3.0] - 2026-05-17
 
 ### Added

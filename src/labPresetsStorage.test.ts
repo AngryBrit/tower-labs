@@ -4,6 +4,8 @@ import {
   defaultWorkshopPersisted,
   parseLabPresetsFile,
   resetWorkshopCards,
+  resetWorkshopModules,
+  resetWorkshopRelics,
   resetWorkshopUpgradeLevels,
 } from './labPresetsStorage'
 
@@ -50,6 +52,51 @@ describe('resetWorkshopCards', () => {
     expect(after.cardEquipSlots).toBe(1)
     expect(after.cardPresetLoadouts[0]).toEqual([])
     expect(after.simDamageCardStars).toBe(0)
+  })
+})
+
+describe('resetWorkshopModules', () => {
+  it('clears module state but keeps workshop upgrades and cards', () => {
+    const before = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 42,
+      cardStars: { ...defaultWorkshopPersisted().cardStars, damage: 5 },
+      simAssistModuleSlot: 'armor' as const,
+      simCannonModuleLevel: 12,
+      simCannonChassisModuleId: 'deathPenalty',
+      simCannonChassisModuleRarity: 'mythic' as const,
+      simSubmoduleSelections: {
+        ...defaultWorkshopPersisted().simSubmoduleSelections,
+        cannon: { 'attack-speed': 'legendary' as const },
+      },
+      simAttackSpeedModuleSubEffect: 1,
+    }
+    const after = resetWorkshopModules(before)
+    expect(after.damageLevel).toBe(42)
+    expect(after.cardStars.damage).toBe(5)
+    expect(after.simAssistModuleSlot).toBe('cannon')
+    expect(after.simCannonModuleLevel).toBe(0)
+    expect(after.simCannonChassisModuleId).toBe('')
+    expect(after.simCannonChassisModuleRarity).toBe('epic')
+    expect(after.simSubmoduleSelections.cannon).toEqual({})
+    expect(after.simAttackSpeedModuleSubEffect).toBe(0)
+  })
+})
+
+describe('resetWorkshopRelics', () => {
+  it('clears relic ownership and bonus but keeps cards and workshop levels', () => {
+    const before = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 42,
+      cardStars: { ...defaultWorkshopPersisted().cardStars, damage: 5 },
+      relicOwnedIds: ['t_iv_harmonic', 't_xiv_arcane'],
+      simRelicsBonusFraction: 0.12,
+    }
+    const after = resetWorkshopRelics(before)
+    expect(after.damageLevel).toBe(42)
+    expect(after.cardStars.damage).toBe(5)
+    expect(after.relicOwnedIds).toEqual([])
+    expect(after.simRelicsBonusFraction).toBe(0)
   })
 })
 

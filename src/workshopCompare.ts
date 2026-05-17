@@ -2,6 +2,7 @@ import {
   WORKSHOP_ULTIMATE_ACTIVE_ORDER,
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
 } from './data/workshopUltimate'
+import { serializeSubmoduleSelections } from './data/workshopSubmoduleSelection'
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
 
 export type WorkshopCompareRow = {
@@ -14,6 +15,7 @@ export type WorkshopCompareRow = {
 function displayWorkshopField(v: WorkshopPersistedV1, k: keyof WorkshopPersistedV1): string {
   const x = v[k]
   if (typeof x === 'boolean') return x ? 'true' : 'false'
+  if (k === 'simSubmoduleSelections') return serializeSubmoduleSelections(v.simSubmoduleSelections)
   return String(x)
 }
 
@@ -93,9 +95,39 @@ const WORKSHOP_COMPARE_KEYS: readonly (keyof WorkshopPersistedV1)[] = [
   'simAttackSpeedModuleSubEffect',
   'simBerserkerCardStars',
   'simBerserkerDamageTaken',
+  'relicOwnedIds',
   'simRelicsBonusFraction',
   'simPerkDamageQuantity',
   'simAssistModuleSlot',
+  'simCannonModuleLevel',
+  'simArmorModuleLevel',
+  'simGeneratorModuleLevel',
+  'simCoreModuleLevel',
+  'simCannonChassisModuleId',
+  'simArmorChassisModuleId',
+  'simGeneratorChassisModuleId',
+  'simCoreChassisModuleId',
+  'simCannonChassisModuleRarity',
+  'simArmorChassisModuleRarity',
+  'simGeneratorChassisModuleRarity',
+  'simCoreChassisModuleRarity',
+  'simSubmoduleSelections',
+  'simCannonAssistUnlocked',
+  'simArmorAssistUnlocked',
+  'simGeneratorAssistUnlocked',
+  'simCoreAssistUnlocked',
+  'simCannonAssistChassisModuleId',
+  'simArmorAssistChassisModuleId',
+  'simGeneratorAssistChassisModuleId',
+  'simCoreAssistChassisModuleId',
+  'simCannonAssistChassisModuleRarity',
+  'simArmorAssistChassisModuleRarity',
+  'simGeneratorAssistChassisModuleRarity',
+  'simCoreAssistChassisModuleRarity',
+  'simCannonAssistStoneEfficiency',
+  'simArmorAssistStoneEfficiency',
+  'simGeneratorAssistStoneEfficiency',
+  'simCoreAssistStoneEfficiency',
   ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]

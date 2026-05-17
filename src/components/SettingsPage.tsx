@@ -1,10 +1,15 @@
 import { APP_VERSION, CHANGELOG_URL } from '../appVersion'
 import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
+import { useModulesCatalogVisible } from '../modulesCatalogVisibility'
+import { useSubmodulesCatalogVisible } from '../submodulesCatalogVisibility'
 import { useI18n, type AppLocale } from '../i18n'
 
 export function SettingsPage() {
   const { t, fmt, locale, setLocale } = useI18n()
   const [budgetPanelsVisible, setBudgetPanelsVisible] = useBudgetPanelsVisible()
+  const [modulesCatalogVisible, setModulesCatalogVisible] = useModulesCatalogVisible()
+  const [submodulesCatalogVisible, setSubmodulesCatalogVisible] =
+    useSubmodulesCatalogVisible()
 
   return (
     <div className="settings-page" role="region" aria-label={t('app_settings_title')}>
@@ -34,6 +39,30 @@ export function SettingsPage() {
           {t('app_settings_budget_panels_label')}
         </label>
         <p className="settings-page__hint">{t('app_settings_budget_panels_hint')}</p>
+      </div>
+
+      <div className="settings-page__field">
+        <label className="glow-btn glow-btn--toggle settings-page__toggle">
+          <input
+            type="checkbox"
+            checked={modulesCatalogVisible}
+            onChange={(e) => setModulesCatalogVisible(e.target.checked)}
+          />
+          {t('app_settings_modules_catalog_label')}
+        </label>
+        <p className="settings-page__hint">{t('app_settings_modules_catalog_hint')}</p>
+      </div>
+
+      <div className="settings-page__field">
+        <label className="glow-btn glow-btn--toggle settings-page__toggle">
+          <input
+            type="checkbox"
+            checked={submodulesCatalogVisible}
+            onChange={(e) => setSubmodulesCatalogVisible(e.target.checked)}
+          />
+          {t('app_settings_submodules_catalog_label')}
+        </label>
+        <p className="settings-page__hint">{t('app_settings_submodules_catalog_hint')}</p>
       </div>
 
       <div className="settings-page__meta">

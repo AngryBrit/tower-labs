@@ -1,6 +1,8 @@
 /**
- * Cannon submodule **Attack Speed** flat add (wiki Sub-Module Effects table).
+ * Sub-module effects helpers (wiki Sub-Module Effects tables).
  */
+
+import { cannonSubmoduleAttackSpeedByRarity } from './workshopSubmoduleCatalog'
 
 export type WorkshopSubmoduleRarity =
   | 'common'
@@ -19,18 +21,24 @@ export const WORKSHOP_SUBMODULE_RARITIES: readonly WorkshopSubmoduleRarity[] = [
   'ancestral',
 ] as const
 
+/** CSS class per rarity (see `.modules-rarity--*` in App.css). */
+export const WORKSHOP_SUBMODULE_RARITY_CLASS: Record<
+  WorkshopSubmoduleRarity,
+  `modules-rarity--${WorkshopSubmoduleRarity}`
+> = {
+  common: 'modules-rarity--common',
+  rare: 'modules-rarity--rare',
+  epic: 'modules-rarity--epic',
+  legendary: 'modules-rarity--legendary',
+  mythic: 'modules-rarity--mythic',
+  ancestral: 'modules-rarity--ancestral',
+}
+
 /** Flat attack speed added inside **(Workshop × Lab × Card + …)**. */
 export const CANNON_SUBMODULE_ATTACK_SPEED_ADD: Record<
   WorkshopSubmoduleRarity,
   number
-> = {
-  common: 0.3,
-  rare: 0.5,
-  epic: 0.7,
-  legendary: 1,
-  mythic: 3,
-  ancestral: 5,
-}
+> = cannonSubmoduleAttackSpeedByRarity()
 
 export function cannonSubmoduleAttackSpeedAdd(
   rarity: WorkshopSubmoduleRarity | 'none',

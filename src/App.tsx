@@ -5,6 +5,7 @@ import { SelectResearch } from './components/SelectResearch'
 import { ToolsSettingsPage } from './components/ToolsSettingsPage'
 import { CardsPage } from './components/CardsPage'
 import { ModulesPage } from './components/ModulesPage'
+import { RelicsPage } from './components/RelicsPage'
 import { ThemesPage } from './components/ThemesPage'
 import { WorkshopPage } from './components/WorkshopPage'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
@@ -18,8 +19,8 @@ import {
 } from './mainPanelStorage'
 import './App.css'
 
-/** Top-level Modules tab (panel + nav) — set true when ready to ship. */
-const MODULES_PANEL_ENABLED = false
+/** Top-level Modules tab (panel + nav). */
+const MODULES_PANEL_ENABLED = true
 
 export default function App() {
   const { t, fmt } = useI18n()
@@ -118,8 +119,8 @@ export default function App() {
                 <nav
                   className={
                     MODULES_PANEL_ENABLED
-                      ? 'select-research__inpanel-tabs select-research__inpanel-tabs--six'
-                      : 'select-research__inpanel-tabs'
+                      ? 'select-research__inpanel-tabs select-research__inpanel-tabs--seven'
+                      : 'select-research__inpanel-tabs select-research__inpanel-tabs--six'
                   }
                   role="tablist"
                 >
@@ -131,8 +132,8 @@ export default function App() {
                     aria-controls="inpanel-panel-workshop"
                     className={
                       mainPanel === 'workshop'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--workshop select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--workshop'
                     }
                     onClick={() => {
                       setMainPanel('workshop')
@@ -152,8 +153,8 @@ export default function App() {
                     aria-controls="inpanel-panel-cards"
                     className={
                       mainPanel === 'cards'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--cards select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--cards'
                     }
                     onClick={() => {
                       setMainPanel('cards')
@@ -171,8 +172,8 @@ export default function App() {
                       aria-controls="inpanel-panel-modules"
                       className={
                         mainPanel === 'modules'
-                          ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                          : 'select-research__inpanel-tab'
+                          ? 'select-research__inpanel-tab select-research__inpanel-tab--modules select-research__inpanel-tab--on'
+                          : 'select-research__inpanel-tab select-research__inpanel-tab--modules'
                       }
                       onClick={() => {
                         setMainPanel('modules')
@@ -190,8 +191,8 @@ export default function App() {
                     aria-controls="inpanel-panel-lab"
                     className={
                       mainPanel === 'research'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--lab select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--lab'
                     }
                     onClick={() => setMainPanel('research')}
                   >
@@ -205,12 +206,27 @@ export default function App() {
                     aria-controls="inpanel-panel-themes"
                     className={
                       mainPanel === 'themes'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--themes select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--themes'
                     }
                     onClick={() => setMainPanel('themes')}
                   >
                     {t('app_nav_themes')}
+                  </button>
+                  <button
+                    id="inpanel-tab-relics"
+                    type="button"
+                    role="tab"
+                    aria-selected={mainPanel === 'relics'}
+                    aria-controls="inpanel-panel-relics"
+                    className={
+                      mainPanel === 'relics'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--relics select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--relics'
+                    }
+                    onClick={() => setMainPanel('relics')}
+                  >
+                    {t('app_nav_relics')}
                   </button>
                   <button
                     id="inpanel-tab-tools-settings"
@@ -220,8 +236,8 @@ export default function App() {
                     aria-controls="inpanel-panel-tools-settings"
                     className={
                       mainPanel === 'toolsSettings'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--tools-settings select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--tools-settings'
                     }
                     onClick={() => setMainPanel('toolsSettings')}
                   >
@@ -237,6 +253,7 @@ export default function App() {
                     mainPanel !== 'workshop' &&
                     mainPanel !== 'modules' &&
                     mainPanel !== 'cards' &&
+                    mainPanel !== 'relics' &&
                     mainPanel !== 'themes'
                   }
                 />
@@ -247,6 +264,8 @@ export default function App() {
                   hidden={
                     mainPanel !== 'workshop' &&
                     mainPanel !== 'cards' &&
+                    mainPanel !== 'relics' &&
+                    mainPanel !== 'modules' &&
                     mainPanel !== 'themes'
                   }
                 />
@@ -314,8 +333,12 @@ export default function App() {
                 >
                   <ModulesPage
                     embeddedInPanel
+                    toolbarMount={
+                      mainPanel === 'modules' ? inpanelWorkshopToolbarMount : null
+                    }
                     workshopPersisted={workshopPersisted}
                     onWorkshopPersistedChange={setWorkshopPersisted}
+                    onScratchWorkshopPersistedChange={setScratchWorkshopPersisted}
                     researchData={data}
                     labLevelOverrides={labLevelOverrides}
                   />
@@ -331,6 +354,22 @@ export default function App() {
                     toolbarMount={
                       mainPanel === 'themes' ? inpanelWorkshopToolbarMount : null
                     }
+                  />
+                </div>
+                <div
+                  id="inpanel-panel-relics"
+                  role="tabpanel"
+                  aria-labelledby="inpanel-tab-relics"
+                  hidden={mainPanel !== 'relics'}
+                >
+                  <RelicsPage
+                    embeddedInPanel
+                    toolbarMount={
+                      mainPanel === 'relics' ? inpanelWorkshopToolbarMount : null
+                    }
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
+                    onScratchWorkshopPersistedChange={setScratchWorkshopPersisted}
                   />
                 </div>
                 <div

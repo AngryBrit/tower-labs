@@ -1,11 +1,76 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import {
+  ASSIST_MODULE_LEVEL_KEY,
   WORKSHOP_ASSIST_MODULE_SLOTS,
   workshopAssistModuleLabPercentPoints,
+  workshopAssistModuleLevel,
   workshopCannonModulePercentFromLabs,
+  clampWorkshopAssistModuleLevel,
   type WorkshopAssistModuleSlot,
 } from '../data/workshopSimModules'
+import {
+  formatWorkshopChassisModuleAbility,
+  formatWorkshopChassisModuleValue,
+  WORKSHOP_CHASSIS_MODULE_RARITY_CLASS,
+  type WorkshopChassisModuleRarity,
+} from '../data/workshopChassisModuleShared'
+import {
+  ASSIST_CHASSIS_MODULE_ID_KEY,
+  ASSIST_CHASSIS_MODULE_RARITY_KEY,
+  ASSIST_CHASSIS_UNLOCKED_KEY,
+  ASSIST_STONE_EFFICIENCY_KEY,
+  assistModuleConflictsWithMain,
+  clampAssistStoneEfficiency,
+  workshopAssistChassisModuleSelection,
+} from '../data/workshopAssistChassisModule'
+import {
+  CHASSIS_MODULE_ID_KEY,
+  CHASSIS_MODULE_RARITY_KEY,
+  workshopChassisModuleDefForSlot,
+  workshopChassisModuleSelection,
+} from '../data/workshopChassisModuleSelection'
+import {
+  toggleSubmoduleSelection,
+  workshopPersistedWithSubmoduleSelections,
+  workshopSubmoduleSelections,
+} from '../data/workshopSubmoduleSelection'
+import type { WorkshopSubmoduleRarity } from '../data/workshopSubmoduleEffects'
+import {
+  MODULE_FRAME_SHAPE,
+  MODULE_HUB_SLOT_ART,
+  WORKSHOP_MODULES_TOWER_IMAGE,
+  type ModuleHubShape,
+} from '../data/workshopModuleArt'
+import {
+  workshopChassisModuleDedicatedImageUrl,
+  workshopChassisModuleHasDedicatedArt,
+} from '../data/workshopModuleImages'
+import { buildTowerHealthHeroStatContext } from '../data/workshopChassisModuleHeroStat'
+import { ChassisModulePickerDialog } from './ChassisModulePickerDialog'
+import { ChassisModulesCatalog } from './ChassisModulesCatalog'
+import { SubmoduleEffectsCatalog } from './SubmoduleEffectsCatalog'
+import {
+  WORKSHOP_ARMOR_MODULE_NOTES,
+  WORKSHOP_ARMOR_MODULE_ORDER,
+  workshopArmorModuleDef,
+} from '../data/workshopArmorModules'
+import {
+  WORKSHOP_CORE_MODULE_NOTES,
+  WORKSHOP_CORE_MODULE_ORDER,
+  workshopCoreModuleDef,
+} from '../data/workshopCoreModules'
+import {
+  WORKSHOP_GENERATOR_MODULE_NOTES,
+  WORKSHOP_GENERATOR_MODULE_ORDER,
+  workshopGeneratorModuleDef,
+} from '../data/workshopGeneratorModules'
+import {
+  WORKSHOP_CANNON_MODULE_ORDER,
+  workshopCannonModuleDef,
+} from '../data/workshopCannonModules'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
+import { useModulesCatalogVisible } from '../modulesCatalogVisibility'
+import { useSubmodulesCatalogVisible } from '../submodulesCatalogVisibility'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import type { ResearchData } from '../types/research'
@@ -24,6 +89,372 @@ type WorkshopModulesPanelProps = {
   labLevelOverrides: Record<string, number>
 }
 
+function ModuleLevelInput({
+  slot,
+  value,
+  onCommit,
+}: {
+  slot: WorkshopAssistModuleSlot
+  value: number
+  onCommit: (level: number) => void
+}) {
+  const { t } = useI18n()
+  const [draft, setDraft] = useState(String(value))
+
+  useEffect(() => {
+    setDraft(String(value))
+  }, [value])
+
+  const commit = () => {
+    const raw = draft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setDraft(String(value))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setDraft(String(value))
+      return
+    }
+    onCommit(clampWorkshopAssistModuleLevel(n))
+  }
+
+  return (
+    <label className="modules-slot__level">
+      <span className="modules-slot__level-prefix">{t('ws_modules_level_prefix')}</span>
+      <input
+        className="modules-slot__level-input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={`${t('ws_modules_level_input_aria')} ${t(SLOT_LABEL[slot])}`}
+        value={draft}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+      />
+    </label>
+  )
+}
+
+function AssistStoneEfficiencyInput({
+  slot,
+  value,
+  onCommit,
+}: {
+  slot: WorkshopAssistModuleSlot
+  value: number
+  onCommit: (pct: number) => void
+}) {
+  const { t } = useI18n()
+  const [draft, setDraft] = useState(String(value))
+
+  useEffect(() => {
+    setDraft(String(value))
+  }, [value])
+
+  const commit = () => {
+    const raw = draft.trim().replace(/,/g, '')
+    if (raw === '') {
+      setDraft(String(value))
+      return
+    }
+    const n = Number(raw)
+    if (!Number.isFinite(n)) {
+      setDraft(String(value))
+      return
+    }
+    onCommit(clampAssistStoneEfficiency(n))
+  }
+
+  return (
+    <label className="modules-slot__efficiency">
+      <span className="modules-slot__efficiency-prefix">{t('ws_modules_assist_efficiency_prefix')}</span>
+      <input
+        className="modules-slot__efficiency-input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={`${t('ws_modules_assist_stone_efficiency')} ${t(SLOT_LABEL[slot])}`}
+        value={draft}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+      />
+      <span className="modules-slot__efficiency-suffix">%</span>
+    </label>
+  )
+}
+
+function ModuleSlotMetaBelow({
+  name,
+  moduleRarity,
+  frameRole,
+  slot,
+  moduleLevel,
+  onModuleLevelCommit,
+}: {
+  name: string
+  moduleRarity: WorkshopChassisModuleRarity
+  frameRole: 'main' | 'assist'
+  slot: WorkshopAssistModuleSlot
+  moduleLevel?: number
+  onModuleLevelCommit?: (level: number) => void
+}) {
+  return (
+    <span className="modules-slot__meta-below">
+      <span
+        className={[
+          'modules-slot__name',
+          'modules-slot__name--below',
+          'modules-slot__name--module',
+          frameRole === 'assist' ? 'modules-slot__name--below-assist' : '',
+          WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[moduleRarity],
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-hidden
+      >
+        {name}
+      </span>
+      {moduleLevel != null && onModuleLevelCommit != null ? (
+        <ModuleLevelInput slot={slot} value={moduleLevel} onCommit={onModuleLevelCommit} />
+      ) : null}
+    </span>
+  )
+}
+
+function ModuleSlotFrame({
+  slot,
+  shape,
+  moduleId,
+  moduleRarity,
+  frameRole = 'main',
+  locked = false,
+  showNameBelow = true,
+}: {
+  slot: WorkshopAssistModuleSlot
+  shape: ModuleHubShape
+  moduleId: string | null
+  moduleRarity: WorkshopChassisModuleRarity
+  frameRole?: 'main' | 'assist'
+  locked?: boolean
+  showNameBelow?: boolean
+}) {
+  const { t } = useI18n()
+  const frameDef = MODULE_FRAME_SHAPE[shape]
+  const equipped =
+    moduleId != null ? workshopChassisModuleDefForSlot(slot, moduleId) : null
+  const dedicatedIconUrl =
+    moduleId != null && workshopChassisModuleHasDedicatedArt(slot, moduleId)
+      ? workshopChassisModuleDedicatedImageUrl(slot, moduleId)
+      : null
+  const [iconFailed, setIconFailed] = useState(false)
+
+  useEffect(() => {
+    setIconFailed(false)
+  }, [dedicatedIconUrl])
+
+  const showIcon = dedicatedIconUrl != null && !iconFailed
+
+  const frameClass = [
+    'modules-slot__frame',
+    `modules-slot__frame--${shape}`,
+    frameRole === 'assist' ? 'modules-slot__frame--assist' : 'modules-slot__frame--main',
+    locked ? 'modules-slot__frame--locked' : '',
+    moduleId != null && !locked ? 'modules-slot__frame--equipped' : 'modules-slot__frame--empty',
+    moduleId != null && !locked ? WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[moduleRarity] : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <span className="modules-slot__frame-wrap">
+      <span className={frameClass}>
+        {showIcon ? (
+          <span className={`modules-slot__icon modules-slot__icon--${shape}`} aria-hidden>
+            <img
+              className="modules-slot__icon-img"
+              src={dedicatedIconUrl!}
+              alt=""
+              decoding="async"
+              draggable={false}
+              onError={() => setIconFailed(true)}
+            />
+          </span>
+        ) : null}
+        <svg className="modules-slot__frame-svg" viewBox="0 0 100 100" aria-hidden>
+          {frameDef.type === 'circle' ? (
+            <circle
+              className="modules-slot__frame-shape"
+              cx="50"
+              cy="50"
+              r={frameDef.r}
+              vectorEffect="nonScalingStroke"
+            />
+          ) : (
+            <polygon
+              className="modules-slot__frame-shape"
+              points={frameDef.points}
+              vectorEffect="nonScalingStroke"
+            />
+          )}
+        </svg>
+        {locked ? (
+          <span className="modules-slot__frame-label" aria-hidden>
+            <span className="modules-slot__name modules-slot__name--empty">
+              {t('ws_modules_assist_locked')}
+            </span>
+          </span>
+        ) : equipped == null ? (
+          <span className="modules-slot__frame-label" aria-hidden>
+            <span className="modules-slot__name modules-slot__name--empty">
+              {t('ws_modules_none_selected')}
+            </span>
+          </span>
+        ) : null}
+      </span>
+      {showNameBelow && equipped != null ? (
+        <ModuleSlotMetaBelow
+          name={equipped.name}
+          moduleRarity={moduleRarity}
+          frameRole={frameRole}
+          slot={slot}
+        />
+      ) : null}
+    </span>
+  )
+}
+
+function ModulesLabDetail({
+  slot,
+  labPercents,
+  cannonDecimal,
+  moduleId,
+  moduleRarity,
+  assist,
+}: {
+  slot: WorkshopAssistModuleSlot
+  labPercents: { substatsPercent: number; bonusPercent: number }
+  cannonDecimal: number
+  moduleId: string | null
+  moduleRarity: WorkshopChassisModuleRarity
+  assist: ReturnType<typeof workshopAssistChassisModuleSelection>
+}) {
+  const { t } = useI18n()
+  const equipped =
+    moduleId != null ? workshopChassisModuleDefForSlot(slot, moduleId) : null
+  const assistEquipped =
+    assist.moduleId != null ? workshopChassisModuleDefForSlot(slot, assist.moduleId) : null
+
+  return (
+    <ul className="workshop__grid workshop__grid--sim modules-detail">
+      {equipped != null ? (
+        <li
+          className={[
+            'workshop__card',
+            'workshop__card--active',
+            'workshop__card--sim',
+            'workshop__card--sim-wide',
+            WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[moduleRarity],
+          ].join(' ')}
+        >
+          <div className="workshop__card-damage-head">
+            <span className="workshop__card-name">{equipped.name}</span>
+            <span className="workshop__card-value">
+              {formatWorkshopChassisModuleValue(equipped.kind, equipped.values[moduleRarity])}
+            </span>
+          </div>
+          <p className="workshop__sim-foot">
+            {formatWorkshopChassisModuleAbility(equipped, moduleRarity)}
+          </p>
+        </li>
+      ) : null}
+      {assistEquipped != null ? (
+        <li
+          className={[
+            'workshop__card',
+            'workshop__card--active',
+            'workshop__card--sim',
+            'workshop__card--sim-wide',
+            WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.rarity],
+          ].join(' ')}
+        >
+          <div className="workshop__card-damage-head">
+            <span className="workshop__card-name">
+              {t('ws_modules_assist_label')}: {assistEquipped.name}
+            </span>
+            <span className="workshop__card-value">{assist.stoneEfficiency}%</span>
+          </div>
+          <p className="workshop__sim-foot">
+            {formatWorkshopChassisModuleAbility(assistEquipped, assist.rarity)}
+          </p>
+          <p className="workshop__sim-foot">{t('ws_modules_assist_efficiency_hint')}</p>
+        </li>
+      ) : null}
+      <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
+        <div className="workshop__card-damage-head">
+          <span className="workshop__card-name">
+            {t(SLOT_LABEL[slot])} · {t('ws_sim_module_lab_substats')}
+          </span>
+          <span className="workshop__card-value">+{labPercents.substatsPercent}%</span>
+        </div>
+        <p className="workshop__sim-foot">{t('ws_sim_module_substats_hint')}</p>
+      </li>
+      <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
+        <div className="workshop__card-damage-head">
+          <span className="workshop__card-name">
+            {t(SLOT_LABEL[slot])} · {t('ws_sim_module_lab_bonus')}
+          </span>
+          <span className="workshop__card-value">+{labPercents.bonusPercent}%</span>
+        </div>
+        <p className="workshop__sim-foot">{t('ws_sim_module_bonus_hint')}</p>
+      </li>
+      {slot === 'cannon' ? (
+        <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
+          <div className="workshop__card-damage-head">
+            <span className="workshop__card-name">{t('ws_sim_module_cannon_damage')}</span>
+            <span className="workshop__card-value">+{(cannonDecimal * 100).toFixed(0)}%</span>
+          </div>
+          <p className="workshop__sim-foot">{t('ws_sim_module_cannon_hint')}</p>
+        </li>
+      ) : null}
+    </ul>
+  )
+}
+
+function ModulesHubLines() {
+  return (
+    <svg
+      className="modules-hub__lines"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <polyline className="modules-hub__line" points="26,30 50,42" />
+      <polyline className="modules-hub__line" points="74,30 50,42" />
+      <polyline className="modules-hub__line" points="26,70 50,58" />
+      <polyline className="modules-hub__line" points="74,70 50,58" />
+    </svg>
+  )
+}
+
 export function WorkshopModulesPanel({
   workshopPersisted,
   onWorkshopPersistedChange,
@@ -31,6 +462,8 @@ export function WorkshopModulesPanel({
   labLevelOverrides,
 }: WorkshopModulesPanelProps) {
   const { t } = useI18n()
+  const [modulesCatalogVisible] = useModulesCatalogVisible()
+  const [submodulesCatalogVisible] = useSubmodulesCatalogVisible()
   const slot = workshopPersisted.simAssistModuleSlot
 
   const labPercents = useMemo(() => {
@@ -52,56 +485,344 @@ export function WorkshopModulesPanel({
     [onWorkshopPersistedChange, workshopPersisted],
   )
 
+  const setModuleLevel = useCallback(
+    (target: WorkshopAssistModuleSlot, level: number) => {
+      const key = ASSIST_MODULE_LEVEL_KEY[target]
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: level })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const activeChassisSelection = workshopChassisModuleSelection(workshopPersisted, slot)
+
+  const selectChassisModule = useCallback(
+    (targetSlot: WorkshopAssistModuleSlot, moduleId: string, rarity: WorkshopChassisModuleRarity) => {
+      const next = {
+        ...workshopPersisted,
+        [CHASSIS_MODULE_ID_KEY[targetSlot]]: moduleId,
+        [CHASSIS_MODULE_RARITY_KEY[targetSlot]]: rarity,
+      }
+      if (moduleId !== '' && assistModuleConflictsWithMain(targetSlot, workshopPersisted, moduleId)) {
+        next[ASSIST_CHASSIS_MODULE_ID_KEY[targetSlot]] = ''
+      }
+      onWorkshopPersistedChange(next)
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const selectAssistChassisModule = useCallback(
+    (targetSlot: WorkshopAssistModuleSlot, moduleId: string, rarity: WorkshopChassisModuleRarity) => {
+      if (moduleId !== '' && assistModuleConflictsWithMain(targetSlot, workshopPersisted, moduleId)) {
+        return
+      }
+      onWorkshopPersistedChange({
+        ...workshopPersisted,
+        [ASSIST_CHASSIS_MODULE_ID_KEY[targetSlot]]: moduleId,
+        [ASSIST_CHASSIS_MODULE_RARITY_KEY[targetSlot]]: rarity,
+      })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  type ModulePickerTarget = { slot: WorkshopAssistModuleSlot; role: 'main' | 'assist' }
+  const [pickerTarget, setPickerTarget] = useState<ModulePickerTarget | null>(null)
+
+  const openModulePicker = useCallback(
+    (target: WorkshopAssistModuleSlot, role: 'main' | 'assist') => {
+      setPickerTarget({ slot: target, role })
+      selectSlot(target)
+    },
+    [selectSlot],
+  )
+
+  const handleMainSlotClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, key: WorkshopAssistModuleSlot) => {
+      if ((e.target as HTMLElement).closest('.modules-slot__frame--main')) {
+        e.preventDefault()
+        openModulePicker(key, 'main')
+        return
+      }
+      selectSlot(key)
+    },
+    [openModulePicker, selectSlot],
+  )
+
+  const activeSubmoduleSelections = workshopSubmoduleSelections(workshopPersisted, slot)
+
+  const selectSubmoduleEffect = useCallback(
+    (
+      effectId: string,
+      rarity: WorkshopSubmoduleRarity,
+      cellValue: string | null,
+    ) => {
+      const nextSlotSelections = toggleSubmoduleSelection(
+        activeSubmoduleSelections,
+        effectId,
+        rarity,
+        cellValue,
+      )
+      onWorkshopPersistedChange(
+        workshopPersistedWithSubmoduleSelections(workshopPersisted, slot, nextSlotSelections),
+      )
+    },
+    [activeSubmoduleSelections, onWorkshopPersistedChange, slot, workshopPersisted],
+  )
+
   return (
-    <>
-      <div
-        className="workshop__categories workshop__categories--modules"
-        role="toolbar"
-        aria-label={t('ws_section_modules')}
-      >
-        {WORKSHOP_ASSIST_MODULE_SLOTS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className={
-              slot === key
-                ? `workshop__cat workshop__cat--${key} workshop__cat--module-on`
-                : `workshop__cat workshop__cat--idle workshop__cat--${key} workshop__cat--module`
-            }
-            onClick={() => selectSlot(key)}
-            aria-pressed={slot === key}
-          >
-            {t(SLOT_LABEL[key])}
-          </button>
-        ))}
+    <div className="modules-layout">
+      <div className="modules-hub" role="group" aria-label={t('ws_modules_hub_aria')}>
+        <div className="modules-hub__stage">
+          <div className="modules-hub__pcb" aria-hidden />
+          <ModulesHubLines />
+          <div className="modules-hub__grid">
+          {WORKSHOP_ASSIST_MODULE_SLOTS.map((key) => {
+            const art = MODULE_HUB_SLOT_ART[key]
+            const level = workshopAssistModuleLevel(workshopPersisted, key)
+            const assistActive = slot === key
+            const chassis = workshopChassisModuleSelection(workshopPersisted, key)
+            const assistChassis = workshopAssistChassisModuleSelection(workshopPersisted, key)
+            const slotStyle = {
+              '--module-glow-rgb': art.glowRgb,
+            } as CSSProperties
+            const equippedName =
+              chassis.moduleId != null
+                ? workshopChassisModuleDefForSlot(key, chassis.moduleId).name
+                : t('ws_modules_none_selected')
+
+            const assistCol = (
+              <div className="modules-assist-col">
+                <span className="modules-slot__chassis modules-slot__chassis--assist" aria-hidden>
+                  {t('ws_modules_assist_label')}
+                </span>
+                <button
+                  type="button"
+                  className="modules-assist-hit"
+                  aria-label={`${t('ws_modules_assist_label')} ${t(SLOT_LABEL[key])}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openModulePicker(key, 'assist')
+                  }}
+                >
+                  <ModuleSlotFrame
+                    slot={key}
+                    shape={art.shape}
+                    frameRole="assist"
+                    locked={!assistChassis.unlocked}
+                    moduleId={assistChassis.moduleId}
+                    moduleRarity={assistChassis.rarity}
+                  />
+                </button>
+                {assistChassis.unlocked ? (
+                  <>
+                    <AssistStoneEfficiencyInput
+                      slot={key}
+                      value={assistChassis.stoneEfficiency}
+                      onCommit={(next) =>
+                        onWorkshopPersistedChange({
+                          ...workshopPersisted,
+                          [ASSIST_STONE_EFFICIENCY_KEY[key]]: next,
+                        })
+                      }
+                    />
+                  </>
+                ) : null}
+              </div>
+            )
+
+            return (
+              <div
+                key={key}
+                className={[
+                  'modules-slot-pair',
+                  `modules-slot--${art.placement}`,
+                  `modules-slot-pair--assist-${art.assistSide}`,
+                  assistActive ? 'modules-slot-pair--on' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                style={slotStyle}
+              >
+                {art.assistSide === 'before' ? assistCol : null}
+                {art.assistSide === 'before' ? (
+                  <span className="modules-slot-pair__connector" aria-hidden />
+                ) : null}
+                <div
+                  className={[
+                    'modules-slot',
+                    'modules-slot--main',
+                    `modules-slot--${key}`,
+                    `modules-slot--shape-${art.shape}`,
+                    assistActive ? 'modules-slot--on' : '',
+                    chassis.moduleId != null ? 'modules-slot--equipped' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <button
+                    type="button"
+                    className="modules-slot__hit"
+                    aria-pressed={assistActive}
+                    aria-current={assistActive ? 'true' : undefined}
+                    aria-label={`${t(SLOT_LABEL[key])}: ${equippedName}`}
+                    onClick={(e) => handleMainSlotClick(e, key)}
+                  >
+                    <span className="modules-slot__chassis" aria-hidden>
+                      {t(SLOT_LABEL[key])}
+                    </span>
+                    <ModuleSlotFrame
+                      slot={key}
+                      shape={art.shape}
+                      frameRole="main"
+                      moduleId={chassis.moduleId}
+                      moduleRarity={chassis.rarity}
+                      showNameBelow={false}
+                    />
+                  </button>
+                  {chassis.moduleId != null ? (
+                    <ModuleSlotMetaBelow
+                      name={equippedName}
+                      moduleRarity={chassis.rarity}
+                      frameRole="main"
+                      slot={key}
+                      moduleLevel={level}
+                      onModuleLevelCommit={(next) => setModuleLevel(key, next)}
+                    />
+                  ) : null}
+                </div>
+                {art.assistSide === 'after' ? (
+                  <span className="modules-slot-pair__connector" aria-hidden />
+                ) : null}
+                {art.assistSide === 'after' ? assistCol : null}
+              </div>
+            )
+          })}
+          <div className="modules-hub__tower" aria-hidden>
+            <img
+              className="modules-hub__tower-img"
+              src={WORKSHOP_MODULES_TOWER_IMAGE}
+              alt=""
+              decoding="async"
+            />
+          </div>
+          </div>
+        </div>
+        <ModulesLabDetail
+          slot={slot}
+          labPercents={labPercents}
+          cannonDecimal={cannonDecimal}
+          moduleId={activeChassisSelection.moduleId}
+          moduleRarity={activeChassisSelection.rarity}
+          assist={workshopAssistChassisModuleSelection(workshopPersisted, slot)}
+        />
       </div>
-      <ul className="workshop__grid workshop__grid--sim">
-        <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
-          <div className="workshop__card-damage-head">
-            <span className="workshop__card-name">{t('ws_sim_module_lab_substats')}</span>
-            <span className="workshop__card-value">+{labPercents.substatsPercent}%</span>
-          </div>
-          <p className="workshop__sim-foot">{t('ws_sim_module_substats_hint')}</p>
-        </li>
-        <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
-          <div className="workshop__card-damage-head">
-            <span className="workshop__card-name">{t('ws_sim_module_lab_bonus')}</span>
-            <span className="workshop__card-value">+{labPercents.bonusPercent}%</span>
-          </div>
-          <p className="workshop__sim-foot">{t('ws_sim_module_bonus_hint')}</p>
-        </li>
-        <li className="workshop__card workshop__card--active workshop__card--sim workshop__card--sim-wide">
-          <div className="workshop__card-damage-head">
-            <span className="workshop__card-name">{t('ws_sim_module_cannon_damage')}</span>
-            <span className="workshop__card-value">
-              {slot === 'cannon'
-                ? `+${(cannonDecimal * 100).toFixed(0)}%`
-                : t('ws_sim_module_not_cannon')}
-            </span>
-          </div>
-          <p className="workshop__sim-foot">{t('ws_sim_module_cannon_hint')}</p>
-        </li>
-      </ul>
-    </>
+
+      {modulesCatalogVisible ? (
+        slot === 'cannon' ? (
+          <ChassisModulesCatalog
+            titleId="ws_modules_cannons_title"
+            titleDomId="modules-cannons-title"
+            moduleOrder={WORKSHOP_CANNON_MODULE_ORDER}
+            getDef={(id) => workshopCannonModuleDef(id as (typeof WORKSHOP_CANNON_MODULE_ORDER)[number])}
+            selectedModuleId={activeChassisSelection.moduleId}
+            selectedRarity={activeChassisSelection.rarity}
+            onSelectModule={(moduleId, rarity) => selectChassisModule('cannon', moduleId, rarity)}
+          />
+        ) : slot === 'armor' ? (
+          <ChassisModulesCatalog
+            titleId="ws_modules_armor_title"
+            titleDomId="modules-armor-title"
+            moduleOrder={WORKSHOP_ARMOR_MODULE_ORDER}
+            getDef={(id) => workshopArmorModuleDef(id as (typeof WORKSHOP_ARMOR_MODULE_ORDER)[number])}
+            notes={WORKSHOP_ARMOR_MODULE_NOTES}
+            selectedModuleId={activeChassisSelection.moduleId}
+            selectedRarity={activeChassisSelection.rarity}
+            onSelectModule={(moduleId, rarity) => selectChassisModule('armor', moduleId, rarity)}
+          />
+        ) : slot === 'generator' ? (
+          <ChassisModulesCatalog
+            titleId="ws_modules_generators_title"
+            titleDomId="modules-generators-title"
+            moduleOrder={WORKSHOP_GENERATOR_MODULE_ORDER}
+            getDef={(id) =>
+              workshopGeneratorModuleDef(id as (typeof WORKSHOP_GENERATOR_MODULE_ORDER)[number])
+            }
+            notes={WORKSHOP_GENERATOR_MODULE_NOTES}
+            selectedModuleId={activeChassisSelection.moduleId}
+            selectedRarity={activeChassisSelection.rarity}
+            onSelectModule={(moduleId, rarity) => selectChassisModule('generator', moduleId, rarity)}
+          />
+        ) : (
+          <ChassisModulesCatalog
+            titleId="ws_modules_cores_title"
+            titleDomId="modules-cores-title"
+            moduleOrder={WORKSHOP_CORE_MODULE_ORDER}
+            getDef={(id) => workshopCoreModuleDef(id as (typeof WORKSHOP_CORE_MODULE_ORDER)[number])}
+            notes={WORKSHOP_CORE_MODULE_NOTES}
+            selectedModuleId={activeChassisSelection.moduleId}
+            selectedRarity={activeChassisSelection.rarity}
+            onSelectModule={(moduleId, rarity) => selectChassisModule('core', moduleId, rarity)}
+          />
+        )
+      ) : null}
+
+      {submodulesCatalogVisible ? (
+        <SubmoduleEffectsCatalog
+          slot={slot}
+          selectedEffects={activeSubmoduleSelections}
+          onSelectEffect={selectSubmoduleEffect}
+        />
+      ) : null}
+
+      {pickerTarget != null ? (
+        <ChassisModulePickerDialog
+          slot={pickerTarget.slot}
+          pickerRole={pickerTarget.role}
+          excludeModuleIds={
+            pickerTarget.role === 'assist'
+              ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId != null
+                ? [workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId!]
+                : []
+              : []
+          }
+          selectedModuleId={
+            pickerTarget.role === 'main'
+              ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId
+              : workshopAssistChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId
+          }
+          selectedRarity={
+            pickerTarget.role === 'main'
+              ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).rarity
+              : workshopAssistChassisModuleSelection(workshopPersisted, pickerTarget.slot).rarity
+          }
+          moduleLevel={workshopAssistModuleLevel(workshopPersisted, pickerTarget.slot)}
+          heroStatContext={buildTowerHealthHeroStatContext(
+            workshopPersisted,
+            researchData,
+            labLevelOverrides,
+            workshopAssistModuleLevel(workshopPersisted, pickerTarget.slot),
+          )}
+          submoduleSelections={workshopSubmoduleSelections(
+            workshopPersisted,
+            pickerTarget.slot,
+          )}
+          onSelect={(moduleId, rarity) => {
+            if (pickerTarget.role === 'main') {
+              selectChassisModule(pickerTarget.slot, moduleId, rarity)
+            } else {
+              selectAssistChassisModule(pickerTarget.slot, moduleId, rarity)
+            }
+          }}
+          onClear={(rarity) => {
+            if (pickerTarget.role === 'main') {
+              selectChassisModule(pickerTarget.slot, '', rarity)
+            } else {
+              selectAssistChassisModule(pickerTarget.slot, '', rarity)
+            }
+          }}
+          onSelectEffect={selectSubmoduleEffect}
+          onClose={() => setPickerTarget(null)}
+        />
+      ) : null}
+    </div>
   )
 }

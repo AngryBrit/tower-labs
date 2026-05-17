@@ -14,6 +14,33 @@ export const WORKSHOP_ASSIST_MODULE_SLOTS: readonly WorkshopAssistModuleSlot[] =
   'core',
 ] as const
 
+export const WORKSHOP_ASSIST_MODULE_MAX_LEVEL = 999
+
+export const ASSIST_MODULE_LEVEL_KEY = {
+  cannon: 'simCannonModuleLevel',
+  armor: 'simArmorModuleLevel',
+  generator: 'simGeneratorModuleLevel',
+  core: 'simCoreModuleLevel',
+} as const satisfies Record<
+  WorkshopAssistModuleSlot,
+  | 'simCannonModuleLevel'
+  | 'simArmorModuleLevel'
+  | 'simGeneratorModuleLevel'
+  | 'simCoreModuleLevel'
+>
+
+export function workshopAssistModuleLevel(
+  ws: { [K in (typeof ASSIST_MODULE_LEVEL_KEY)[WorkshopAssistModuleSlot]]: number },
+  slot: WorkshopAssistModuleSlot,
+): number {
+  return ws[ASSIST_MODULE_LEVEL_KEY[slot]]
+}
+
+export function clampWorkshopAssistModuleLevel(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(WORKSHOP_ASSIST_MODULE_MAX_LEVEL, Math.trunc(n)))
+}
+
 const SUBSTATS_LAB: Record<WorkshopAssistModuleSlot, string> = {
   cannon: 'Assist Module Substats - Cannon',
   armor: 'Assist Module Substats - Armor',

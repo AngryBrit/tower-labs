@@ -3,6 +3,7 @@ export type MainPanel =
   | 'workshop'
   | 'modules'
   | 'cards'
+  | 'relics'
   | 'themes'
   | 'toolsSettings'
 
@@ -13,6 +14,7 @@ const MAIN_PANELS: readonly MainPanel[] = [
   'workshop',
   'modules',
   'cards',
+  'relics',
   'themes',
   'toolsSettings',
 ]

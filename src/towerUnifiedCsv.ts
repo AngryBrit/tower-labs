@@ -38,6 +38,10 @@ const THEME_CATEGORIES: readonly ThemeCategory[] = [
 
 const WS_BOOL_FIELDS = new Set<keyof WorkshopPersistedV1>([
   'hideMaxed',
+  'simCannonAssistUnlocked',
+  'simArmorAssistUnlocked',
+  'simGeneratorAssistUnlocked',
+  'simCoreAssistUnlocked',
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ])
 
@@ -114,9 +118,39 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'enhanceEnemyLevelSkipLevel',
   'simAttackSpeedModuleSubEffect',
   'simBerserkerDamageTaken',
+  'relicOwnedIds',
   'simRelicsBonusFraction',
   'simPerkDamageQuantity',
   'simAssistModuleSlot',
+  'simCannonModuleLevel',
+  'simArmorModuleLevel',
+  'simGeneratorModuleLevel',
+  'simCoreModuleLevel',
+  'simCannonChassisModuleId',
+  'simArmorChassisModuleId',
+  'simGeneratorChassisModuleId',
+  'simCoreChassisModuleId',
+  'simCannonChassisModuleRarity',
+  'simArmorChassisModuleRarity',
+  'simGeneratorChassisModuleRarity',
+  'simCoreChassisModuleRarity',
+  'simSubmoduleSelections',
+  'simCannonAssistUnlocked',
+  'simArmorAssistUnlocked',
+  'simGeneratorAssistUnlocked',
+  'simCoreAssistUnlocked',
+  'simCannonAssistChassisModuleId',
+  'simArmorAssistChassisModuleId',
+  'simGeneratorAssistChassisModuleId',
+  'simCoreAssistChassisModuleId',
+  'simCannonAssistChassisModuleRarity',
+  'simArmorAssistChassisModuleRarity',
+  'simGeneratorAssistChassisModuleRarity',
+  'simCoreAssistChassisModuleRarity',
+  'simCannonAssistStoneEfficiency',
+  'simArmorAssistStoneEfficiency',
+  'simGeneratorAssistStoneEfficiency',
+  'simCoreAssistStoneEfficiency',
   ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
 ]
@@ -149,6 +183,9 @@ function sortLabKeys(keys: string[]): string[] {
 function serializeWsValue(v: WorkshopPersistedV1, k: keyof WorkshopPersistedV1): string {
   const x = v[k]
   if (typeof x === 'boolean') return x ? 'true' : 'false'
+  if (k === 'simSubmoduleSelections' || k === 'relicOwnedIds') {
+    return JSON.stringify(x)
+  }
   return String(x)
 }
 
@@ -295,6 +332,38 @@ function parseWsRow(wsRaw: Record<string, unknown>, wsKey: keyof WorkshopPersist
     const t = valCell.toLowerCase()
     if (t !== 'cannon' && t !== 'armor' && t !== 'generator' && t !== 'core') return false
     wsRaw[wsKey] = t
+    return true
+  }
+  if (
+    wsKey === 'simCannonChassisModuleId' ||
+    wsKey === 'simArmorChassisModuleId' ||
+    wsKey === 'simGeneratorChassisModuleId' ||
+    wsKey === 'simCoreChassisModuleId' ||
+    wsKey === 'simCannonAssistChassisModuleId' ||
+    wsKey === 'simArmorAssistChassisModuleId' ||
+    wsKey === 'simGeneratorAssistChassisModuleId' ||
+    wsKey === 'simCoreAssistChassisModuleId'
+  ) {
+    wsRaw[wsKey] = valCell.trim()
+    return true
+  }
+  if (
+    wsKey === 'simCannonChassisModuleRarity' ||
+    wsKey === 'simArmorChassisModuleRarity' ||
+    wsKey === 'simGeneratorChassisModuleRarity' ||
+    wsKey === 'simCoreChassisModuleRarity' ||
+    wsKey === 'simCannonAssistChassisModuleRarity' ||
+    wsKey === 'simArmorAssistChassisModuleRarity' ||
+    wsKey === 'simGeneratorAssistChassisModuleRarity' ||
+    wsKey === 'simCoreAssistChassisModuleRarity'
+  ) {
+    const t = valCell.toLowerCase()
+    if (t !== 'epic' && t !== 'legendary' && t !== 'mythic' && t !== 'ancestral') return false
+    wsRaw[wsKey] = t
+    return true
+  }
+  if (wsKey === 'simSubmoduleSelections' || wsKey === 'relicOwnedIds') {
+    wsRaw[wsKey] = valCell.trim()
     return true
   }
   if (

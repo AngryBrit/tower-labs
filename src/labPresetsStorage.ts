@@ -41,7 +41,26 @@ import {
   WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER,
   workshopEnhanceUtilityClampLevel,
 } from './data/workshopEnhanceUtility'
-import type { WorkshopAssistModuleSlot } from './data/workshopSimModules'
+import {
+  sanitizeChassisModuleId,
+  sanitizeChassisModuleRarity,
+} from './data/workshopChassisModuleSelection'
+import { sanitizeRelicOwnedIds } from './data/workshopRelics'
+import {
+  clampAssistStoneEfficiency,
+  defaultAssistChassisFields,
+} from './data/workshopAssistChassisModule'
+import {
+  cannonSubmoduleAttackSpeedFromSelections,
+  defaultWorkshopSubmoduleSelections,
+  parseSubmoduleSelectionsJson,
+  type WorkshopSubmoduleSelections,
+} from './data/workshopSubmoduleSelection'
+import type { WorkshopChassisModuleRarity } from './data/workshopChassisModuleShared'
+import {
+  clampWorkshopAssistModuleLevel,
+  type WorkshopAssistModuleSlot,
+} from './data/workshopSimModules'
 import {
   clampWorkshopCardActivePresetIndex,
   defaultWorkshopCardStars,
@@ -171,12 +190,49 @@ export type WorkshopPersistedV1 = {
   simBerserkerCardStars: number
   /** Damage taken this round for Berserker flat bonus. */
   simBerserkerDamageTaken: number
+  /** Owned relic ids (wiki catalog); drives **simRelicsBonusFraction** when toggled. */
+  relicOwnedIds: string[]
   /** Relic sum inside **(1 + Relics)** as a fraction (0.5 = +50%). */
   simRelicsBonusFraction: number
   /** Damage perk count for displayed-damage Perk term. */
   simPerkDamageQuantity: number
   /** Active assist module chassis for cannon % sim. */
   simAssistModuleSlot: WorkshopAssistModuleSlot
+  /** In-game assist module levels (hub UI). */
+  simCannonModuleLevel: number
+  simArmorModuleLevel: number
+  simGeneratorModuleLevel: number
+  simCoreModuleLevel: number
+  /** Equipped cannon chassis module id (`''` = none). */
+  simCannonChassisModuleId: string
+  simArmorChassisModuleId: string
+  simGeneratorChassisModuleId: string
+  simCoreChassisModuleId: string
+  simCannonChassisModuleRarity: WorkshopChassisModuleRarity
+  simArmorChassisModuleRarity: WorkshopChassisModuleRarity
+  simGeneratorChassisModuleRarity: WorkshopChassisModuleRarity
+  simCoreChassisModuleRarity: WorkshopChassisModuleRarity
+  /** Equipped sub-module effect picks per chassis slot. */
+  simSubmoduleSelections: WorkshopSubmoduleSelections
+  /** Assist chassis slot unlocked (stones). */
+  simCannonAssistUnlocked: boolean
+  simArmorAssistUnlocked: boolean
+  simGeneratorAssistUnlocked: boolean
+  simCoreAssistUnlocked: boolean
+  /** Equipped assist chassis module id (`''` = none). */
+  simCannonAssistChassisModuleId: string
+  simArmorAssistChassisModuleId: string
+  simGeneratorAssistChassisModuleId: string
+  simCoreAssistChassisModuleId: string
+  simCannonAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  simArmorAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  simGeneratorAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  simCoreAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  /** Assist main/sub stone efficiency (0–70%). */
+  simCannonAssistStoneEfficiency: number
+  simArmorAssistStoneEfficiency: number
+  simGeneratorAssistStoneEfficiency: number
+  simCoreAssistStoneEfficiency: number
 } & WorkshopUltimateLevels &
   WorkshopUltimateActiveFlags
 
@@ -190,6 +246,18 @@ const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
  * Reset card stars, preset loadouts, and equip slots only.
  * Preserves workshop upgrade / enhance / ultimate levels and module sim fields.
  */
+/**
+ * Reset relic ownership and displayed-damage relic bonus.
+ * Preserves cards, modules, workshop levels, and other sim fields.
+ */
+export function resetWorkshopRelics(current: WorkshopPersistedV1): WorkshopPersistedV1 {
+  return {
+    ...current,
+    relicOwnedIds: [],
+    simRelicsBonusFraction: 0,
+  }
+}
+
 export function resetWorkshopCards(current: WorkshopPersistedV1): WorkshopPersistedV1 {
   const cardStars = defaultWorkshopCardStars()
   const cardPresetLoadouts = defaultCardPresetLoadouts()
@@ -205,6 +273,33 @@ export function resetWorkshopCards(current: WorkshopPersistedV1): WorkshopPersis
       cardPresetLoadouts,
       cardActivePresetIndex,
     }),
+  }
+}
+
+/**
+ * Reset assist module levels, chassis modules, and sub-module effect picks only.
+ * Preserves workshop upgrade / enhance / ultimate levels, cards, and other sim fields.
+ */
+export function resetWorkshopModules(current: WorkshopPersistedV1): WorkshopPersistedV1 {
+  const d = defaultWorkshopPersisted()
+  return {
+    ...current,
+    simAttackSpeedModuleSubEffect: d.simAttackSpeedModuleSubEffect,
+    simAssistModuleSlot: d.simAssistModuleSlot,
+    simCannonModuleLevel: d.simCannonModuleLevel,
+    simArmorModuleLevel: d.simArmorModuleLevel,
+    simGeneratorModuleLevel: d.simGeneratorModuleLevel,
+    simCoreModuleLevel: d.simCoreModuleLevel,
+    simCannonChassisModuleId: d.simCannonChassisModuleId,
+    simArmorChassisModuleId: d.simArmorChassisModuleId,
+    simGeneratorChassisModuleId: d.simGeneratorChassisModuleId,
+    simCoreChassisModuleId: d.simCoreChassisModuleId,
+    simCannonChassisModuleRarity: d.simCannonChassisModuleRarity,
+    simArmorChassisModuleRarity: d.simArmorChassisModuleRarity,
+    simGeneratorChassisModuleRarity: d.simGeneratorChassisModuleRarity,
+    simCoreChassisModuleRarity: d.simCoreChassisModuleRarity,
+    simSubmoduleSelections: d.simSubmoduleSelections,
+    ...defaultAssistChassisFields(),
   }
 }
 
@@ -224,6 +319,36 @@ export function resetWorkshopUpgradeLevels(
     cardEquipSlots: current.cardEquipSlots,
     simAttackSpeedModuleSubEffect: current.simAttackSpeedModuleSubEffect,
     simAssistModuleSlot: current.simAssistModuleSlot,
+    simCannonModuleLevel: current.simCannonModuleLevel,
+    simArmorModuleLevel: current.simArmorModuleLevel,
+    simGeneratorModuleLevel: current.simGeneratorModuleLevel,
+    simCoreModuleLevel: current.simCoreModuleLevel,
+    simCannonChassisModuleId: current.simCannonChassisModuleId,
+    simArmorChassisModuleId: current.simArmorChassisModuleId,
+    simGeneratorChassisModuleId: current.simGeneratorChassisModuleId,
+    simCoreChassisModuleId: current.simCoreChassisModuleId,
+    simCannonChassisModuleRarity: current.simCannonChassisModuleRarity,
+    simArmorChassisModuleRarity: current.simArmorChassisModuleRarity,
+    simGeneratorChassisModuleRarity: current.simGeneratorChassisModuleRarity,
+    simCoreChassisModuleRarity: current.simCoreChassisModuleRarity,
+    simSubmoduleSelections: current.simSubmoduleSelections,
+    simCannonAssistUnlocked: current.simCannonAssistUnlocked,
+    simArmorAssistUnlocked: current.simArmorAssistUnlocked,
+    simGeneratorAssistUnlocked: current.simGeneratorAssistUnlocked,
+    simCoreAssistUnlocked: current.simCoreAssistUnlocked,
+    simCannonAssistChassisModuleId: current.simCannonAssistChassisModuleId,
+    simArmorAssistChassisModuleId: current.simArmorAssistChassisModuleId,
+    simGeneratorAssistChassisModuleId: current.simGeneratorAssistChassisModuleId,
+    simCoreAssistChassisModuleId: current.simCoreAssistChassisModuleId,
+    simCannonAssistChassisModuleRarity: current.simCannonAssistChassisModuleRarity,
+    simArmorAssistChassisModuleRarity: current.simArmorAssistChassisModuleRarity,
+    simGeneratorAssistChassisModuleRarity: current.simGeneratorAssistChassisModuleRarity,
+    simCoreAssistChassisModuleRarity: current.simCoreAssistChassisModuleRarity,
+    simCannonAssistStoneEfficiency: current.simCannonAssistStoneEfficiency,
+    simArmorAssistStoneEfficiency: current.simArmorAssistStoneEfficiency,
+    simGeneratorAssistStoneEfficiency: current.simGeneratorAssistStoneEfficiency,
+    simCoreAssistStoneEfficiency: current.simCoreAssistStoneEfficiency,
+    relicOwnedIds: current.relicOwnedIds,
     simRelicsBonusFraction: current.simRelicsBonusFraction,
     simPerkDamageQuantity: current.simPerkDamageQuantity,
     simBerserkerDamageTaken: current.simBerserkerDamageTaken,
@@ -321,9 +446,24 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     }),
     simAttackSpeedModuleSubEffect: 0,
     simBerserkerDamageTaken: 0,
+    relicOwnedIds: [],
     simRelicsBonusFraction: 0,
     simPerkDamageQuantity: 0,
     simAssistModuleSlot: 'cannon',
+    simCannonModuleLevel: 0,
+    simArmorModuleLevel: 0,
+    simGeneratorModuleLevel: 0,
+    simCoreModuleLevel: 0,
+    simCannonChassisModuleId: '',
+    simArmorChassisModuleId: '',
+    simGeneratorChassisModuleId: '',
+    simCoreChassisModuleId: '',
+    simCannonChassisModuleRarity: 'epic',
+    simArmorChassisModuleRarity: 'epic',
+    simGeneratorChassisModuleRarity: 'epic',
+    simCoreChassisModuleRarity: 'epic',
+    simSubmoduleSelections: defaultWorkshopSubmoduleSelections(),
+    ...defaultAssistChassisFields(),
     ...defaultUltimateLevels(),
     ...defaultUltimateActive(),
   }
@@ -566,14 +706,71 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         ? Number(o.cardEquipSlots)
         : WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS,
     ),
-    simAttackSpeedModuleSubEffect: Math.max(
-      0,
-      Number(o.simAttackSpeedModuleSubEffect) || 0,
-    ),
+    ...(() => {
+      const simSubmoduleSelections = parseSubmoduleSelectionsJson(o.simSubmoduleSelections)
+      const attackFromSub = cannonSubmoduleAttackSpeedFromSelections(
+        simSubmoduleSelections.cannon,
+      )
+      const simAttackSpeedModuleSubEffect =
+        attackFromSub > 0
+          ? attackFromSub
+          : Math.max(0, Number(o.simAttackSpeedModuleSubEffect) || 0)
+      return { simSubmoduleSelections, simAttackSpeedModuleSubEffect }
+    })(),
     simBerserkerDamageTaken: Math.max(0, Number(o.simBerserkerDamageTaken) || 0),
+    relicOwnedIds: sanitizeRelicOwnedIds(o.relicOwnedIds),
     simRelicsBonusFraction: Math.max(0, Number(o.simRelicsBonusFraction) || 0),
     simPerkDamageQuantity: clampInt(Number(o.simPerkDamageQuantity), 0, 99),
     simAssistModuleSlot,
+    simCannonModuleLevel: clampWorkshopAssistModuleLevel(Number(o.simCannonModuleLevel)),
+    simArmorModuleLevel: clampWorkshopAssistModuleLevel(Number(o.simArmorModuleLevel)),
+    simGeneratorModuleLevel: clampWorkshopAssistModuleLevel(Number(o.simGeneratorModuleLevel)),
+    simCoreModuleLevel: clampWorkshopAssistModuleLevel(Number(o.simCoreModuleLevel)),
+    simCannonChassisModuleId:
+      sanitizeChassisModuleId('cannon', o.simCannonChassisModuleId) ?? '',
+    simArmorChassisModuleId:
+      sanitizeChassisModuleId('armor', o.simArmorChassisModuleId) ?? '',
+    simGeneratorChassisModuleId:
+      sanitizeChassisModuleId('generator', o.simGeneratorChassisModuleId) ?? '',
+    simCoreChassisModuleId: sanitizeChassisModuleId('core', o.simCoreChassisModuleId) ?? '',
+    simCannonChassisModuleRarity: sanitizeChassisModuleRarity(o.simCannonChassisModuleRarity),
+    simArmorChassisModuleRarity: sanitizeChassisModuleRarity(o.simArmorChassisModuleRarity),
+    simGeneratorChassisModuleRarity: sanitizeChassisModuleRarity(
+      o.simGeneratorChassisModuleRarity,
+    ),
+    simCoreChassisModuleRarity: sanitizeChassisModuleRarity(o.simCoreChassisModuleRarity),
+    simCannonAssistUnlocked: o.simCannonAssistUnlocked === true,
+    simArmorAssistUnlocked: o.simArmorAssistUnlocked === true,
+    simGeneratorAssistUnlocked: o.simGeneratorAssistUnlocked === true,
+    simCoreAssistUnlocked: o.simCoreAssistUnlocked === true,
+    simCannonAssistChassisModuleId:
+      sanitizeChassisModuleId('cannon', o.simCannonAssistChassisModuleId) ?? '',
+    simArmorAssistChassisModuleId:
+      sanitizeChassisModuleId('armor', o.simArmorAssistChassisModuleId) ?? '',
+    simGeneratorAssistChassisModuleId:
+      sanitizeChassisModuleId('generator', o.simGeneratorAssistChassisModuleId) ?? '',
+    simCoreAssistChassisModuleId:
+      sanitizeChassisModuleId('core', o.simCoreAssistChassisModuleId) ?? '',
+    simCannonAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      o.simCannonAssistChassisModuleRarity,
+    ),
+    simArmorAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      o.simArmorAssistChassisModuleRarity,
+    ),
+    simGeneratorAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      o.simGeneratorAssistChassisModuleRarity,
+    ),
+    simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      o.simCoreAssistChassisModuleRarity,
+    ),
+    simCannonAssistStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simCannonAssistStoneEfficiency),
+    ),
+    simArmorAssistStoneEfficiency: clampAssistStoneEfficiency(Number(o.simArmorAssistStoneEfficiency)),
+    simGeneratorAssistStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simGeneratorAssistStoneEfficiency),
+    ),
+    simCoreAssistStoneEfficiency: clampAssistStoneEfficiency(Number(o.simCoreAssistStoneEfficiency)),
   } as WorkshopPersistedV1
 }
 
