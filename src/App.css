@@ -2237,6 +2237,7 @@ span.research-card__costIcon .workshop-power-stone-svg {
 
 /* Modules page — in-game hub layout */
 .modules-layout {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -3916,9 +3917,11 @@ span.research-card__costIcon .workshop-power-stone-svg {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.35rem;
+  overflow: hidden;
 }
 
 .cards-preset {
+  min-width: 0;
   min-height: 2rem;
   padding: 0.3rem 0.2rem;
   border-radius: 0.35rem;
@@ -3931,6 +3934,9 @@ span.research-card__costIcon .workshop-power-stone-svg {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -4483,25 +4489,58 @@ span.research-card__costIcon .workshop-power-stone-svg {
   color: var(--sr-muted);
 }
 
-@media (max-width: 36rem) {
+@container (max-width: 36rem) {
   .cards-presets {
-    display: flex;
-    overflow-x: auto;
-    gap: 0.35rem;
-    scrollbar-width: thin;
+    gap: 0.25rem;
   }
 
   .cards-preset {
-    flex: 0 0 auto;
-    min-width: 4.25rem;
+    min-height: 1.75rem;
+    padding: 0.22rem 0.1rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .relics-page__tabs {
+    gap: 0.25rem;
+  }
+
+  .relics-page__tab {
+    min-height: 1.9rem;
+    padding: 0.28rem 0.25rem;
+    font-size: 0.52rem;
+    letter-spacing: 0.02em;
   }
 
   .cards-layout {
-    --cards-grid-cols: 2;
+    --cards-grid-gap: 0.35rem;
   }
 
-  .cards-inventory-grid {
-    grid-template-columns: repeat(var(--cards-grid-cols), minmax(0, 1fr));
+  .cards-tile {
+    min-height: 7.25rem;
+  }
+
+  .cards-tile__head {
+    padding: 0.16rem 0.2rem;
+  }
+
+  .cards-tile__name {
+    font-size: 0.48rem;
+  }
+
+  .cards-tile__stars {
+    gap: 0.1rem;
+    padding: 0.16rem 0.14rem 0.14rem;
+  }
+
+  .cards-tile__star {
+    width: 0.55rem;
+    height: 0.55rem;
+  }
+
+  .cards-tile__stepper {
+    gap: 0.08rem;
+    padding: 0 0.18rem 0.16rem;
   }
 }
 
@@ -4518,6 +4557,7 @@ span.research-card__costIcon .workshop-power-stone-svg {
   max-width: 3.35rem;
   padding: 0;
   border-radius: 0.5rem;
+  overflow: hidden;
   cursor: pointer;
   font-family: inherit;
   color: var(--sr-muted);
@@ -4532,15 +4572,15 @@ span.research-card__costIcon .workshop-power-stone-svg {
 .workshop__cat > svg,
 .workshop__cat > .workshop__cat-icon-img {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  transform: scale(3);
-  transform-origin: center;
+  width: 82%;
+  height: 82%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .workshop__cat > .workshop__cat-icon-img {
   display: block;
-  object-fit: contain;
 }
 
 .workshop__cat > .workshop__cat-power-stone {
@@ -4548,16 +4588,16 @@ span.research-card__costIcon .workshop-power-stone-svg {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 82%;
+  height: 82%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .workshop__cat > .workshop__cat-power-stone .workshop-power-stone-svg {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  transform: scale(3);
-  transform-origin: center;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 
@@ -5104,6 +5144,7 @@ span.research-card__costIcon .workshop-power-stone-svg {
 
 /* Relics page */
 .relics-page {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -5262,26 +5303,37 @@ span.research-card__costIcon .workshop-power-stone-svg {
 }
 
 .relics-page__tabs {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .relics-page__tab {
-  flex: 0 0 auto;
-  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.4rem;
   font-size: 0.58rem;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.03em;
+  line-height: 1.2;
+  text-align: center;
   text-transform: uppercase;
+  white-space: normal;
   border-radius: 0.4rem;
   border: 1px solid var(--sr-cyan-dim);
   background: rgba(15, 23, 42, 0.85);
   color: var(--sr-muted);
   cursor: pointer;
+}
+
+@container (min-width: 52rem) {
+  .relics-page__tabs {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 .relics-page__tab--on {

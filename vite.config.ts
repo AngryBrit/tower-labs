@@ -11,6 +11,9 @@ export default defineConfig({
    * read-only reparse point and Vite fails with EPERM when it tries to `rmdir` before rebuild.
    */
   cacheDir: path.join(os.tmpdir(), 'vite-cache-tower_export'),
+  server: {
+    host: true,
+  },
   plugins: [react()],
   test: {
     environment: 'node',

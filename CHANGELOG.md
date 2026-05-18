@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2026-05-18
+
+### Fixed
+
+- **Cards (mobile)**: Inventory stays **4 per row** (removed 2-column squeeze); preset toolbars on Cards and Modules use a **5-column grid** without horizontal scrollbars (`container-type` on `modules-layout`).
+- **Workshop (mobile)**: Category icons stay inside attack/defense/utility/ultimate buttons (no `scale(3)` overflow).
+- **Relics (mobile)**: Filter tabs use a **3×2 grid** with full labels (no ellipsis on MILESTONE / TOURNAMENT).
+
+### Changed
+
+- **Dev server**: `vite.config.ts` sets `server.host: true` for LAN testing from other devices.
+
+### Docs
+
+- README: note LAN **Network** URL when running `npm run dev`.
+
 ## [2.6.0] - 2026-05-18
 
 ### Fixed
