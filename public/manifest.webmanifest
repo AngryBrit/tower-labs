@@ -1,7 +1,7 @@
 {
-  "name": "Tower Labs",
-  "short_name": "Tower Labs",
-  "description": "Browse research trees, compare lab builds, and share Tower configurations.",
+  "name": "TowerSmith",
+  "short_name": "TowerSmith",
+  "description": "Workshop upgrades, chassis modules, relics, card loadouts, themes, lab research, and shareable Tower builds.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

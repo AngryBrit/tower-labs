@@ -7,6 +7,8 @@ import {
   type ResearchItem,
 } from '../types/research'
 import { useI18n } from '../i18n'
+import { CoinGlyph } from './CoinGlyph'
+import { PowerStoneGlyph } from './PowerStoneGlyph'
 
 interface ResearchCardProps {
   /** Parallel to manifest filename stem; used for Spanish name overlay. */
@@ -20,6 +22,8 @@ interface ResearchCardProps {
   maxLevelCap: number
   /** Total Labs Coin Discount % (simulated Labs Coin Discount lab). */
   labsCoinDiscountPercent: number
+  /** Labs Speed multiplier from simulated Labs Speed level (applied to research times). */
+  labsSpeedMultiplier: number
   onLevelDelta: (delta: number) => void
   onLevelSet: (level: number) => void
 }
@@ -33,6 +37,7 @@ export function ResearchCard({
   effectiveLevel,
   maxLevelCap,
   labsCoinDiscountPercent,
+  labsSpeedMultiplier,
   onLevelDelta,
   onLevelSet,
 }: ResearchCardProps) {
@@ -73,6 +78,7 @@ export function ResearchCard({
     item,
     effectiveLevel,
     maxLevelCap,
+    labsSpeedMultiplier,
   )
 
   function commitLevelDraft(raw: string) {
@@ -96,7 +102,7 @@ export function ResearchCard({
       id={domId}
       className={[
         'research-card',
-        showMaxStyle ? 'research-card--max' : '',
+        showMaxStyle ? 'research-card--max' : 'research-card--active',
         researching ? 'research-card--researching' : '',
         hidden ? 'research-card--hidden' : '',
       ]
@@ -104,55 +110,57 @@ export function ResearchCard({
         .join(' ')}
       data-testid="research-card"
     >
-      <div className="research-card__title" id={cardTitleId}>
-        {displayName}
-      </div>
-      <div className="research-card__levelRow">
-        <button
-          type="button"
-          className="research-card__step"
-          aria-label={t('researchCard_decrease_aria')}
-          disabled={!canDec}
-          onClick={() => onLevelDelta(-1)}
-        >
-          −
-        </button>
-        <input
-          type="number"
-          className="research-card__level research-card__levelInput"
-          aria-label={fmt.levelAriaLabel(displayName)}
-          title={maxLevelCap > 0 ? fmt.levelRangeTitle(maxLevelCap) : undefined}
-          min={0}
-          max={maxLevelCap > 0 ? maxLevelCap : undefined}
-          step={1}
-          value={levelFocused ? levelDraft : String(effectiveLevel)}
-          onFocus={() => {
-            setLevelFocused(true)
-            setLevelDraft(String(effectiveLevel))
-          }}
-          onChange={(e) => setLevelDraft(e.target.value)}
-          onBlur={() => {
-            setLevelFocused(false)
-            commitLevelDraft(levelDraft)
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.currentTarget.blur()
-            }
-          }}
-        />
-        <button
-          type="button"
-          className="research-card__step"
-          aria-label={t('researchCard_increase_aria')}
-          disabled={!canInc}
-          onClick={() => onLevelDelta(1)}
-        >
-          +
-        </button>
-      </div>
-      <div className="research-card__benefit">
-        {researchBenefitLine(benefitDisplay)}
+      <div className="research-card__main">
+        <div className="research-card__title" id={cardTitleId}>
+          {displayName}
+        </div>
+        <div className="research-card__levelRow">
+          <button
+            type="button"
+            className="research-card__step"
+            aria-label={t('researchCard_decrease_aria')}
+            disabled={!canDec}
+            onClick={() => onLevelDelta(-1)}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            className="research-card__level research-card__levelInput"
+            aria-label={fmt.levelAriaLabel(displayName)}
+            title={maxLevelCap > 0 ? fmt.levelRangeTitle(maxLevelCap) : undefined}
+            min={0}
+            max={maxLevelCap > 0 ? maxLevelCap : undefined}
+            step={1}
+            value={levelFocused ? levelDraft : String(effectiveLevel)}
+            onFocus={() => {
+              setLevelFocused(true)
+              setLevelDraft(String(effectiveLevel))
+            }}
+            onChange={(e) => setLevelDraft(e.target.value)}
+            onBlur={() => {
+              setLevelFocused(false)
+              commitLevelDraft(levelDraft)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur()
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="research-card__step"
+            aria-label={t('researchCard_increase_aria')}
+            disabled={!canInc}
+            onClick={() => onLevelDelta(1)}
+          >
+            +
+          </button>
+        </div>
+        <div className="research-card__benefit">
+          {researchBenefitLine(benefitDisplay)}
+        </div>
       </div>
       {researching ? (
         <div className="research-card__overlay" aria-live="polite">
@@ -160,21 +168,28 @@ export function ResearchCard({
         </div>
       ) : null}
       <div
-        className="research-card__footer"
+        className={[
+          'research-card__footer',
+          showMaxStyle ? 'research-card__footer--max' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="group"
         aria-labelledby={cardTitleId}
         aria-live="polite"
         aria-atomic="true"
       >
-        <span
-          className={
-            researching
-              ? 'research-card__time research-card__time--active'
-              : 'research-card__time'
-          }
-        >
-          {timeDisplay}
-        </span>
+        {!showMaxStyle ? (
+          <span
+            className={
+              researching
+                ? 'research-card__time research-card__time--active'
+                : 'research-card__time'
+            }
+          >
+            {timeDisplay}
+          </span>
+        ) : null}
         <div className="research-card__costCol">
           {costIsMax ? (
             <span className="research-card__cost research-card__cost--text">
@@ -193,13 +208,11 @@ export function ResearchCard({
               title={stoneCost ? t('researchCard_cost_stones_title') : t('researchCard_cost_coins_title')}
             >
               {nextCost}
-              <img
-                className="research-card__costIcon"
-                src={stoneCost ? '/power-stone.webp' : '/coin.webp'}
-                alt=""
-                decoding="async"
-                aria-hidden
-              />
+              {stoneCost ? (
+                <PowerStoneGlyph className="research-card__costIcon" />
+              ) : (
+                <CoinGlyph className="research-card__costIcon" />
+              )}
             </span>
           )}
         </div>

@@ -1,23 +1,70 @@
-/** Query param name for encoded lab level overrides (`?labs=…`). */
-export const LABS_SHARE_SEARCH_PARAM = 'labs'
+import type { WorkshopPersistedV1 } from './labPresetsStorage'
+import type { TowerThemesSnapshot } from './towerDataThemes'
+
+/** Query param name for encoded share payloads (`?tower=…`). */
+export const TOWER_SHARE_SEARCH_PARAM = 'tower'
+
+export function readShareEncodedFromUrlSearchParams(
+  params: URLSearchParams,
+): string | null {
+  return params.get(TOWER_SHARE_SEARCH_PARAM)
+}
+
+/** Remove share params from a URL after applying an imported link. */
+export function clearShareEncodedFromUrl(url: URL): void {
+  url.searchParams.delete(TOWER_SHARE_SEARCH_PARAM)
+}
+
+export type LabsShareFile = {
+  v: 4
+  o: Record<string, number>
+  w?: unknown
+  /** Optional saved build name for display when the link is opened. */
+  n?: string
+  /** Owned theme catalog IDs. */
+  t?: { owned: string[] }
+}
 
 /**
- * Builds share URLs for the current `labs` payload.
- * - **clean**: `origin` + `pathname` + `?labs=…` only (drops hash and other query params).
- * - **full**: current `href` with `labs` set (keeps other params and hash).
+ * Builds share URLs for the current share payload.
+ * - **clean**: `origin` + `pathname` + `?tower=…` only (drops hash and other query params).
+ * - **full**: current `href` with `tower` set (keeps other params and hash).
  */
 export function buildLabsShareUrls(
   encoded: string,
   pageHref: string,
 ): { clean: string; full: string } {
   const full = new URL(pageHref)
-  full.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  full.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
   const clean = new URL(full.origin + full.pathname)
-  clean.searchParams.set(LABS_SHARE_SEARCH_PARAM, encoded)
+  clean.searchParams.set(TOWER_SHARE_SEARCH_PARAM, encoded)
   return { clean: clean.toString(), full: full.toString() }
 }
 
-type LabsShareFile = { v: 1; o: Record<string, number> }
+export function isLabsShareFile(x: unknown): x is LabsShareFile {
+  if (!x || typeof x !== 'object') return false
+  const v = (x as { v?: unknown }).v
+  const o = (x as { o?: unknown }).o
+  if (v !== 4) return false
+  if (o === null || typeof o !== 'object' || Array.isArray(o)) return false
+  if ('w' in x) {
+    const w = (x as { w?: unknown }).w
+    if (w !== undefined && (w === null || typeof w !== 'object' || Array.isArray(w))) {
+      return false
+    }
+  }
+  if ('n' in x) {
+    const n = (x as { n?: unknown }).n
+    if (n !== undefined && typeof n !== 'string') return false
+  }
+  if ('t' in x) {
+    const t = (x as { t?: unknown }).t
+    if (t !== undefined && (t === null || typeof t !== 'object' || Array.isArray(t))) {
+      return false
+    }
+  }
+  return true
+}
 
 /** Satisfies `Blob` constructor typing for `Uint8Array` views on shared buffers. */
 function uint8ToBlobPart(u8: Uint8Array): BlobPart {
@@ -42,21 +89,28 @@ function fromBase64Url(s: string): Uint8Array {
   return out
 }
 
-function isLabsShareFile(x: unknown): x is LabsShareFile {
-  if (!x || typeof x !== 'object') return false
-  const o = (x as { v?: unknown; o?: unknown }).v
-  const payload = (x as { o?: unknown }).o
-  return o === 1 && payload !== null && typeof payload === 'object' && !Array.isArray(payload)
-}
-
 /**
- * Encodes lab overrides for use in `?labs=`. Uses raw DEFLATE when supported,
+ * Encodes lab overrides for use in `?tower=`. Uses raw DEFLATE when supported,
  * otherwise base64url JSON with an `u` prefix.
  */
 export async function encodeLabsShareQueryValue(
   levelOverrides: Record<string, number>,
+  workshop?: WorkshopPersistedV1,
+  buildName?: string,
+  themes?: TowerThemesSnapshot,
 ): Promise<string> {
-  const file: LabsShareFile = { v: 1, o: levelOverrides }
+  const trimmedName = buildName?.trim()
+  const includeName = trimmedName != null && trimmedName.length > 0
+  const includeThemes = themes != null && themes.ownedIds.length > 0
+  const includeWorkshop = workshop != null
+
+  const file: LabsShareFile = {
+    v: 4,
+    o: levelOverrides,
+    ...(includeWorkshop ? { w: workshop } : {}),
+    ...(includeName ? { n: trimmedName } : {}),
+    ...(includeThemes ? { t: { owned: themes.ownedIds } } : {}),
+  }
   const json = JSON.stringify(file)
   const bytes = new TextEncoder().encode(json)
 

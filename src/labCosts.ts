@@ -180,3 +180,9 @@ export function formatCoinAbbrev(n: number): string {
   if (abs >= 1e3) return `${(n / 1e3).toFixed(2)} K`
   return String(Math.round(n))
 }
+
+/** Full power-stone amount for ultimate workshop cards (no K/M/B abbrev). */
+export function formatPowerStoneAmount(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return '—'
+  return String(Math.round(n))
+}

@@ -2,9 +2,12 @@ import { readFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { workshopDefenseNextMarginalCoins } from './data/workshopDefense'
+import { workshopDamageNextMarginalCoins } from './data/workshopDamage'
 import { toolkitMarginalCoinCost, toolkitUpgradeDurationSeconds } from './labCosts'
 import {
   UNLOCK_LAB_LV0_LABELS,
+  applyWorkshopDiscountToCoins,
   benefitDisplayForCard,
   benefitLineWithNextUpgrade,
   getLevelBounds,
@@ -928,6 +931,19 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(researchTimeForNextUpgrade(labsCoin!, 1, max)).toBe('9m')
     })
 
+    it('Labs Coin Discount reduces other labs coin cost, not its own', () => {
+      const labsCoin = main.items.find((i) => i.name === 'Labs Coin Discount')
+      const workshop = main.items.find(
+        (i) => i.name === 'Workshop Attack Discount',
+      )
+      expect(labsCoin).toBeDefined()
+      expect(workshop).toBeDefined()
+      const max = labsCoin!.maxLevel ?? 99
+      expect(marginalCostForNextUpgrade(labsCoin!, 0, max, 29.7)).toBe('40')
+      expect(marginalCostForNextUpgrade(workshop!, 0, max, 0)).toBe('30')
+      expect(marginalCostForNextUpgrade(workshop!, 0, max, 10)).toBe('27')
+    })
+
     it('Workshop Respec wiki unlock, cost, time, and benefit copy', () => {
       const wr = main.items.find((i) => i.name === 'Workshop Respec')
       expect(wr).toBeDefined()
@@ -1070,6 +1086,19 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(researchTimeForNextUpgrade(labsSpeed!, 1, max)).toBe('9m')
     })
 
+    it('Labs Speed divides research time on other labs, not on itself', () => {
+      const labsSpeed = main.items.find((i) => i.name === 'Labs Speed')
+      const workshop = main.items.find(
+        (i) => i.name === 'Workshop Attack Discount',
+      )
+      expect(labsSpeed).toBeDefined()
+      expect(workshop).toBeDefined()
+      const max = workshop!.maxLevel ?? 99
+      const speedMax = 2.98
+      expect(researchTimeForNextUpgrade(workshop!, 1, max, speedMax)).toBe('2m')
+      expect(researchTimeForNextUpgrade(labsSpeed!, 1, max, speedMax)).toBe('9m')
+    })
+
     it('Workshop Attack Discount wiki Value, early tower-lab times, and benefit lines', () => {
       const workshop = main.items.find(
         (i) => i.name === 'Workshop Attack Discount',
@@ -1097,6 +1126,18 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       )
       expect(researchTimeForNextUpgrade(workshop!, 0, max)).toBe('0m')
       expect(researchTimeForNextUpgrade(workshop!, 1, max)).toBe('6m')
+    })
+
+    it('Workshop Attack Discount reduces attack workshop marginal coins', () => {
+      const m0 = workshopDamageNextMarginalCoins(0)!
+      expect(applyWorkshopDiscountToCoins(m0, 0.5)).toBeCloseTo(m0 * 0.995, 5)
+      expect(applyWorkshopDiscountToCoins(m0, 10)).toBe(27)
+    })
+
+    it('Workshop Defense Discount reduces defense workshop marginal coins', () => {
+      const m0 = workshopDefenseNextMarginalCoins('healthLevel', 0)!
+      expect(applyWorkshopDiscountToCoins(m0, 0.5)).toBeCloseTo(m0 * 0.995, 5)
+      expect(applyWorkshopDiscountToCoins(m0, 10)).toBe(27)
     })
 
     it('Workshop Defense Discount shares Attack wiki ladder (tier 2 wave 50 unlock)', () => {
@@ -2807,14 +2848,31 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(benefitLineWithNextUpgrade(h!, max, max)).toBe('x4.00')
     })
 
-    it('Health Regen and Defense Absolute match Health calculator Value', () => {
+    it('Health Regen matches Health wiki ladder (100 levels; same marginal cost/time)', () => {
       const regen = defense.items.find((i) => i.name === 'Health Regen')
       const abs = defense.items.find((i) => i.name === 'Defense Absolute')
       expect(regen).toBeDefined()
       expect(abs).toBeDefined()
       const maxR = regen!.maxLevel ?? 100
       const maxA = abs!.maxLevel ?? 100
+      expect(benefitDisplayForCard(regen!, 0, maxR)).toBe('x1.00')
       expect(benefitDisplayForCard(regen!, 1, maxR)).toBe('x1.03')
+      expect(benefitDisplayForCard(regen!, 29, maxR)).toBe('x1.87')
+      expect(benefitDisplayForCard(regen!, 100, maxR)).toBe('x4.00')
+      expect(benefitLineWithNextUpgrade(regen!, 0, maxR)).toBe('x1.00 » x1.03')
+      expect(benefitLineWithNextUpgrade(regen!, maxR, maxR)).toBe('x4.00')
+      expect(toolkitMarginalCoinCost('Health Regen', 0)).toBe(30)
+      expect(toolkitMarginalCoinCost('Health Regen', 99)).toBe(4_310_000)
+      expect(toolkitUpgradeDurationSeconds('Health Regen', 0)).toBe(14)
+      expect(toolkitUpgradeDurationSeconds('Health Regen', 99)).toBe(4_341_120)
+      for (const level of [17, 59, 98]) {
+        expect(toolkitMarginalCoinCost('Health Regen', level)).toBe(
+          toolkitMarginalCoinCost('Health', level),
+        )
+        expect(toolkitUpgradeDurationSeconds('Health Regen', level)).toBe(
+          toolkitUpgradeDurationSeconds('Health', level),
+        )
+      }
       expect(benefitDisplayForCard(abs!, 100, maxA)).toBe('x4.00')
     })
 

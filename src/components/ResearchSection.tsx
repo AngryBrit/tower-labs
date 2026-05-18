@@ -19,6 +19,8 @@ interface ResearchSectionProps {
   levelOverrides: Record<string, number>
   /** Total Labs Coin Discount % from simulated Labs Coin Discount level (applied to list coin costs). */
   labsCoinDiscountPercent: number
+  /** Labs Speed multiplier from simulated Labs Speed level (applied to research times). */
+  labsSpeedMultiplier: number
   onLevelDelta: (itemIndex: number, delta: number) => void
   onLevelSet: (itemIndex: number, level: number) => void
   /** Shown on the right side of the section header row (e.g. global “collapse all” on the first section). */
@@ -35,6 +37,7 @@ export function ResearchSection({
   hideCompleted,
   levelOverrides,
   labsCoinDiscountPercent,
+  labsSpeedMultiplier,
   onLevelDelta,
   onLevelSet,
   sectionHeadEnd,
@@ -117,6 +120,7 @@ export function ResearchSection({
               effectiveLevel={effectiveLevel}
               maxLevelCap={bounds.max}
               labsCoinDiscountPercent={labsCoinDiscountPercent}
+              labsSpeedMultiplier={labsSpeedMultiplier}
               onLevelDelta={(d) => onLevelDelta(i, d)}
               onLevelSet={(lvl) => onLevelSet(i, lvl)}
             />

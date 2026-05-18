@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { encodeLabsShareQueryValue } from './labsShareCodec'
 import { compareLabLevelOverrides, formatSignedCoinDelta } from './labCompare'
-import { serializeLabLevelOverridesCsv } from './labLevelOverridesCsv'
+import { defaultWorkshopPersisted } from './labPresetsStorage'
 import {
   extractLabsShareEncodedFromText,
   parseLabLevelsPayload,
@@ -14,6 +14,7 @@ import {
   parseResearchSection,
   type ResearchData,
 } from './types/research'
+import { serializeTowerUnifiedCsv, TOWER_UNIFIED_CSV_MAGIC } from './towerUnifiedCsv'
 
 const srcDir = dirname(fileURLToPath(import.meta.url))
 
@@ -33,17 +34,25 @@ function loadResearchDataSync(): ResearchData {
 }
 
 describe('extractLabsShareEncodedFromText', () => {
-  it('reads labs param from full URL', () => {
+  it('reads tower param from full URL', () => {
     expect(
       extractLabsShareEncodedFromText(
-        'https://example.com/app/?utm=1&labs=ueyJ2IjoxLCJvIjp7fX0',
+        'https://example.com/app/?utm=1&tower=ueyJ2IjoxLCJvIjp7fX0',
       ),
     ).toBe('ueyJ2IjoxLCJvIjp7fX0')
   })
 
+  it('ignores old labs query param', () => {
+    expect(
+      extractLabsShareEncodedFromText(
+        'https://example.com/app/?utm=1&labs=ueyJ2IjoxLCJvIjp7fX0',
+      ),
+    ).toBeNull()
+  })
+
   it('percent-decodes payload', () => {
     expect(
-      extractLabsShareEncodedFromText('https://x.test/t?labs=u%2Bfoo'),
+      extractLabsShareEncodedFromText('https://x.test/t?tower=u%2Bfoo'),
     ).toBe('u+foo')
   })
 })
@@ -51,9 +60,9 @@ describe('extractLabsShareEncodedFromText', () => {
 describe('parseLabLevelsPayload', () => {
   const data = loadResearchDataSync()
 
-  it('parses URL with labs param', async () => {
+  it('parses URL with tower param', async () => {
     const enc = await encodeLabsShareQueryValue({ '0-0': 4 })
-    const url = `https://host.example/path/page?labs=${enc}`
+    const url = `https://host.example/path/page?tower=${enc}`
     const r = await parseLabLevelsPayload(url, data)
     expect(r.ok && r.overrides['0-0']).toBe(4)
   })
@@ -68,22 +77,11 @@ describe('parseLabLevelsPayload', () => {
     }
   })
 
-  it('parses CSV export shape', async () => {
-    const csv = serializeLabLevelOverridesCsv({ '0-0': 2 })
-    const r = await parseLabLevelsPayload(csv, data)
-    expect(r.ok && r.overrides['0-0']).toBe(2)
-  })
-
-  it('accepts UTF-8 BOM on CSV', async () => {
-    const csv = `\uFEFF${serializeLabLevelOverridesCsv({ '0-0': 3 })}`
-    const r = await parseLabLevelsPayload(csv, data)
-    expect(r.ok && r.overrides['0-0']).toBe(3)
-  })
-
-  it('parses header-only CSV as empty overrides', async () => {
-    const r = await parseLabLevelsPayload('key,level\n', data)
-    expect(r.ok).toBe(true)
-    if (r.ok) expect(Object.keys(r.overrides).length).toBe(0)
+  it('rejects lab-only key,level CSV', async () => {
+    expect(await parseLabLevelsPayload('key,level\n0-0,2\n', data)).toEqual({
+      ok: false,
+      error: 'invalid_csv',
+    })
   })
 
   it('rejects empty', async () => {
@@ -93,17 +91,58 @@ describe('parseLabLevelsPayload', () => {
     })
   })
 
-  it('rejects invalid CSV rows when comma present', async () => {
-    expect(await parseLabLevelsPayload('key,level\nbad,1\n', data)).toEqual({
+  it('parses tower unified CSV via parseLabLevelsPayload', async () => {
+    const ws = { ...defaultWorkshopPersisted(), damageLevel: 4 }
+    const csv = serializeTowerUnifiedCsv({ '0-0': 1 }, ws)
+    const r = await parseLabLevelsPayload(csv, data)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.overrides['0-0']).toBe(1)
+      expect(r.workshop?.damageLevel).toBe(4)
+    }
+  })
+
+  it('rejects malformed tower CSV as invalid_csv', async () => {
+    const bad = `${TOWER_UNIFIED_CSV_MAGIC}\ntype,key,value\nlab,bad-key,1\n`
+    expect(await parseLabLevelsPayload(bad, data)).toEqual({
       ok: false,
       error: 'invalid_csv',
     })
   })
 
-  it('rejects JSON-style text as invalid_csv when commas present', async () => {
+  it('accepts inline v4 JSON with empty overrides', async () => {
+    expect(await parseLabLevelsPayload('{"v":4,"o":{}}', data)).toEqual({
+      ok: true,
+      overrides: {},
+    })
+  })
+
+  it('parses inline v4 JSON with workshop snapshot', async () => {
+    const w = {
+      hideMaxed: true,
+      mainTab: 'upgrade' as const,
+      category: 'defense' as const,
+      multiplier: 5 as const,
+      damageLevel: 3,
+      attackSpeedLevel: 0,
+      critChanceLevel: 0,
+      critFactorLevel: 0,
+    }
+    const raw = JSON.stringify({ v: 4, o: { '0-0': 2 }, w })
+    const r = await parseLabLevelsPayload(raw, data)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.overrides['0-0']).toBe(2)
+      expect(r.workshop).toBeDefined()
+      expect(r.workshop?.damageLevel).toBe(3)
+      expect(r.workshop?.hideMaxed).toBe(true)
+    }
+  })
+
+  it('rejects pre-v4 inline JSON', async () => {
     expect(await parseLabLevelsPayload('{"v":1,"o":{}}', data)).toEqual({
       ok: false,
-      error: 'invalid_csv',
+      error: 'invalid_payload',
     })
   })
 
