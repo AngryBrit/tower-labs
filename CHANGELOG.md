@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-05-18
+
+### Added
+
+- **TowerSmith** rebrand: browser title, PWA manifest, Open Graph / Twitter previews, OG banner, and in-app copy; GitHub repository **AngryBrit/tower-smith**.
+- **Module loadout presets**: five saved hub configurations (levels, chassis, assist, sub-modules) on the **Modules** tab (`workshopModulePresets`, `WorkshopModulesPanel`).
+- **GitHub Sponsors** footer link (`FUNDING.yml`, `appVersion` sponsor URL).
+
+### Changed
+
+- **Modules hub**: polished slot layout, generator connector alignment, and assist positioning with efficiency display (`WorkshopModulesPanel`, `App.css`).
+
+### Docs
+
+- README tower CSV format, share v4, and module-preset persistence notes; expanded OG/PWA/meta descriptions; corrected CHANGELOG 2.3.0 theme/share rows; release template links.
+
 ## [2.4.2] - 2026-05-18
 
 ### Changed
