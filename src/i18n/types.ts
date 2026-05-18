@@ -1,3 +1,3 @@
-export type AppLocale = 'en' | 'es'
+export type AppLocale = 'en' | 'es' | 'de'
 
 export type ResearchLabelKind = 'section' | 'item'

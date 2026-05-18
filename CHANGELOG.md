@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.3] - 2026-05-18
+
+### Added
+
+- **German (`de`) locale** — Full UI copy in [`src/i18n/dictionary.de.ts`](src/i18n/dictionary.de.ts), research name overlay ([`research-overlay.de.json`](src/i18n/research-overlay.de.json)), and benefit-line translation. Choose **Deutsch** in Settings or the Lab header language menu. Regenerate the research overlay with `node scripts/write-research-overlay-de.mjs`.
+- **Relics search** — Filter the relic catalog by name, description, or unlock text; press `/` on the Relics tab to focus the search field.
+- **Themes search** — Same search pattern on the Themes tab (name, event, unlock metadata).
+
+### Changed
+
+- **Relics catalog** — Wiki-aligned corrections and full **262-relic** table in [`workshopRelics.generated.json`](src/data/workshopRelics.generated.json) (`scripts/patch-relics-catalog.mjs`).
+
+### Fixed
+
+- **Relics / Themes toolbars** — Correct spacing between reset actions and search inputs in the in-panel workshop toolbar slot.
+- **Relics layout** — Remove double margin between the relic bonuses summary and filter tabs.
+
+### Docs
+
+- README: German locale, overlay scripts, Relics/Themes search, version **2.6.3**.
+
 ## [2.6.2] - 2026-05-18
 
 ### Fixed

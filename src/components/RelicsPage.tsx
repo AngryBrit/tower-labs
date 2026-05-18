@@ -5,6 +5,7 @@ import {
   useState,
   type Dispatch,
   type ReactNode,
+  type RefObject,
   type SetStateAction,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -27,18 +28,49 @@ function relicsOverlayPortal(node: ReactNode) {
   return createPortal(node, document.body)
 }
 
-function RelicsToolbarQuick({ onResetRelics }: { onResetRelics: () => void }) {
+function RelicsToolbar({
+  onResetRelics,
+  search,
+  onSearchChange,
+  searchInputRef,
+}: {
+  onResetRelics: () => void
+  search: string
+  onSearchChange: (value: string) => void
+  searchInputRef: RefObject<HTMLInputElement | null>
+}) {
   const { t } = useI18n()
+  const searchFieldId = 'relics-search'
+  const searchSlashHintId = 'relics-search-slash-hint'
   return (
-    <div className="select-research__toolbar-quick select-research__toolbar-quick--relics-only">
-      <button
-        type="button"
-        className="glow-btn glow-btn--danger glow-btn--block"
-        onClick={onResetRelics}
-        aria-label={t('sr_reset_relics_aria')}
-      >
-        {t('sr_reset_relics')}
-      </button>
+    <div className="select-research__toolbar">
+      <div className="select-research__toolbar-quick select-research__toolbar-quick--relics-only">
+        <button
+          type="button"
+          className="glow-btn glow-btn--danger glow-btn--block"
+          onClick={onResetRelics}
+          aria-label={t('sr_reset_relics_aria')}
+        >
+          {t('sr_reset_relics')}
+        </button>
+      </div>
+      <label className="visually-hidden" htmlFor={searchFieldId}>
+        {t('ws_relics_search_label_hidden')}
+      </label>
+      <input
+        ref={searchInputRef}
+        id={searchFieldId}
+        className="select-research__search glow-input"
+        type="search"
+        placeholder={t('ws_relics_search_placeholder')}
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        autoComplete="off"
+        aria-describedby={searchSlashHintId}
+      />
+      <p id={searchSlashHintId} className="visually-hidden">
+        {t('ws_relics_search_slash_hint')}
+      </p>
     </div>
   )
 }
@@ -51,8 +83,10 @@ export function RelicsPage({
   onScratchWorkshopPersistedChange,
 }: RelicsPageProps) {
   const { t } = useI18n()
+  const [search, setSearch] = useState('')
   const [resetRelicsConfirmOpen, setResetRelicsConfirmOpen] = useState(false)
   const workshopPersistedRef = useRef(workshopPersisted)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     workshopPersistedRef.current = workshopPersisted
@@ -78,21 +112,54 @@ export function RelicsPage({
     return () => window.removeEventListener('keydown', onKey)
   }, [resetRelicsConfirmOpen])
 
+  useEffect(() => {
+    const onDocKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.repeat) return
+      const panel = document.getElementById('inpanel-panel-relics')
+      if (!panel || panel.hidden) return
+      if (e.target === searchInputRef.current) return
+      const target = e.target
+      if (target instanceof HTMLElement && target.isContentEditable) return
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return
+      }
+      e.preventDefault()
+      const el = searchInputRef.current
+      if (!el) return
+      el.focus()
+      el.select()
+    }
+    document.addEventListener('keydown', onDocKeyDown)
+    return () => document.removeEventListener('keydown', onDocKeyDown)
+  }, [])
+
+  const toolbar = (
+    <RelicsToolbar
+      onResetRelics={openResetRelicsConfirm}
+      search={search}
+      onSearchChange={setSearch}
+      searchInputRef={searchInputRef}
+    />
+  )
+
   return (
     <div
       className={embeddedInPanel ? 'workshop workshop--embedded' : 'workshop'}
       aria-label={t('ws_section_relics')}
     >
       {embeddedInPanel && toolbarMount
-        ? createPortal(
-            <RelicsToolbarQuick onResetRelics={openResetRelicsConfirm} />,
-            toolbarMount,
-          )
-        : null}
+        ? createPortal(toolbar, toolbarMount)
+        : toolbar}
 
       <WorkshopRelicsPanel
         workshopPersisted={workshopPersisted}
         onWorkshopPersistedChange={onWorkshopPersistedChange}
+        searchQuery={search}
       />
 
       {resetRelicsConfirmOpen

@@ -1,3 +1,5 @@
+import { STRINGS_DE } from './dictionary.de'
+
 /** UI string ids — English is the source of truth; Spanish must define every key. */
 export const STRINGS_EN = {
   app_skipToMain: 'Skip to main content',
@@ -214,6 +216,11 @@ export const STRINGS_EN = {
   themes_owned_false: 'Not owned',
   themes_owned_toggle_on: 'Mark {{name}} as owned',
   themes_owned_toggle_off: 'Mark {{name}} as not owned',
+  themes_search_label_hidden: 'Search themes',
+  themes_search_placeholder: 'Search… (press / to focus)',
+  themes_search_slash_hint:
+    'Press the slash key anywhere on this page to focus the theme search field.',
+  themes_search_no_results: 'No themes match your search.',
   theme_music_krisu_oceans_sings: 'Krisu - Oceans Sings',
   theme_music_krisu_hiding_himalaya: 'Krisu - Hiding in Himalaya',
   theme_music_krisu_forest_bathing: 'Krisu - Forest Bathing',
@@ -329,6 +336,11 @@ export const STRINGS_EN = {
   ws_relics_filter_guild: 'Guild',
   ws_relics_filter_other: 'Other',
   ws_relics_filter_count: '{{owned}} owned · {{shown}} shown',
+  ws_relics_search_label_hidden: 'Search relics',
+  ws_relics_search_placeholder: 'Search… (press / to focus)',
+  ws_relics_search_slash_hint:
+    'Press the slash key anywhere on this page to focus the relic search field.',
+  ws_relics_search_no_results: 'No relics match your search.',
   ws_relics_select_all_shown: 'Select all shown',
   ws_relics_clear_all_shown: 'Clear shown',
   ws_relics_select_all_shown_aria: 'Mark all {{count}} relics in this filter as owned',
@@ -845,6 +857,7 @@ export const STRINGS_EN = {
   sr_locale_aria: 'Language',
   sr_locale_option_en: 'English',
   sr_locale_option_es: 'Español',
+  sr_locale_option_de: 'German',
 
   sr_notice_share_cleared: 'Share link opened: lab levels cleared to defaults.',
   sr_notice_share_one: 'Share link opened: loaded 1 custom lab level.',
@@ -1124,6 +1137,11 @@ export const STRINGS_ES = {
   themes_owned_false: 'No obtenida',
   themes_owned_toggle_on: 'Marcar {{name}} como en posesión',
   themes_owned_toggle_off: 'Marcar {{name}} como no en posesión',
+  themes_search_label_hidden: 'Buscar temas',
+  themes_search_placeholder: 'Buscar… (pulsa / para enfocar)',
+  themes_search_slash_hint:
+    'Pulsa la tecla / en cualquier parte de esta página para enfocar la búsqueda de temas.',
+  themes_search_no_results: 'Ningún tema coincide con tu búsqueda.',
   theme_music_krisu_oceans_sings: 'Krisu - Oceans Sings',
   theme_music_krisu_hiding_himalaya: 'Krisu - Hiding in Himalaya',
   theme_music_krisu_forest_bathing: 'Krisu - Forest Bathing',
@@ -1240,6 +1258,11 @@ export const STRINGS_ES = {
   ws_relics_filter_guild: 'Gremio',
   ws_relics_filter_other: 'Otras',
   ws_relics_filter_count: '{{owned}} obtenidas · {{shown}} visibles',
+  ws_relics_search_label_hidden: 'Buscar reliquias',
+  ws_relics_search_placeholder: 'Buscar… (pulsa / para enfocar)',
+  ws_relics_search_slash_hint:
+    'Pulsa la tecla / en cualquier parte de esta página para enfocar la búsqueda de reliquias.',
+  ws_relics_search_no_results: 'Ninguna reliquia coincide con tu búsqueda.',
   ws_relics_select_all_shown: 'Seleccionar todas las visibles',
   ws_relics_clear_all_shown: 'Quitar las visibles',
   ws_relics_select_all_shown_aria: 'Marcar las {{count}} reliquias visibles como obtenidas',
@@ -1764,6 +1787,7 @@ export const STRINGS_ES = {
   sr_locale_aria: 'Idioma',
   sr_locale_option_en: 'Inglés',
   sr_locale_option_es: 'Español',
+  sr_locale_option_de: 'Alemán',
 
   sr_notice_share_cleared:
     'Enlace abierto: niveles de lab restablecidos a los predeterminados.',
@@ -1937,3 +1961,5 @@ export const FORMAT_EN: I18nFormatters = formatters(
 )
 
 export const FORMAT_ES: I18nFormatters = formatters(STRINGS_ES)
+
+export const FORMAT_DE: I18nFormatters = formatters(STRINGS_DE)

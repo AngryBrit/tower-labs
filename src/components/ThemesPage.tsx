@@ -3,8 +3,10 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -44,20 +46,78 @@ function themesOverlayPortal(node: ReactNode) {
   return createPortal(node, document.body)
 }
 
-function ThemesToolbarQuick({ onResetThemes }: { onResetThemes: () => void }) {
+function ThemesToolbar({
+  onResetThemes,
+  search,
+  onSearchChange,
+  searchInputRef,
+}: {
+  onResetThemes: () => void
+  search: string
+  onSearchChange: (value: string) => void
+  searchInputRef: RefObject<HTMLInputElement | null>
+}) {
   const { t } = useI18n()
+  const searchFieldId = 'themes-search'
+  const searchSlashHintId = 'themes-search-slash-hint'
   return (
-    <div className="select-research__toolbar-quick select-research__toolbar-quick--themes-only">
-      <button
-        type="button"
-        className="glow-btn glow-btn--danger glow-btn--block"
-        onClick={onResetThemes}
-        aria-label={t('themes_reset_aria')}
-      >
-        {t('themes_reset')}
-      </button>
+    <div className="select-research__toolbar">
+      <div className="select-research__toolbar-quick select-research__toolbar-quick--themes-only">
+        <button
+          type="button"
+          className="glow-btn glow-btn--danger glow-btn--block"
+          onClick={onResetThemes}
+          aria-label={t('themes_reset_aria')}
+        >
+          {t('themes_reset')}
+        </button>
+      </div>
+      <label className="visually-hidden" htmlFor={searchFieldId}>
+        {t('themes_search_label_hidden')}
+      </label>
+      <input
+        ref={searchInputRef}
+        id={searchFieldId}
+        className="select-research__search glow-input"
+        type="search"
+        placeholder={t('themes_search_placeholder')}
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        autoComplete="off"
+        aria-describedby={searchSlashHintId}
+      />
+      <p id={searchSlashHintId} className="visually-hidden">
+        {t('themes_search_slash_hint')}
+      </p>
     </div>
   )
+}
+
+function themeMatchesSearch(
+  t: (id: StringId) => string,
+  theme: GameThemeEntry,
+  query: string,
+): boolean {
+  if (query.length === 0) return true
+  const haystack = [
+    t(theme.nameId),
+    theme.eventNameId != null ? t(theme.eventNameId) : '',
+    themeUnlockLabel(t, theme) ?? '',
+    theme.milestoneTier != null ? String(theme.milestoneTier) : '',
+    theme.guildSeason != null ? String(theme.guildSeason) : '',
+    theme.id,
+  ]
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(query)
+}
+
+function filterThemes(
+  themes: readonly GameThemeEntry[],
+  t: (id: StringId) => string,
+  query: string,
+): GameThemeEntry[] {
+  return themes.filter((theme) => themeMatchesSearch(t, theme, query))
 }
 
 const TAB_LABEL_IDS: Record<ThemeCategory, StringId> = {
@@ -169,6 +229,8 @@ export function ThemesPage({
   toolbarMount = null,
 }: ThemesPageProps) {
   const { t } = useI18n()
+  const [search, setSearch] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [budgetPanelsVisible] = useBudgetPanelsVisible()
   const coinBonusBodyId = useId().replace(/:/g, '')
   const [resetThemesConfirmOpen, setResetThemesConfirmOpen] = useState(false)
@@ -185,6 +247,26 @@ export function ThemesPage({
   const items = themesForCategory(activeCategory)
   const towerGroups = useMemo(() => towerThemesByGroup(), [])
   const backgroundGroups = useMemo(() => backgroundThemesByGroup(), [])
+  const searchNormalized = search.trim().toLowerCase()
+  const visibleItems = useMemo(
+    () => filterThemes(items, t, searchNormalized),
+    [items, t, searchNormalized],
+  )
+  const visibleTowerGroups = useMemo(
+    () => ({
+      milestone: filterThemes(towerGroups.milestone, t, searchNormalized),
+      event: filterThemes(towerGroups.event, t, searchNormalized),
+      guild: filterThemes(towerGroups.guild, t, searchNormalized),
+    }),
+    [towerGroups, t, searchNormalized],
+  )
+  const visibleBackgroundGroups = useMemo(
+    () => ({
+      event: filterThemes(backgroundGroups.event, t, searchNormalized),
+      guild: filterThemes(backgroundGroups.guild, t, searchNormalized),
+    }),
+    [backgroundGroups, t, searchNormalized],
+  )
   const selectedId = selection[activeCategory]
   const tabPassive = tabPassivePercent(activeCategory)
 
@@ -247,9 +329,26 @@ export function ThemesPage({
   }
 
   const ownedCountInCategory = useMemo(
-    () => items.filter((entry) => isThemeOwned(entry, ownedIds)).length,
-    [items, ownedIds],
+    () => visibleItems.filter((entry) => isThemeOwned(entry, ownedIds)).length,
+    [visibleItems, ownedIds],
   )
+
+  const anyVisibleInPanel = useMemo(() => {
+    if (activeCategory === 'tower') {
+      return (
+        visibleTowerGroups.milestone.length +
+          visibleTowerGroups.event.length +
+          visibleTowerGroups.guild.length >
+        0
+      )
+    }
+    if (activeCategory === 'background') {
+      return (
+        visibleBackgroundGroups.event.length + visibleBackgroundGroups.guild.length > 0
+      )
+    }
+    return visibleItems.length > 0
+  }, [activeCategory, visibleItems, visibleTowerGroups, visibleBackgroundGroups])
 
   const coinQuantities = useMemo(
     () => countOwnedThemesForCoinBonus(ownedIds),
@@ -291,14 +390,46 @@ export function ThemesPage({
     }
   }, [coinBonusCollapsed])
 
+  useEffect(() => {
+    const onDocKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.repeat) return
+      const panel = document.getElementById('inpanel-panel-themes')
+      if (!panel || panel.hidden) return
+      if (e.target === searchInputRef.current) return
+      const target = e.target
+      if (target instanceof HTMLElement && target.isContentEditable) return
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return
+      }
+      e.preventDefault()
+      const el = searchInputRef.current
+      if (!el) return
+      el.focus()
+      el.select()
+    }
+    document.addEventListener('keydown', onDocKeyDown)
+    return () => document.removeEventListener('keydown', onDocKeyDown)
+  }, [])
+
+  const toolbar = (
+    <ThemesToolbar
+      onResetThemes={openResetThemesConfirm}
+      search={search}
+      onSearchChange={setSearch}
+      searchInputRef={searchInputRef}
+    />
+  )
+
   return (
     <div className="themes-page" role="region" aria-label={t('app_nav_themes')}>
       {embeddedInPanel && toolbarMount
-        ? createPortal(
-            <ThemesToolbarQuick onResetThemes={openResetThemesConfirm} />,
-            toolbarMount,
-          )
-        : null}
+        ? createPortal(toolbar, toolbarMount)
+        : toolbar}
       {budgetPanelsVisible ? (
       <div
         className={
@@ -404,7 +535,7 @@ export function ThemesPage({
             category: t(TAB_LABEL_IDS[activeCategory]),
             percent: tabPassive,
             owned: ownedCountInCategory,
-            total: items.length,
+            total: visibleItems.length,
           })}
         </p>
       ) : null}
@@ -415,69 +546,84 @@ export function ThemesPage({
         aria-labelledby={`themes-tab-${activeCategory}`}
         className={themesPanelClassName(activeCategory)}
       >
+        {!anyVisibleInPanel && searchNormalized.length > 0 ? (
+          <p className="themes-page__search-empty" role="status">
+            {t('themes_search_no_results')}
+          </p>
+        ) : null}
         {activeCategory === 'background' ? (
           <>
-            <section
-              className="themes-page__section"
-              aria-labelledby="themes-bg-event-title"
-            >
-              <h3 id="themes-bg-event-title" className="themes-page__section-title">
-                {t('themes_tower_group_event')}
-              </h3>
-              <div className="themes-page__grid">
-                {backgroundGroups.event.map(renderThemeCard)}
-              </div>
-            </section>
-            <section
-              className="themes-page__section"
-              aria-labelledby="themes-bg-guild-title"
-            >
+            {visibleBackgroundGroups.event.length > 0 ? (
+              <section
+                className="themes-page__section"
+                aria-labelledby="themes-bg-event-title"
+              >
+                <h3 id="themes-bg-event-title" className="themes-page__section-title">
+                  {t('themes_tower_group_event')}
+                </h3>
+                <div className="themes-page__grid">
+                  {visibleBackgroundGroups.event.map(renderThemeCard)}
+                </div>
+              </section>
+            ) : null}
+            {visibleBackgroundGroups.guild.length > 0 ? (
+              <section
+                className="themes-page__section"
+                aria-labelledby="themes-bg-guild-title"
+              >
               <h3 id="themes-bg-guild-title" className="themes-page__section-title">
                 {t('themes_tower_group_guild')}
               </h3>
               <div className="themes-page__grid">
-                {backgroundGroups.guild.map(renderThemeCard)}
+                {visibleBackgroundGroups.guild.map(renderThemeCard)}
               </div>
             </section>
+            ) : null}
           </>
         ) : activeCategory === 'tower' ? (
           <>
-            <section
-              className="themes-page__section"
-              aria-labelledby="themes-tower-milestone-title"
-            >
+            {visibleTowerGroups.milestone.length > 0 ? (
+              <section
+                className="themes-page__section"
+                aria-labelledby="themes-tower-milestone-title"
+              >
               <h3 id="themes-tower-milestone-title" className="themes-page__section-title">
                 {t('themes_tower_group_milestone')}
               </h3>
               <div className="themes-page__grid">
-                {towerGroups.milestone.map(renderThemeCard)}
+                {visibleTowerGroups.milestone.map(renderThemeCard)}
               </div>
             </section>
-            <section
-              className="themes-page__section"
-              aria-labelledby="themes-tower-event-title"
-            >
-              <h3 id="themes-tower-event-title" className="themes-page__section-title">
-                {t('themes_tower_group_event')}
-              </h3>
-              <div className="themes-page__grid">
-                {towerGroups.event.map(renderThemeCard)}
-              </div>
-            </section>
-            <section
-              className="themes-page__section"
-              aria-labelledby="themes-tower-guild-title"
-            >
-              <h3 id="themes-tower-guild-title" className="themes-page__section-title">
-                {t('themes_tower_group_guild')}
-              </h3>
-              <div className="themes-page__grid">
-                {towerGroups.guild.map(renderThemeCard)}
-              </div>
-            </section>
+            ) : null}
+            {visibleTowerGroups.event.length > 0 ? (
+              <section
+                className="themes-page__section"
+                aria-labelledby="themes-tower-event-title"
+              >
+                <h3 id="themes-tower-event-title" className="themes-page__section-title">
+                  {t('themes_tower_group_event')}
+                </h3>
+                <div className="themes-page__grid">
+                  {visibleTowerGroups.event.map(renderThemeCard)}
+                </div>
+              </section>
+            ) : null}
+            {visibleTowerGroups.guild.length > 0 ? (
+              <section
+                className="themes-page__section"
+                aria-labelledby="themes-tower-guild-title"
+              >
+                <h3 id="themes-tower-guild-title" className="themes-page__section-title">
+                  {t('themes_tower_group_guild')}
+                </h3>
+                <div className="themes-page__grid">
+                  {visibleTowerGroups.guild.map(renderThemeCard)}
+                </div>
+              </section>
+            ) : null}
           </>
         ) : (
-          items.map(renderThemeCard)
+          visibleItems.map(renderThemeCard)
         )}
       </div>
 

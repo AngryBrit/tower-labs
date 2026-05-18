@@ -6,24 +6,50 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  FORMAT_DE,
   FORMAT_EN,
   FORMAT_ES,
   STRINGS_EN,
   STRINGS_ES,
   type StringId,
 } from './dictionary'
+import { STRINGS_DE } from './dictionary.de'
 import { LOCALE_STORAGE_KEY, readStoredLocale } from './constants'
 import { I18nReactContext, type I18nContextValue } from './I18nContext'
+import researchOverlayDe from './research-overlay.de.json' with { type: 'json' }
 import researchOverlayEs from './research-overlay.es.json' with { type: 'json' }
 import { translateResearchBenefitLine } from './researchBenefitTranslate'
 import type { AppLocale, ResearchLabelKind } from './types'
 
-type ResearchOverlayEsFile = {
+type ResearchOverlayFile = {
   sections: Record<string, string>
   items: Record<string, string>
 }
 
-const RESEARCH_ES = researchOverlayEs as ResearchOverlayEsFile
+const RESEARCH_OVERLAY_BY_LOCALE: Partial<
+  Record<AppLocale, ResearchOverlayFile>
+> = {
+  es: researchOverlayEs as ResearchOverlayFile,
+  de: researchOverlayDe as ResearchOverlayFile,
+}
+
+const HTML_LANG_BY_LOCALE: Record<AppLocale, string> = {
+  en: 'en',
+  es: 'es',
+  de: 'de',
+}
+
+const STRINGS_BY_LOCALE = {
+  en: STRINGS_EN,
+  es: STRINGS_ES,
+  de: STRINGS_DE,
+} as const
+
+const FORMAT_BY_LOCALE = {
+  en: FORMAT_EN,
+  es: FORMAT_ES,
+  de: FORMAT_DE,
+} as const
 
 function pickResearchLabel(
   locale: AppLocale,
@@ -32,12 +58,13 @@ function pickResearchLabel(
   english: string,
   kind: ResearchLabelKind,
 ): string {
-  if (locale !== 'es') return english
+  const overlay = RESEARCH_OVERLAY_BY_LOCALE[locale]
+  if (!overlay) return english
   if (kind === 'section') {
-    return RESEARCH_ES.sections[sectionSlug] ?? english
+    return overlay.sections[sectionSlug] ?? english
   }
   if (itemIndex == null) return english
-  return RESEARCH_ES.items[`${sectionSlug}:${itemIndex}`] ?? english
+  return overlay.items[`${sectionSlug}:${itemIndex}`] ?? english
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -53,12 +80,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useLayoutEffect(() => {
-    document.documentElement.lang = locale === 'es' ? 'es' : 'en'
+    document.documentElement.lang = HTML_LANG_BY_LOCALE[locale]
   }, [locale])
 
   const value = useMemo((): I18nContextValue => {
-    const strings = locale === 'es' ? STRINGS_ES : STRINGS_EN
-    const fmt = locale === 'es' ? FORMAT_ES : FORMAT_EN
+    const strings = STRINGS_BY_LOCALE[locale]
+    const fmt = FORMAT_BY_LOCALE[locale]
     const fallback = STRINGS_EN
 
     function t(id: StringId): string {

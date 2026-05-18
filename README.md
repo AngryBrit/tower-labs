@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.6.2-2ea44f)
+![Version](https://img.shields.io/badge/version-2.6.3-2ea44f)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7c57c118-c5d2-4b8c-a8db-3cd2eb32a4de/deploy-status)](https://app.netlify.com/projects/towerlabs/deploys)
 
 ---
@@ -22,11 +22,11 @@
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
 - **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Scaled effect values can show as an overlay on card art or below the stars (toggle in **Tools / Settings**). Equipped cards on the active preset feed workshop displayed-stat formulas.
 - **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
-- **Relics** — **Relics** tab tracks owned relic IDs from the wiki catalog and optional displayed-damage bonus for workshop sim formulas.
-- **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
+- **Relics** — **Relics** tab tracks **262** wiki relics (owned IDs, unlock-group filters, bonus breakdown) and optional displayed-damage bonus for workshop sim formulas. **Search** filters by name, description, or unlock text (`/` to focus).
+- **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`). **Search** filters skins by name, event, and unlock metadata (`/` to focus).
 - **Unified CSV backup** — Export and import a single **tower CSV** (`tower_csv_v1`) with one or more **named builds** (lab levels, workshop `ws,…` rows, card stars/presets) plus optional global **theme** owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts). Carries the **active** module/relic sim fields; the five **module loadout presets** stay in browser workshop storage (and in lab compare named presets), not in tower CSV rows.
 - **Shareable builds** — Encode lab levels, workshop snapshot, optional build name, and owned theme IDs in the `?tower=` query string (share codec **v4**); optional QR code for sharing.
-- **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
+- **Languages** — English, Spanish, and German UI; Spanish and German research titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
 - **Persistence** — Section collapse state, locale, last-selected main panel (Research, Workshop, Modules, Cards, Relics, Themes, Tools / Settings), workshop snapshot (including chassis modules, five module loadout presets, relics, and submodule picks), lab compare named presets (with themes), theme owned/selection state, and optional budget-panel, module-catalog, and **cards stat overlay** visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
 
 
@@ -85,6 +85,8 @@ These are run with Node directly when you update data or regenerate assets:
 | [`build-module-tower-labs.mjs`](scripts/build-module-tower-labs.mjs) | Build pipeline for per-module lab JSON. |
 | [`merge-module-tower-labs.mjs`](scripts/merge-module-tower-labs.mjs) | Merge module exports into `src/data/tower-labs.json`. |
 | [`write-research-overlay.mjs`](scripts/write-research-overlay.mjs) | Regenerate [`src/i18n/research-overlay.es.json`](src/i18n/research-overlay.es.json) from the manifest and Spanish string tables. |
+| [`write-research-overlay-de.mjs`](scripts/write-research-overlay-de.mjs) | Regenerate [`src/i18n/research-overlay.de.json`](src/i18n/research-overlay.de.json) from the manifest and German string tables. |
+| [`patch-relics-catalog.mjs`](scripts/patch-relics-catalog.mjs) | Apply wiki table corrections to [`workshopRelics.generated.json`](src/data/workshopRelics.generated.json). |
 | [`gen-dissonant-echo-labs.mjs`](scripts/gen-dissonant-echo-labs.mjs) | Generate Dissonant Echo lab duration/cost rows and patch `tower-labs.json` (wiki-aligned). |
 | [`gen-enhancement-coin-discount-labs.mjs`](scripts/gen-enhancement-coin-discount-labs.mjs) | Generate enhancement coin discount lab rows and patch `tower-labs.json`. |
 | [`gen-utility-enhance-coins.mjs`](scripts/gen-utility-enhance-coins.mjs) | Regenerate utility enhancement coin ladders (`workshopEnhanceUtilityTier200`, free upgrades, enemy level skip) from a wiki table scrape. |
@@ -122,7 +124,7 @@ node scripts/write-research-overlay.mjs
 | [`public/app-icon.svg`](public/app-icon.svg), [`public/og-banner.png`](public/og-banner.png) | Brand icon and social preview image (regenerate with `npm run icons` / `npm run og-banner` after edits). |
 | [`index.html`](index.html) | Document title, `theme-color`, favicon links, and Open Graph / Twitter Card meta tags. |
 | [`public/*.webp`](public/) | Resource glyphs (coin, cash, …) and per-card art (`Damage.webp`, `Berserker.webp`, …) used by the Cards UI. |
-| [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish research overlay, and benefit translation helpers. |
+| [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish/German research overlays, and benefit translation helpers. |
 | [`src/labCompare.ts`](src/labCompare.ts), [`src/labBudgetAggregates.ts`](src/labBudgetAggregates.ts), [`src/workshopCompare.ts`](src/workshopCompare.ts), [`src/workshopBudgetAggregates.ts`](src/workshopBudgetAggregates.ts), … | Lab and workshop comparison, budgets, presets, slugs, share codec, and unified CSV. |
 | [`src/budgetPanelsVisibility.ts`](src/budgetPanelsVisibility.ts) | Toggle for showing lab and workshop budget summary panels (persisted). |
 | [`src/appVersion.ts`](src/appVersion.ts) | `APP_VERSION` and changelog URL (from `package.json`). |
@@ -157,9 +159,10 @@ Multi-build files repeat `build` / `lab` / `ws` / `card` sections; themes are wr
 
 ## Internationalization
 
-- Supported locales: **English (`en`)** and **Spanish (`es`)**.
-- UI strings live under [`src/i18n/`](src/i18n/). Locale is stored under the key documented in [`src/i18n/constants.ts`](src/i18n/constants.ts).
+- Supported locales: **English (`en`)**, **Spanish (`es`)**, and **German (`de`)**.
+- UI strings live under [`src/i18n/`](src/i18n/) (`dictionary.ts` for English and Spanish; [`dictionary.de.ts`](src/i18n/dictionary.de.ts) for German). Locale is stored under the key documented in [`src/i18n/constants.ts`](src/i18n/constants.ts).
 - Spanish research **names** (sections and cards) come from [`src/i18n/research-overlay.es.json`](src/i18n/research-overlay.es.json), maintained by `scripts/write-research-overlay.mjs` when you refresh translations from your tables.
+- German research **names** use the same overlay shape in [`src/i18n/research-overlay.de.json`](src/i18n/research-overlay.de.json), maintained by `scripts/write-research-overlay-de.mjs`.
 
 ---
 

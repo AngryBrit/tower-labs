@@ -1055,6 +1055,7 @@ export const SelectResearch = forwardRef<
             >
               <option value="en">{t('sr_locale_option_en')}</option>
               <option value="es">{t('sr_locale_option_es')}</option>
+              <option value="de">{t('sr_locale_option_de')}</option>
             </select>
           </div>
         </header>

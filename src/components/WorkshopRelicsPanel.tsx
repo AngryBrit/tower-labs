@@ -20,6 +20,16 @@ import type { StringId } from '../i18n/dictionary'
 type WorkshopRelicsPanelProps = {
   workshopPersisted: WorkshopPersistedV1
   onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
+  searchQuery?: string
+}
+
+function relicMatchesSearch(relic: WorkshopRelicDef, query: string): boolean {
+  if (query.length === 0) return true
+  return (
+    relic.name.toLowerCase().includes(query) ||
+    relic.description.toLowerCase().includes(query) ||
+    relic.unlock.toLowerCase().includes(query)
+  )
 }
 
 /** Unlock-group tabs shown in the panel (`other` relics appear under All only). */
@@ -82,6 +92,7 @@ function withParams(
 export function WorkshopRelicsPanel({
   workshopPersisted,
   onWorkshopPersistedChange,
+  searchQuery = '',
 }: WorkshopRelicsPanelProps) {
   const { t } = useI18n()
   const summaryBodyId = useId().replace(/:/g, '')
@@ -112,7 +123,13 @@ export function WorkshopRelicsPanel({
 
   const bonusTable = useMemo(() => workshopRelicsBonusTable(ownedSet), [ownedSet])
 
-  const visibleRelics = useMemo(() => workshopRelicsForUnlockGroup(filter), [filter])
+  const searchNormalized = searchQuery.trim().toLowerCase()
+
+  const visibleRelics = useMemo(() => {
+    const groupFiltered = workshopRelicsForUnlockGroup(filter)
+    if (searchNormalized.length === 0) return groupFiltered
+    return groupFiltered.filter((r) => relicMatchesSearch(r, searchNormalized))
+  }, [filter, searchNormalized])
 
   const relicsByRarity = useMemo(
     () => workshopRelicsGroupedByRarity(visibleRelics),
@@ -368,6 +385,11 @@ export function WorkshopRelicsPanel({
         className="relics-page__catalog"
         aria-label={t(FILTER_LABEL_IDS[filter])}
       >
+        {visibleRelics.length === 0 && searchNormalized.length > 0 ? (
+          <p className="relics-page__search-empty" role="status">
+            {t('ws_relics_search_no_results')}
+          </p>
+        ) : null}
         {relicsByRarity.map(({ rarity, relics }) => {
           const ownedInRarity = relics.filter((r) => ownedSet.has(r.id)).length
           const sectionId = `relics-section-${rarity}`
