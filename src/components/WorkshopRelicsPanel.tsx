@@ -22,9 +22,10 @@ type WorkshopRelicsPanelProps = {
   onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
 }
 
-type RelicFilter = WorkshopRelicUnlockGroup | 'all'
+/** Unlock-group tabs shown in the panel (`other` relics appear under All only). */
+type RelicTabFilter = Exclude<WorkshopRelicUnlockGroup, 'other'> | 'all'
 
-const FILTER_ORDER: readonly RelicFilter[] = [
+const FILTER_ORDER: readonly RelicTabFilter[] = [
   'all',
   'milestone',
   'tournament',
@@ -33,7 +34,7 @@ const FILTER_ORDER: readonly RelicFilter[] = [
   'guild',
 ]
 
-const FILTER_LABEL_IDS: Record<RelicFilter, StringId> = {
+const FILTER_LABEL_IDS: Record<RelicTabFilter, StringId> = {
   all: 'ws_relics_filter_all',
   milestone: 'ws_relics_filter_milestone',
   tournament: 'ws_relics_filter_tournament',
@@ -84,7 +85,7 @@ export function WorkshopRelicsPanel({
 }: WorkshopRelicsPanelProps) {
   const { t } = useI18n()
   const summaryBodyId = useId().replace(/:/g, '')
-  const [filter, setFilter] = useState<RelicFilter>('all')
+  const [filter, setFilter] = useState<RelicTabFilter>('all')
   const [summaryCollapsed, setSummaryCollapsed] = useState(() => {
     try {
       return localStorage.getItem(RELICS_SUMMARY_COLLAPSED_STORAGE_KEY) === '1'
