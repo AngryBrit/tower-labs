@@ -3,7 +3,7 @@
 **TowerSmith** is a static web app for [**The Tower**](https://thetowergame.com/): browse research trees from exported JSON, model workshop upgrades and card loadouts, track cosmetic themes, compare builds, and share lab configurations from the browser.
 
 **Live site:** [thetower.thatangrybrit.com](https://thetower.thatangrybrit.com/)  
-**Repository:** [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs) (npm package name `tower_export` is internal only; user-facing branding is always **TowerSmith**).
+**Repository:** [AngryBrit/tower-smith](https://github.com/AngryBrit/tower-smith) (npm package name `tower_export` is internal only; user-facing branding is always **TowerSmith**).
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
