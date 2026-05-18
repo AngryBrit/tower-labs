@@ -3,7 +3,6 @@
  */
 
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
-import { applyWorkshopDiscountToCoins } from '../types/research'
 import {
   WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER,
   workshopEnhanceDefenseNextMarginalCoins,
@@ -48,40 +47,17 @@ function sumMarginalSteps(
   return s
 }
 
-function defenseNextAt(
-  key: WorkshopEnhanceDefenseUpgradeKey,
-  discountPercent: number,
-): (completed: number) => number | undefined {
-  return (L) => {
-    const raw = workshopEnhanceDefenseNextMarginalCoins(key, L)
-    if (raw == null) return undefined
-    if (!(discountPercent > 0)) return raw
-    return applyWorkshopDiscountToCoins(raw, discountPercent)
-  }
+/** Wiki unlock gates use list **Coins** column totals, not coins paid after lab discount. */
+function defenseNextAt(key: WorkshopEnhanceDefenseUpgradeKey): (completed: number) => number | undefined {
+  return (L) => workshopEnhanceDefenseNextMarginalCoins(key, L)
 }
 
-function utilityNextAt(
-  key: WorkshopEnhanceUtilityUpgradeKey,
-  discountPercent: number,
-): (completed: number) => number | undefined {
-  return (L) => {
-    const raw = workshopEnhanceUtilityNextMarginalCoins(key, L)
-    if (raw == null) return undefined
-    if (!(discountPercent > 0)) return raw
-    return applyWorkshopDiscountToCoins(raw, discountPercent)
-  }
+function utilityNextAt(key: WorkshopEnhanceUtilityUpgradeKey): (completed: number) => number | undefined {
+  return (L) => workshopEnhanceUtilityNextMarginalCoins(key, L)
 }
 
-function attackNextAt(
-  key: WorkshopEnhanceAttackUpgradeKey,
-  discountPercent: number,
-): (completed: number) => number | undefined {
-  return (L) => {
-    const raw = workshopEnhanceAttackNextMarginalCoins(key, L)
-    if (raw == null) return undefined
-    if (!(discountPercent > 0)) return raw
-    return applyWorkshopDiscountToCoins(raw, discountPercent)
-  }
+function attackNextAt(key: WorkshopEnhanceAttackUpgradeKey): (completed: number) => number | undefined {
+  return (L) => workshopEnhanceAttackNextMarginalCoins(key, L)
 }
 
 const DEFENSE_UNLOCK_REQUIRED: Record<WorkshopEnhanceDefenseUpgradeKey, number> = {
@@ -129,62 +105,45 @@ export function workshopEnhanceAttackUnlockRequiredCoins(
   return ATTACK_UNLOCK_REQUIRED[key]
 }
 
-export function workshopEnhanceAttackCategorySpentCoins(
-  ws: WorkshopPersistedV1,
-  enhancementAttackDiscountPercent = 0,
-): number {
+export function workshopEnhanceAttackCategorySpentCoins(ws: WorkshopPersistedV1): number {
   let total = 0
   for (const key of WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER) {
     const level = ws[key]
-    total += sumMarginalSteps(attackNextAt(key, enhancementAttackDiscountPercent), 0, Math.max(0, level))
+    total += sumMarginalSteps(attackNextAt(key), 0, Math.max(0, level))
   }
   return total
 }
 
-export function workshopEnhanceAttackDamageEnhanceSpentCoins(
-  ws: WorkshopPersistedV1,
-  enhancementAttackDiscountPercent = 0,
-): number {
+export function workshopEnhanceAttackDamageEnhanceSpentCoins(ws: WorkshopPersistedV1): number {
   const level = ws.enhanceDamageLevel
-  return sumMarginalSteps(
-    attackNextAt('enhanceDamageLevel', enhancementAttackDiscountPercent),
-    0,
-    Math.max(0, level),
-  )
+  return sumMarginalSteps(attackNextAt('enhanceDamageLevel'), 0, Math.max(0, level))
 }
 
 /** Spend counted toward unlocking this attack enhancement (wiki damage-only vs category). */
 export function workshopEnhanceAttackUnlockSpentCoins(
   key: WorkshopEnhanceAttackUpgradeKey,
   ws: WorkshopPersistedV1,
-  enhancementAttackDiscountPercent = 0,
 ): number {
   if (key === 'enhanceRendArmorLevel') {
-    return workshopEnhanceAttackDamageEnhanceSpentCoins(ws, enhancementAttackDiscountPercent)
+    return workshopEnhanceAttackDamageEnhanceSpentCoins(ws)
   }
-  return workshopEnhanceAttackCategorySpentCoins(ws, enhancementAttackDiscountPercent)
+  return workshopEnhanceAttackCategorySpentCoins(ws)
 }
 
-export function workshopEnhanceDefenseCategorySpentCoins(
-  ws: WorkshopPersistedV1,
-  enhancementDefenseDiscountPercent = 0,
-): number {
+export function workshopEnhanceDefenseCategorySpentCoins(ws: WorkshopPersistedV1): number {
   let total = 0
   for (const key of WORKSHOP_ENHANCE_DEFENSE_UPGRADE_ORDER) {
     const level = ws[key]
-    total += sumMarginalSteps(defenseNextAt(key, enhancementDefenseDiscountPercent), 0, Math.max(0, level))
+    total += sumMarginalSteps(defenseNextAt(key), 0, Math.max(0, level))
   }
   return total
 }
 
-export function workshopEnhanceUtilityCategorySpentCoins(
-  ws: WorkshopPersistedV1,
-  enhancementUtilityDiscountPercent = 0,
-): number {
+export function workshopEnhanceUtilityCategorySpentCoins(ws: WorkshopPersistedV1): number {
   let total = 0
   for (const key of WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER) {
     const level = ws[key]
-    total += sumMarginalSteps(utilityNextAt(key, enhancementUtilityDiscountPercent), 0, Math.max(0, level))
+    total += sumMarginalSteps(utilityNextAt(key), 0, Math.max(0, level))
   }
   return total
 }
@@ -192,21 +151,27 @@ export function workshopEnhanceUtilityCategorySpentCoins(
 export function workshopEnhanceDefenseIsUnlocked(
   key: WorkshopEnhanceDefenseUpgradeKey,
   categorySpentCoins: number,
+  labEnhancementsUnlocked = true,
 ): boolean {
+  if (!labEnhancementsUnlocked) return false
   return categorySpentCoins >= DEFENSE_UNLOCK_REQUIRED[key]
 }
 
 export function workshopEnhanceUtilityIsUnlocked(
   key: WorkshopEnhanceUtilityUpgradeKey,
   categorySpentCoins: number,
+  labEnhancementsUnlocked = true,
 ): boolean {
+  if (!labEnhancementsUnlocked) return false
   return categorySpentCoins >= UTILITY_UNLOCK_REQUIRED[key]
 }
 
 export function workshopEnhanceAttackIsUnlocked(
   key: WorkshopEnhanceAttackUpgradeKey,
   unlockSpentCoins: number,
+  labEnhancementsUnlocked = true,
 ): boolean {
+  if (!labEnhancementsUnlocked) return false
   return unlockSpentCoins >= ATTACK_UNLOCK_REQUIRED[key]
 }
 

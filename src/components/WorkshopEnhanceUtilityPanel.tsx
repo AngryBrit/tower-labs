@@ -69,6 +69,7 @@ function WorkshopEnhanceUtilityCard({
   bulkStep,
   coinDiscountPercent,
   locked,
+  labLocked,
   unlockRemainingCoins,
   unlockRequiredCoins,
 }: {
@@ -81,6 +82,7 @@ function WorkshopEnhanceUtilityCard({
   bulkStep: WorkshopMultiplier
   coinDiscountPercent: number
   locked: boolean
+  labLocked: boolean
   unlockRemainingCoins: number
   unlockRequiredCoins: number
 }) {
@@ -171,7 +173,9 @@ function WorkshopEnhanceUtilityCard({
       {locked ? (
         <div className="workshop__card-unlock-overlay" role="status">
           <span className="workshop__card-unlock-hint">
-            {utilityUnlockHint(t, unlockRemainingCoins, unlockRequiredCoins)}
+            {labLocked
+              ? t('ws_enhance_locked_lab')
+              : utilityUnlockHint(t, unlockRemainingCoins, unlockRequiredCoins)}
           </span>
         </div>
       ) : null}
@@ -185,6 +189,7 @@ type WorkshopEnhanceUtilityPanelProps = {
   hideMaxed: boolean
   multiplier: WorkshopMultiplier
   enhancementUtilityDiscountPercent: number
+  workshopEnhancementsLabUnlocked: boolean
 }
 
 export function WorkshopEnhanceUtilityPanel({
@@ -193,14 +198,12 @@ export function WorkshopEnhanceUtilityPanel({
   hideMaxed,
   multiplier,
   enhancementUtilityDiscountPercent,
+  workshopEnhancementsLabUnlocked,
 }: WorkshopEnhanceUtilityPanelProps) {
   const categorySpentCoins = useMemo(
     () =>
-      workshopEnhanceUtilityCategorySpentCoins(
-        workshopPersisted,
-        enhancementUtilityDiscountPercent,
-      ),
-    [workshopPersisted, enhancementUtilityDiscountPercent],
+      workshopEnhanceUtilityCategorySpentCoins(workshopPersisted),
+    [workshopPersisted],
   )
 
   const initialDrafts = useMemo(
@@ -224,7 +227,11 @@ export function WorkshopEnhanceUtilityPanel({
   const commitDraft = useCallback(
     (key: WorkshopEnhanceUtilityUpgradeKey) => {
       const level = workshopPersisted[key]
-      const locked = !workshopEnhanceUtilityIsUnlocked(key, categorySpentCoins)
+      const locked = !workshopEnhanceUtilityIsUnlocked(
+        key,
+        categorySpentCoins,
+        workshopEnhancementsLabUnlocked,
+      )
       const raw = drafts[key].trim().replace(/,/g, '')
       if (raw === '') {
         setDrafts((d) => ({ ...d, [key]: String(level) }))
@@ -243,14 +250,24 @@ export function WorkshopEnhanceUtilityPanel({
       }
       onWorkshopPersistedChange({ ...workshopPersisted, [key]: c })
     },
-    [categorySpentCoins, drafts, onWorkshopPersistedChange, workshopPersisted],
+    [
+      categorySpentCoins,
+      drafts,
+      onWorkshopPersistedChange,
+      workshopEnhancementsLabUnlocked,
+      workshopPersisted,
+    ],
   )
 
   const bump = useCallback(
     (key: WorkshopEnhanceUtilityUpgradeKey, direction: -1 | 1) => {
       if (
         direction === 1 &&
-        !workshopEnhanceUtilityIsUnlocked(key, categorySpentCoins)
+        !workshopEnhanceUtilityIsUnlocked(
+          key,
+          categorySpentCoins,
+          workshopEnhancementsLabUnlocked,
+        )
       ) {
         return
       }
@@ -261,7 +278,13 @@ export function WorkshopEnhanceUtilityPanel({
       )
       onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
     },
-    [categorySpentCoins, multiplier, onWorkshopPersistedChange, workshopPersisted],
+    [
+      categorySpentCoins,
+      multiplier,
+      onWorkshopPersistedChange,
+      workshopEnhancementsLabUnlocked,
+      workshopPersisted,
+    ],
   )
 
   const visibleKeys = WORKSHOP_ENHANCE_UTILITY_UPGRADE_ORDER.filter((key) => {
@@ -272,7 +295,11 @@ export function WorkshopEnhanceUtilityPanel({
   return (
     <>
       {visibleKeys.map((key) => {
-        const locked = !workshopEnhanceUtilityIsUnlocked(key, categorySpentCoins)
+        const locked = !workshopEnhanceUtilityIsUnlocked(
+          key,
+          categorySpentCoins,
+          workshopEnhancementsLabUnlocked,
+        )
         return (
           <WorkshopEnhanceUtilityCard
             key={key}
@@ -285,6 +312,7 @@ export function WorkshopEnhanceUtilityPanel({
             bulkStep={multiplier}
             coinDiscountPercent={enhancementUtilityDiscountPercent}
             locked={locked}
+            labLocked={!workshopEnhancementsLabUnlocked}
             unlockRemainingCoins={workshopEnhanceUtilityUnlockRemainingCoins(
               key,
               categorySpentCoins,

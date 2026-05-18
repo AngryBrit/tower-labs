@@ -16,6 +16,7 @@ import {
   type ResearchData,
 } from '../types/research'
 import { workshopEnhanceAttackTierMultiplier } from './workshopEnhanceAttackShared'
+import { workshopEnhancementsLabUnlocked } from './workshopEnhanceResearch'
 import { workshopBerserkerDisplayedDamageAdd } from './workshopSimCards'
 import { workshopCannonModulePercentFromLabs } from './workshopSimModules'
 import { workshopDamageStatAtLevel } from './workshopDamage'
@@ -136,7 +137,9 @@ export function workshopDamageDisplayOptsFromPersisted(
       labOverrides,
       ws.simAssistModuleSlot,
     ),
-    enhancementsMultiplier: workshopEnhanceAttackTierMultiplier(ws.enhanceDamageLevel),
+    enhancementsMultiplier: workshopEnhanceAttackTierMultiplier(
+      workshopEnhancementsLabUnlocked(research, labOverrides) ? ws.enhanceDamageLevel : 0,
+    ),
     perkDamageQuantity: ws.simPerkDamageQuantity,
     standardPerkBonus: attackResearchStandardPerkBonusFraction(research, labOverrides),
     berserkerDamageAdd: 0,

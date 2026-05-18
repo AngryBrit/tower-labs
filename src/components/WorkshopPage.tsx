@@ -124,6 +124,7 @@ import { WorkshopUltimateWeaponCard } from './WorkshopUltimateWeaponCard'
 import { workshopAttackSpeedDisplayOptsFromPersisted } from '../data/workshopDisplayedAttackSpeed'
 import { workshopDamageDisplayOptsFromPersisted } from '../data/workshopDisplayedDamage'
 import type { WorkshopAttackSpeedDisplayOpts } from '../data/workshopAttackSpeed'
+import { workshopEnhancementsLabUnlocked } from '../data/workshopEnhanceResearch'
 import { WorkshopEnhanceAttackPanel } from './WorkshopEnhanceAttackPanel'
 import { WorkshopEnhanceDefensePanel } from './WorkshopEnhanceDefensePanel'
 import { WorkshopEnhanceUtilityPanel } from './WorkshopEnhanceUtilityPanel'
@@ -2389,6 +2390,11 @@ export function WorkshopPage({
     [researchData, labLevelOverrides, workshopPersisted],
   )
 
+  const workshopEnhancementsLabUnlockedFlag = useMemo(
+    () => workshopEnhancementsLabUnlocked(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
+  )
+
   const workshopCoinDiscountOpts = useMemo((): WorkshopCoinDiscountOpts => {
     if (researchData == null) {
       return {
@@ -2398,6 +2404,7 @@ export function WorkshopPage({
         enhancementAttackDiscountPercent: 0,
         enhancementDefenseDiscountPercent: 0,
         enhancementUtilityDiscountPercent: 0,
+        workshopEnhancementsLabUnlocked: false,
       }
     }
     return {
@@ -2425,8 +2432,9 @@ export function WorkshopPage({
         researchData,
         labLevelOverrides,
       ),
+      workshopEnhancementsLabUnlocked: workshopEnhancementsLabUnlockedFlag,
     }
-  }, [researchData, labLevelOverrides])
+  }, [researchData, labLevelOverrides, workshopEnhancementsLabUnlockedFlag])
 
   const workshopCoinDiscountContext = useMemo(
     (): WorkshopCoinDiscountContextValue => ({
@@ -3441,6 +3449,7 @@ export function WorkshopPage({
                   hideMaxed={hideMaxed}
                   multiplier={multiplier}
                   enhancementAttackDiscountPercent={enhancementAttackDiscountPercent}
+                  workshopEnhancementsLabUnlocked={workshopEnhancementsLabUnlockedFlag}
                 />
               ) : category === 'defense' ? (
                 <WorkshopEnhanceDefensePanel
@@ -3449,6 +3458,7 @@ export function WorkshopPage({
                   hideMaxed={hideMaxed}
                   multiplier={multiplier}
                   enhancementDefenseDiscountPercent={enhancementDefenseDiscountPercent}
+                  workshopEnhancementsLabUnlocked={workshopEnhancementsLabUnlockedFlag}
                 />
               ) : (
                 <WorkshopEnhanceUtilityPanel
@@ -3457,6 +3467,7 @@ export function WorkshopPage({
                   hideMaxed={hideMaxed}
                   multiplier={multiplier}
                   enhancementUtilityDiscountPercent={enhancementUtilityDiscountPercent}
+                  workshopEnhancementsLabUnlocked={workshopEnhancementsLabUnlockedFlag}
                 />
               )}
             </ul>

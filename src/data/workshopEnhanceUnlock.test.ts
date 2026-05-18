@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { defaultWorkshopPersisted } from '../labPresetsStorage'
+import { workshopEnhanceAttackNextMarginalCoins } from './workshopEnhanceAttack'
 import {
   WORKSHOP_ENHANCE_CRIT_FACTOR_UNLOCK_ATTACK_ENHANCE_SPENT_COINS,
   WORKSHOP_ENHANCE_REND_ARMOR_UNLOCK_DAMAGE_ENHANCE_SPENT_COINS,
@@ -17,6 +18,12 @@ import {
 } from './workshopEnhanceUnlock'
 
 describe('workshopEnhanceUnlock', () => {
+  it('all attack enhancements need Workshop Enhancements lab research', () => {
+    expect(workshopEnhanceAttackIsUnlocked('enhanceDamageLevel', 0, false)).toBe(false)
+    expect(workshopEnhanceDefenseIsUnlocked('enhanceHealthLevel', 0, false)).toBe(false)
+    expect(workshopEnhanceUtilityIsUnlocked('enhanceCashBonusLevel', 0, false)).toBe(false)
+  })
+
   it('attack damage is always unlocked; rend needs 50B damage-enhancement spend', () => {
     const ws = defaultWorkshopPersisted()
     expect(workshopEnhanceAttackIsUnlocked('enhanceDamageLevel', 0)).toBe(true)
@@ -65,6 +72,19 @@ describe('workshopEnhanceUnlock', () => {
     })
     expect(spent).toBeGreaterThanOrEqual(50e9)
     expect(workshopEnhanceDefenseIsUnlocked('enhanceHealthRegenLevel', spent)).toBe(true)
+  })
+
+  it('unlock progress uses wiki list prices (ignores enhancement coin discount)', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      enhanceDamageLevel: 10,
+    }
+    const spent = workshopEnhanceAttackCategorySpentCoins(ws)
+    let expected = 0
+    for (let L = 0; L < 10; L += 1) {
+      expected += workshopEnhanceAttackNextMarginalCoins('enhanceDamageLevel', L)!
+    }
+    expect(spent).toBe(expected)
   })
 
   it('utility cash bonus is always unlocked; coin bonus needs 50B category spend', () => {

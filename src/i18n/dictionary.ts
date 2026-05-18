@@ -516,6 +516,7 @@ export const STRINGS_EN = {
     'Orb size enhancement level (type a number, Enter or blur to apply)',
   ws_enhance_level_down_aria: 'Decrease enhancement level',
   ws_enhance_level_up_aria: 'Increase enhancement level',
+  ws_enhance_locked_lab: 'Research Workshop Enhancements in the Lab',
   ws_enhance_locked_attack:
     'Spend {remaining} more on attack enhancements ({required} total)',
   ws_enhance_locked_attack_damage:
@@ -1428,6 +1429,7 @@ export const STRINGS_ES = {
     'Nivel de mejora de tamaño de orbe (escribe un número; Enter o salir para aplicar)',
   ws_enhance_level_down_aria: 'Bajar nivel de mejora',
   ws_enhance_level_up_aria: 'Subir nivel de mejora',
+  ws_enhance_locked_lab: 'Investiga Mejoras del taller en el laboratorio',
   ws_enhance_locked_attack:
     'Gasta {remaining} más en mejoras de ataque ({required} en total)',
   ws_enhance_locked_attack_damage:

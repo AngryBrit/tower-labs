@@ -74,6 +74,7 @@ function WorkshopEnhanceAttackCard({
   bulkStep,
   coinDiscountPercent,
   locked,
+  labLocked,
   unlockRemainingCoins,
   unlockRequiredCoins,
 }: {
@@ -86,6 +87,7 @@ function WorkshopEnhanceAttackCard({
   bulkStep: WorkshopMultiplier
   coinDiscountPercent: number
   locked: boolean
+  labLocked: boolean
   unlockRemainingCoins: number
   unlockRequiredCoins: number
 }) {
@@ -176,7 +178,9 @@ function WorkshopEnhanceAttackCard({
       {locked ? (
         <div className="workshop__card-unlock-overlay" role="status">
           <span className="workshop__card-unlock-hint">
-            {attackUnlockHint(t, upgradeKey, unlockRemainingCoins, unlockRequiredCoins)}
+            {labLocked
+              ? t('ws_enhance_locked_lab')
+              : attackUnlockHint(t, upgradeKey, unlockRemainingCoins, unlockRequiredCoins)}
           </span>
         </div>
       ) : null}
@@ -190,6 +194,7 @@ type WorkshopEnhanceAttackPanelProps = {
   hideMaxed: boolean
   multiplier: WorkshopMultiplier
   enhancementAttackDiscountPercent: number
+  workshopEnhancementsLabUnlocked: boolean
 }
 
 export function WorkshopEnhanceAttackPanel({
@@ -198,6 +203,7 @@ export function WorkshopEnhanceAttackPanel({
   hideMaxed,
   multiplier,
   enhancementAttackDiscountPercent,
+  workshopEnhancementsLabUnlocked,
 }: WorkshopEnhanceAttackPanelProps) {
   const initialDrafts = useMemo(
     () =>
@@ -220,12 +226,12 @@ export function WorkshopEnhanceAttackPanel({
   const commitDraft = useCallback(
     (key: WorkshopEnhanceAttackUpgradeKey) => {
       const level = workshopPersisted[key]
-      const unlockSpent = workshopEnhanceAttackUnlockSpentCoins(
+      const unlockSpent = workshopEnhanceAttackUnlockSpentCoins(key, workshopPersisted)
+      const locked = !workshopEnhanceAttackIsUnlocked(
         key,
-        workshopPersisted,
-        enhancementAttackDiscountPercent,
+        unlockSpent,
+        workshopEnhancementsLabUnlocked,
       )
-      const locked = !workshopEnhanceAttackIsUnlocked(key, unlockSpent)
       const raw = drafts[key].trim().replace(/,/g, '')
       if (raw === '') {
         setDrafts((d) => ({ ...d, [key]: String(level) }))
@@ -244,7 +250,13 @@ export function WorkshopEnhanceAttackPanel({
       }
       onWorkshopPersistedChange({ ...workshopPersisted, [key]: c })
     },
-    [drafts, enhancementAttackDiscountPercent, onWorkshopPersistedChange, workshopPersisted],
+    [
+      drafts,
+      enhancementAttackDiscountPercent,
+      onWorkshopPersistedChange,
+      workshopEnhancementsLabUnlocked,
+      workshopPersisted,
+    ],
   )
 
   const bump = useCallback(
@@ -253,11 +265,8 @@ export function WorkshopEnhanceAttackPanel({
         direction === 1 &&
         !workshopEnhanceAttackIsUnlocked(
           key,
-          workshopEnhanceAttackUnlockSpentCoins(
-            key,
-            workshopPersisted,
-            enhancementAttackDiscountPercent,
-          ),
+          workshopEnhanceAttackUnlockSpentCoins(key, workshopPersisted),
+          workshopEnhancementsLabUnlocked,
         )
       ) {
         return
@@ -269,7 +278,13 @@ export function WorkshopEnhanceAttackPanel({
       )
       onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
     },
-    [enhancementAttackDiscountPercent, multiplier, onWorkshopPersistedChange, workshopPersisted],
+    [
+      enhancementAttackDiscountPercent,
+      multiplier,
+      onWorkshopPersistedChange,
+      workshopEnhancementsLabUnlocked,
+      workshopPersisted,
+    ],
   )
 
   const visibleKeys = WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER.filter((key) => {
@@ -280,12 +295,12 @@ export function WorkshopEnhanceAttackPanel({
   return (
     <>
       {visibleKeys.map((key) => {
-        const unlockSpent = workshopEnhanceAttackUnlockSpentCoins(
+        const unlockSpent = workshopEnhanceAttackUnlockSpentCoins(key, workshopPersisted)
+        const locked = !workshopEnhanceAttackIsUnlocked(
           key,
-          workshopPersisted,
-          enhancementAttackDiscountPercent,
+          unlockSpent,
+          workshopEnhancementsLabUnlocked,
         )
-        const locked = !workshopEnhanceAttackIsUnlocked(key, unlockSpent)
         return (
           <WorkshopEnhanceAttackCard
             key={key}
@@ -298,6 +313,7 @@ export function WorkshopEnhanceAttackPanel({
             bulkStep={multiplier}
             coinDiscountPercent={enhancementAttackDiscountPercent}
             locked={locked}
+            labLocked={!workshopEnhancementsLabUnlocked}
             unlockRemainingCoins={workshopEnhanceAttackUnlockRemainingCoins(key, unlockSpent)}
             unlockRequiredCoins={workshopEnhanceAttackUnlockRequiredCoins(key)}
           />

@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.6.1-2ea44f)
+![Version](https://img.shields.io/badge/version-2.6.2-2ea44f)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7c57c118-c5d2-4b8c-a8db-3cd2eb32a4de/deploy-status)](https://app.netlify.com/projects/towerlabs/deploys)
 
 ---
@@ -18,7 +18,7 @@
 - **Research browser** — Loads [`public/research/manifest.json`](public/research/manifest.json) and every section file it lists (main, attack, defense, utility, ultimate weapon, cards, perks, bots, enemies, modules, card mastery, battle conditions). Cards show costs and benefits where data allows.
 - **Lab economics** — Upgrade costs and build times from [`src/data/tower-labs.json`](src/data/tower-labs.json), aligned with the in-game lab grid.
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
-- **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves). **Ultimate weapon** basic upgrades (power stones) for all nine weapons follow wiki milestone tables in [`workshopUltimateData.ts`](src/data/workshopUltimateData.ts) (source: [`scripts/gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs); Vitest locks per-weapon stone totals).
+- **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab is locked until **Workshop Enhancements** is researched in Main Research; then attack, defense, and utility enhancements use wiki coin-spend unlock gates, tier ladders, recovery package, orb size, and related utility curves. **Ultimate weapon** basic upgrades (power stones) for all nine weapons follow wiki milestone tables in [`workshopUltimateData.ts`](src/data/workshopUltimateData.ts) (source: [`scripts/gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs); Vitest locks per-weapon stone totals).
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
 - **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Scaled effect values can show as an overlay on card art or below the stars (toggle in **Tools / Settings**). Equipped cards on the active preset feed workshop displayed-stat formulas.
 - **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
@@ -115,7 +115,7 @@ node scripts/write-research-overlay.mjs
 | [`public/modules/`](public/modules/) | Chassis module and rarity-frame WebP art (cannon, armor, core, generator). |
 | [`public/themes/`](public/themes/) | Theme preview art (tower, background, banners, menus, guardian). |
 | [`src/towerDataThemes.ts`](src/towerDataThemes.ts) | Theme selection/owned snapshot helpers for CSV and presets. |
-| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module simulators, and Vitest coverage. |
+| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module simulators, and Vitest coverage. [`workshopEnhanceResearch.ts`](src/data/workshopEnhanceResearch.ts) gates the Enhance tab on Main Research **Workshop Enhancements**. |
 | [`src/data/workshopModulePresets.ts`](src/data/workshopModulePresets.ts) | Five module loadout presets (hub levels, chassis, assist, sub-modules); persisted on `WorkshopPersistedV1`. |
 | [`src/labPresetsStorage.ts`](src/labPresetsStorage.ts) | Workshop snapshot, lab compare named presets, card/module preset fields, and sanitization on load. |
 | [`public/manifest.webmanifest`](public/manifest.webmanifest) | PWA name **TowerSmith**, theme colours, and icon list for Add to Home Screen. |

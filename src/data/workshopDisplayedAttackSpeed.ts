@@ -9,6 +9,7 @@ import { workshopCardMultProduct } from './workshopCardWorkshopDisplay'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 import { attackResearchAttackSpeedLabMultiplier, type ResearchData } from '../types/research'
 import { workshopEnhanceAttackSpeedMultiplier } from './workshopEnhanceAttack'
+import { workshopEnhancementsLabUnlocked } from './workshopEnhanceResearch'
 import { workshopAttackSpeedStatValue } from './workshopAttackSpeed'
 
 export type WorkshopAttackSpeedDisplayOpts = {
@@ -67,7 +68,9 @@ export function workshopAttackSpeedDisplayOptsFromPersisted(
     attackSpeedCardMultiplier,
     moduleSubEffect: ws.simAttackSpeedModuleSubEffect,
     enhancementsMultiplier: workshopEnhanceAttackSpeedMultiplier(
-      ws.enhanceAttackSpeedLevel,
+      workshopEnhancementsLabUnlocked(research, labOverrides)
+        ? ws.enhanceAttackSpeedLevel
+        : 0,
     ),
   }
 }

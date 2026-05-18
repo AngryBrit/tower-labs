@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-05-18
+
+### Fixed
+
+- **Workshop Enhancements**: Attack, defense, and utility enhancement cards stay locked until **Workshop Enhancements** is researched in Main Research (Lv.≥1). Per-stat coin-spend unlock gates apply only after that lab unlock. Displayed damage and attack speed omit enhancement multipliers until the lab is researched; budget “next upgrade” sums respect the same gate.
+
+### Added
+
+- **`workshopEnhanceResearch.ts`**: Helpers for simulated Main Research **Workshop Enhancements** level; Vitest coverage.
+
+### Docs
+
+- README: note Main Research lab gate on the Enhance tab.
+
 ## [2.6.1] - 2026-05-18
 
 ### Fixed

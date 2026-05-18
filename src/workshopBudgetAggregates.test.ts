@@ -62,6 +62,18 @@ describe('computeWorkshopCoinAggregates', () => {
     expect(a.nextUpgradeVisibleSum).toBe(damageNext)
   })
 
+  it('sums zero enhancement next upgrades when Workshop Enhancements lab is locked', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      mainTab: 'enhance' as const,
+      category: 'attack' as const,
+    }
+    const a = computeWorkshopCoinAggregates(ws, {
+      workshopEnhancementsLabUnlocked: false,
+    })
+    expect(a.nextUpgradeVisibleSum).toBe(0)
+  })
+
   it('includes more attack enhancement next upgrades after category spend unlocks', () => {
     const ws = {
       ...defaultWorkshopPersisted(),
