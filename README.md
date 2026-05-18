@@ -7,7 +7,7 @@ Static web app for **The Tower**: browse research trees from exported JSON, mode
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.5.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.4.2-2ea44f)
 
 ---
 
