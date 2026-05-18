@@ -1,5 +1,6 @@
 {
   "name": "tower_export",
+  "description": "TowerSmith — static web app for The Tower: workshop, modules, relics, cards, themes, labs, and shareable builds.",
   "private": true,
   "version": "2.4.2",
   "type": "module",

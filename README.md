@@ -24,10 +24,10 @@
 - **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
 - **Relics** — **Relics** tab tracks owned relic IDs from the wiki catalog and optional displayed-damage bonus for workshop sim formulas.
 - **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
-- **Unified CSV backup** — Export and import a single CSV with one or more **named builds** (lab levels, workshop snapshot, card stars/presets) plus optional global **theme** selection and owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
+- **Unified CSV backup** — Export and import a single **tower CSV** (`tower_csv_v1`) with one or more **named builds** (lab levels, workshop `ws,…` rows, card stars/presets) plus optional global **theme** owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts). Carries the **active** module/relic sim fields; the five **module loadout presets** stay in browser workshop storage (and in lab compare named presets), not in tower CSV rows.
 - **Shareable builds** — Encode lab levels, workshop snapshot, optional build name, and owned theme IDs in the `?tower=` query string (share codec **v4**); optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
-- **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Modules, Cards, Relics, Themes, Tools), workshop snapshot (including chassis modules, module loadout presets, relics, and submodule picks), lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
+- **Persistence** — Section collapse state, locale, last-selected main panel (Research, Workshop, Modules, Cards, Relics, Themes, Tools / Settings), workshop snapshot (including chassis modules, five module loadout presets, relics, and submodule picks), lab compare named presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
 
 
 For release history, see [`CHANGELOG.md`](CHANGELOG.md).
@@ -115,7 +115,9 @@ node scripts/write-research-overlay.mjs
 | [`public/modules/`](public/modules/) | Chassis module and rarity-frame WebP art (cannon, armor, core, generator). |
 | [`public/themes/`](public/themes/) | Theme preview art (tower, background, banners, menus, guardian). |
 | [`src/towerDataThemes.ts`](src/towerDataThemes.ts) | Theme selection/owned snapshot helpers for CSV and presets. |
-| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module loadout presets, module simulators, and Vitest coverage. |
+| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module simulators, and Vitest coverage. |
+| [`src/data/workshopModulePresets.ts`](src/data/workshopModulePresets.ts) | Five module loadout presets (hub levels, chassis, assist, sub-modules); persisted on `WorkshopPersistedV1`. |
+| [`src/labPresetsStorage.ts`](src/labPresetsStorage.ts) | Workshop snapshot, lab compare named presets, card/module preset fields, and sanitization on load. |
 | [`public/manifest.webmanifest`](public/manifest.webmanifest) | PWA name **TowerSmith**, theme colours, and icon list for Add to Home Screen. |
 | [`public/app-icon.svg`](public/app-icon.svg), [`public/og-banner.png`](public/og-banner.png) | Brand icon and social preview image (regenerate with `npm run icons` / `npm run og-banner` after edits). |
 | [`index.html`](index.html) | Document title, `theme-color`, favicon links, and Open Graph / Twitter Card meta tags. |
@@ -131,7 +133,25 @@ After you edit files under `public/research/` or `src/data/`, save and refresh t
 
 ## Sharing lab builds
 
-The app serializes lab levels (and optional workshop, build name, and owned theme catalog) into the **`tower`** query parameter (`?tower=…`). Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same payload (within codec limits). Import/compare accepts tower CSV and `?tower=` share links only.
+The app serializes lab levels (and optional workshop, build name, and owned theme catalog IDs) into the **`tower`** query parameter (`?tower=…`). Share codec **v4** only (`LabsShareFile` with `v: 4`). Copy the URL from the share control, or use the QR path where offered. Anyone opening that URL with the same app version should decode to the same payload (within codec limits). Import/compare accepts **tower CSV**, `?tower=` URLs, raw `u…` / `z…` payloads, or inline share JSON — not legacy `?labs=` links or old share codecs.
+
+---
+
+## Tower CSV backup format
+
+The first line must be `tower_csv_v1`; the header row is `type,key,value`. Each **build** block can include:
+
+| Row type | Purpose |
+|----------|---------|
+| `build,name,…` | Optional label for the build (escaped if needed). |
+| `lab,<grid-key>,…` | Custom lab level overrides (`section-row` keys). |
+| `ws,<field>,…` | Workshop persisted fields (upgrade/enhance levels, active module sim, relic ownership, etc.). |
+| `card,star.<id>,…` | Per-card star level. |
+| `card,preset.<n>,…` | Pipe-separated equipped card IDs for preset *n*. |
+| `card,activePresetIndex,…` / `card,equipSlots,…` | Active card preset and equip-slot limit. |
+| `theme,ownedIds,…` | JSON array of owned theme catalog IDs (global, not per-build). |
+
+Multi-build files repeat `build` / `lab` / `ws` / `card` sections; themes are written once at the end. **Module loadout presets** (five saved hub configurations) are stored in the workshop snapshot in the browser and in lab compare presets, but are **not** exported as `ws` rows today — only the active module sim fields round-trip in tower CSV.
 
 ---
 

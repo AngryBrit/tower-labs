@@ -59,10 +59,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Themes tab**: Dedicated in-panel **Themes** navigation with tower, background, music, menus, banners, and guardian categories; coin-bonus summary, owned catalog, selection per category, and reset (`ThemesPage`, `gameThemes.ts`).
 - **Theme catalog & art**: Event and guild tower skins, background events, menu guild seasons, banner guild rows, and guardian entries with WebP previews under `public/themes/` (`towerEventGuildSkins`, `backgroundEventGuildSkins`, `bannerGuildSkins`, `menuGuildSkins`, `guardianThemeImages`).
 - **Multi-build CSV**: `serializeTowerUnifiedCsvBuilds` exports several named lab + workshop + card builds in one file; `towerUnifiedPrimaryBuild` for single-build callers.
-- **Themes in backup**: `theme,sel.*` and `theme,owned` rows in unified CSV; `TowerThemesSnapshot` read/apply/sanitize helpers (`towerDataThemes.ts`).
-- **Share codec v4**: `?labs=` payloads can include theme selection and owned catalog IDs (`LabsShareFileV4`).
+- **Themes in backup**: `theme,ownedIds` row in unified CSV (owned catalog IDs); `TowerThemesSnapshot` read/apply/sanitize helpers (`towerDataThemes.ts`).
+- **Share codec v4**: Share payloads can include theme selection and owned catalog IDs (`LabsShareFileV4`); query param was **`?labs=`** until renamed to **`?tower=`** in 2.4.1.
 - **Lab presets UX**: Share-link copy with success notice, delete build, and themes folded into `buildLabPresetsPayload`.
-- **Main panel persistence**: Last-selected top-level panel (research, workshop, modules, cards, themes, tools) survives reload (`mainPanelStorage`).
+- **Main panel persistence**: Last-selected top-level panel (research, workshop, modules, cards, themes, tools/settings) survives reload (`mainPanelStorage`).
 - **Tests**: Vitest coverage for multi-build CSV, theme roundtrip, share v4, main panel sanitization, and preset payload themes.
 
 ### Changed
