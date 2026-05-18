@@ -37,7 +37,7 @@ export type WorkshopUltimateUpgradeKey =
   | 'innerLandMinesCooldownLevel'
   | 'poisonSwampDamageLevel'
   | 'poisonSwampDurationLevel'
-  | 'poisonSwampChanceLevel'
+  | 'poisonSwampCooldownLevel'
   | 'chronoFieldDurationLevel'
   | 'chronoFieldSlowLevel'
   | 'chronoFieldCooldownLevel'
@@ -78,7 +78,7 @@ export const WORKSHOP_ULTIMATE_UPGRADE_ORDER: readonly WorkshopUltimateUpgradeKe
   'innerLandMinesCooldownLevel',
   'poisonSwampDamageLevel',
   'poisonSwampDurationLevel',
-  'poisonSwampChanceLevel',
+  'poisonSwampCooldownLevel',
   'chronoFieldDurationLevel',
   'chronoFieldSlowLevel',
   'chronoFieldCooldownLevel',
@@ -126,7 +126,7 @@ export const WORKSHOP_ULTIMATE_WEAPON_STATS: Record<
   poisonSwamp: [
     { key: 'poisonSwampDamageLevel', stat: 'damage' },
     { key: 'poisonSwampDurationLevel', stat: 'duration' },
-    { key: 'poisonSwampChanceLevel', stat: 'chance' },
+    { key: 'poisonSwampCooldownLevel', stat: 'cooldown' },
   ],
   chronoField: [
     { key: 'chronoFieldDurationLevel', stat: 'duration' },
@@ -1029,6 +1029,66 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
     {
       value: 75,
       marginalStones: 729
+    },
+    {
+      value: 76,
+      marginalStones: 772
+    },
+    {
+      value: 77,
+      marginalStones: 817
+    },
+    {
+      value: 78,
+      marginalStones: 864
+    },
+    {
+      value: 79,
+      marginalStones: 913
+    },
+    {
+      value: 80,
+      marginalStones: 964
+    },
+    {
+      value: 81,
+      marginalStones: 1017
+    },
+    {
+      value: 82,
+      marginalStones: 1072
+    },
+    {
+      value: 83,
+      marginalStones: 1129
+    },
+    {
+      value: 84,
+      marginalStones: 1188
+    },
+    {
+      value: 85,
+      marginalStones: 1249
+    },
+    {
+      value: 86,
+      marginalStones: 1312
+    },
+    {
+      value: 87,
+      marginalStones: 1377
+    },
+    {
+      value: 88,
+      marginalStones: 1444
+    },
+    {
+      value: 89,
+      marginalStones: 1513
+    },
+    {
+      value: 90,
+      marginalStones: 1584
     }
   ]
 },
@@ -1428,7 +1488,7 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
       marginalStones: 1109
     },
     {
-      value: 3390,
+      value: 3990,
       marginalStones: 1295
     },
     {
@@ -1453,24 +1513,20 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
   valueKind: "count",
   milestones: [
     {
-      value: 0,
+      value: 1,
       marginalStones: 0
     },
     {
-      value: 1,
+      value: 2,
       marginalStones: 30
     },
     {
-      value: 2,
+      value: 3,
       marginalStones: 75
     },
     {
-      value: 3,
-      marginalStones: 150
-    },
-    {
       value: 4,
-      marginalStones: 400
+      marginalStones: 150
     },
     {
       value: 5,
@@ -1822,127 +1878,127 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
   valueKind: "mult",
   milestones: [
     {
-      value: 20,
+      value: 10,
       marginalStones: 0
     },
     {
-      value: 23,
+      value: 11,
       marginalStones: 5
     },
     {
-      value: 26,
+      value: 13,
       marginalStones: 11
     },
     {
-      value: 30,
+      value: 16,
       marginalStones: 17
     },
     {
-      value: 34,
+      value: 20,
       marginalStones: 23
     },
     {
-      value: 38,
+      value: 26,
       marginalStones: 29
     },
     {
-      value: 42,
+      value: 34,
       marginalStones: 35
     },
     {
-      value: 47,
+      value: 43,
       marginalStones: 41
     },
     {
-      value: 52,
+      value: 55,
       marginalStones: 47
     },
     {
-      value: 57,
+      value: 69,
       marginalStones: 53
     },
     {
-      value: 63,
+      value: 87,
       marginalStones: 61
     },
     {
-      value: 70,
+      value: 108,
       marginalStones: 71
     },
     {
-      value: 77,
+      value: 134,
       marginalStones: 84
     },
     {
-      value: 84,
+      value: 164,
       marginalStones: 100
     },
     {
-      value: 93,
+      value: 200,
       marginalStones: 120
     },
     {
-      value: 101,
+      value: 243,
       marginalStones: 144
     },
     {
-      value: 111,
+      value: 293,
       marginalStones: 174
     },
     {
-      value: 121,
+      value: 352,
       marginalStones: 210
     },
     {
-      value: 132,
+      value: 421,
       marginalStones: 254
     },
     {
-      value: 144,
+      value: 502,
       marginalStones: 308
     },
     {
-      value: 157,
+      value: 597,
       marginalStones: 374
     },
     {
-      value: 171,
+      value: 708,
       marginalStones: 454
     },
     {
-      value: 186,
+      value: 838,
       marginalStones: 540
     },
     {
-      value: 203,
+      value: 989,
       marginalStones: 632
     },
     {
-      value: 220,
+      value: 1165,
       marginalStones: 730
     },
     {
-      value: 239,
+      value: 1370,
       marginalStones: 834
     },
     {
-      value: 260,
+      value: 1608,
       marginalStones: 944
     },
     {
-      value: 282,
+      value: 1886,
       marginalStones: 1060
     },
     {
-      value: 306,
+      value: 2209,
       marginalStones: 1182
     },
     {
-      value: 332,
+      value: 2585,
       marginalStones: 1312
     },
     {
-      value: 360,
+      value: 3021,
       marginalStones: 1448
     }
   ]
@@ -2041,127 +2097,127 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
   valueKind: "mult",
   milestones: [
     {
-      value: 2,
+      value: 10,
       marginalStones: 0
     },
     {
-      value: 2.5,
+      value: 11,
       marginalStones: 5
     },
     {
-      value: 3,
+      value: 13,
       marginalStones: 11
     },
     {
-      value: 3.5,
+      value: 16,
       marginalStones: 17
     },
     {
-      value: 4,
+      value: 20,
       marginalStones: 23
     },
     {
-      value: 5,
+      value: 26,
       marginalStones: 29
     },
     {
-      value: 6,
+      value: 34,
       marginalStones: 35
     },
     {
-      value: 7,
+      value: 43,
       marginalStones: 41
     },
     {
-      value: 8,
+      value: 55,
       marginalStones: 47
     },
     {
-      value: 9,
+      value: 69,
       marginalStones: 53
     },
     {
-      value: 11,
+      value: 87,
       marginalStones: 61
     },
     {
-      value: 12,
+      value: 108,
       marginalStones: 71
     },
     {
-      value: 14,
+      value: 134,
       marginalStones: 84
     },
     {
-      value: 16,
+      value: 164,
       marginalStones: 100
     },
     {
-      value: 19,
+      value: 200,
       marginalStones: 120
     },
     {
-      value: 22,
+      value: 243,
       marginalStones: 144
     },
     {
-      value: 25,
+      value: 293,
       marginalStones: 174
     },
     {
-      value: 28,
+      value: 352,
       marginalStones: 210
     },
     {
-      value: 32,
+      value: 421,
       marginalStones: 252
     },
     {
-      value: 37,
+      value: 502,
       marginalStones: 302
     },
     {
-      value: 42,
+      value: 597,
       marginalStones: 362
     },
     {
-      value: 48,
+      value: 708,
       marginalStones: 434
     },
     {
-      value: 54,
+      value: 838,
       marginalStones: 525
     },
     {
-      value: 62,
+      value: 989,
       marginalStones: 636
     },
     {
-      value: 70,
+      value: 1165,
       marginalStones: 772
     },
     {
-      value: 79,
+      value: 1370,
       marginalStones: 938
     },
     {
-      value: 90,
+      value: 1608,
       marginalStones: 1134
     },
     {
-      value: 102,
+      value: 1886,
       marginalStones: 1360
     },
     {
-      value: 115,
+      value: 2209,
       marginalStones: 1616
     },
     {
-      value: 131,
+      value: 2585,
       marginalStones: 1902
     },
     {
-      value: 148,
+      value: 3021,
       marginalStones: 2228
     }
   ]
@@ -2170,128 +2226,132 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
   valueKind: "seconds",
   milestones: [
     {
-      value: 2,
+      value: 30,
       marginalStones: 0
     },
     {
-      value: 3,
+      value: 35,
       marginalStones: 10
     },
     {
-      value: 4,
+      value: 40,
       marginalStones: 20
     },
     {
-      value: 5,
+      value: 45,
       marginalStones: 35
     },
     {
-      value: 6,
+      value: 50,
       marginalStones: 55
     },
     {
-      value: 7,
+      value: 55,
       marginalStones: 100
     },
     {
-      value: 8,
+      value: 60,
       marginalStones: 120
     },
     {
-      value: 9,
+      value: 65,
       marginalStones: 150
     },
     {
-      value: 10,
+      value: 70,
       marginalStones: 200
     },
     {
-      value: 11,
+      value: 75,
       marginalStones: 260
     },
     {
-      value: 12,
+      value: 80,
       marginalStones: 330
     },
     {
-      value: 13,
+      value: 85,
       marginalStones: 410
     },
     {
-      value: 14,
+      value: 90,
       marginalStones: 500
     },
     {
-      value: 15,
+      value: 95,
       marginalStones: 600
+    },
+    {
+      value: 100,
+      marginalStones: 710
     }
   ]
 },
-  poisonSwampChanceLevel: {
-  valueKind: "percent",
+  poisonSwampCooldownLevel: {
+  valueKind: "seconds",
   milestones: [
     {
-      value: 10,
+      value: 125,
       marginalStones: 0
     },
     {
-      value: 13,
+      value: 120,
       marginalStones: 8
     },
     {
-      value: 16,
+      value: 115,
       marginalStones: 26
     },
     {
-      value: 19,
+      value: 110,
       marginalStones: 44
     },
     {
-      value: 22,
+      value: 105,
       marginalStones: 62
     },
     {
-      value: 25,
+      value: 100,
       marginalStones: 80
     },
     {
-      value: 28,
+      value: 95,
       marginalStones: 98
     },
     {
-      value: 31,
+      value: 90,
       marginalStones: 116
     },
     {
-      value: 34,
+      value: 85,
       marginalStones: 134
     },
     {
-      value: 37,
+      value: 80,
       marginalStones: 152
     },
     {
-      value: 40,
+      value: 75,
       marginalStones: 170
     },
     {
-      value: 43,
+      value: 70,
       marginalStones: 188
     },
     {
-      value: 46,
+      value: 65,
       marginalStones: 206
     },
     {
-      value: 49,
+      value: 60,
       marginalStones: 224
     },
     {
-      value: 52,
+      value: 55,
       marginalStones: 242
     },
     {
-      value: 55,
+      value: 50,
       marginalStones: 260
     }
   ]

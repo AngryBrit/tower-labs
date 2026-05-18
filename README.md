@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.5.2-2ea44f)
+![Version](https://img.shields.io/badge/version-2.6.0-2ea44f)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7c57c118-c5d2-4b8c-a8db-3cd2eb32a4de/deploy-status)](https://app.netlify.com/projects/towerlabs/deploys)
 
 ---
@@ -18,7 +18,7 @@
 - **Research browser** — Loads [`public/research/manifest.json`](public/research/manifest.json) and every section file it lists (main, attack, defense, utility, ultimate weapon, cards, perks, bots, enemies, modules, card mastery, battle conditions). Cards show costs and benefits where data allows.
 - **Lab economics** — Upgrade costs and build times from [`src/data/tower-labs.json`](src/data/tower-labs.json), aligned with the in-game lab grid.
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
-- **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves).
+- **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves). **Ultimate weapon** basic upgrades (power stones) for all nine weapons follow wiki milestone tables in [`workshopUltimateData.ts`](src/data/workshopUltimateData.ts) (source: [`scripts/gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs); Vitest locks per-weapon stone totals).
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
 - **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Scaled effect values can show as an overlay on card art or below the stars (toggle in **Tools / Settings**). Equipped cards on the active preset feed workshop displayed-stat formulas.
 - **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
@@ -88,7 +88,7 @@ These are run with Node directly when you update data or regenerate assets:
 | [`gen-dissonant-echo-labs.mjs`](scripts/gen-dissonant-echo-labs.mjs) | Generate Dissonant Echo lab duration/cost rows and patch `tower-labs.json` (wiki-aligned). |
 | [`gen-enhancement-coin-discount-labs.mjs`](scripts/gen-enhancement-coin-discount-labs.mjs) | Generate enhancement coin discount lab rows and patch `tower-labs.json`. |
 | [`gen-utility-enhance-coins.mjs`](scripts/gen-utility-enhance-coins.mjs) | Regenerate utility enhancement coin ladders (`workshopEnhanceUtilityTier200`, free upgrades, enemy level skip) from a wiki table scrape. |
-| [`gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs) | Regenerate ultimate-weapon workshop tables from exported data. |
+| [`gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs) | Regenerate ultimate-weapon basic-upgrade milestone tables (`workshopUltimateData.ts`) from embedded wiki rows. |
 | [`build-app-icon-svg.mjs`](scripts/build-app-icon-svg.mjs) | Legacy: rebuild `app-icon.svg` from `app-icon-maskable.svg` (canonical source is `public/app-icon.svg`). |
 | [`generate-app-icons.mjs`](scripts/generate-app-icons.mjs) | Rasterize `app-icon.svg` → favicon / apple-touch / PWA PNGs (`npm run icons`). |
 | [`generate-og-banner.mjs`](scripts/generate-og-banner.mjs) | Build OG/Twitter banner SVG + PNG (`npm run og-banner`). |

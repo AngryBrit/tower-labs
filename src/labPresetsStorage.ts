@@ -653,10 +653,14 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
       ]),
     ),
     ...Object.fromEntries(
-      WORKSHOP_ULTIMATE_UPGRADE_ORDER.map((key) => [
-        key,
-        workshopUltimateClampLevel(key, Number(o[key])),
-      ]),
+      WORKSHOP_ULTIMATE_UPGRADE_ORDER.map((key) => {
+        const legacy =
+          key === 'poisonSwampCooldownLevel'
+            ? (o as Record<string, unknown>).poisonSwampChanceLevel
+            : undefined
+        const raw = o[key] ?? legacy
+        return [key, workshopUltimateClampLevel(key, Number(raw))]
+      }),
     ),
     ...Object.fromEntries(
       WORKSHOP_ULTIMATE_ACTIVE_ORDER.map((key) => [

@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-05-18
+
+### Fixed
+
+- **Ultimate weapon basic upgrades (wiki alignment)** — Milestone values and power-stone costs for all nine ultimates; corrections include:
+  - **Chain Lightning**: ×3990 damage tier; quantity **1#–5#** (removed extra tier); **18,375** stones total.
+  - **Inner Land Mines**: damage curve **×10–×3021** (was wrong multiplier ladder); **13,522** stones.
+  - **Poison Swamp**: damage **×10–×3021** with wiki costs; duration **30s–100s**; third track is **cooldown** (**125s–50s**, not chance %) — persist key `poisonSwampCooldownLevel` with migration from `poisonSwampChanceLevel`; **19,196** stones.
+  - **Spotlight**: angle **76°–90°** (15 missing tiers); **42,236** stones.
+- **Death Wave** (from 2.5.2): max damage tier stones, cooldown to **50s**; **29,391** stones.
+
+### Added
+
+- **Tests**: Vitest wiki total spot-checks for every ultimate weapon basic-upgrade track (`workshopUltimate.test.ts`).
+
+### Changed
+
+- **Persistence**: `labPresetsStorage` migrates legacy `poisonSwampChanceLevel` → `poisonSwampCooldownLevel` on load.
+
+### Docs
+
+- README: ultimate-weapon wiki tables note; `gen-workshop-ultimate-data.mjs` script description.
+
 ## [2.5.2] - 2026-05-18
 
 ### Fixed
