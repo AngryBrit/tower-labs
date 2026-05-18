@@ -17,9 +17,7 @@ import {
   ASSIST_CHASSIS_MODULE_ID_KEY,
   ASSIST_CHASSIS_MODULE_RARITY_KEY,
   ASSIST_CHASSIS_UNLOCKED_KEY,
-  ASSIST_STONE_EFFICIENCY_KEY,
   assistModuleConflictsWithMain,
-  clampAssistStoneEfficiency,
   workshopAssistChassisModuleSelection,
 } from '../data/workshopAssistChassisModule'
 import {
@@ -111,60 +109,21 @@ function ModuleLevelDisplay({ value }: { value: number }) {
   )
 }
 
-function AssistStoneEfficiencyInput({
+function AssistStoneEfficiencyDisplay({
   slot,
   value,
-  onCommit,
 }: {
   slot: WorkshopAssistModuleSlot
   value: number
-  onCommit: (pct: number) => void
 }) {
   const { t } = useI18n()
-  const [draft, setDraft] = useState(String(value))
-
-  useEffect(() => {
-    setDraft(String(value))
-  }, [value])
-
-  const commit = () => {
-    const raw = draft.trim().replace(/,/g, '')
-    if (raw === '') {
-      setDraft(String(value))
-      return
-    }
-    const n = Number(raw)
-    if (!Number.isFinite(n)) {
-      setDraft(String(value))
-      return
-    }
-    onCommit(clampAssistStoneEfficiency(n))
-  }
-
   return (
-    <label className="modules-slot__efficiency">
-      <span className="modules-slot__efficiency-prefix">{t('ws_modules_assist_efficiency_prefix')}</span>
-      <input
-        className="modules-slot__efficiency-input"
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
-        aria-label={`${t('ws_modules_assist_stone_efficiency')} ${t(SLOT_LABEL[slot])}`}
-        value={draft}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          e.stopPropagation()
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            commit()
-            ;(e.target as HTMLInputElement).blur()
-          }
-        }}
-      />
-      <span className="modules-slot__efficiency-suffix">%</span>
-    </label>
+    <span
+      className="modules-slot__efficiency modules-slot__efficiency--display"
+      aria-label={`${t('ws_modules_assist_stone_efficiency')} ${t(SLOT_LABEL[slot])}: ${value}%`}
+    >
+      {t('ws_modules_assist_efficiency_prefix')} {value}%
+    </span>
   )
 }
 
@@ -582,37 +541,33 @@ export function WorkshopModulesPanel({
                 <span className="modules-slot__chassis modules-slot__chassis--assist" aria-hidden>
                   {t('ws_modules_assist_label')}
                 </span>
-                <button
-                  type="button"
-                  className="modules-assist-hit"
-                  aria-label={`${t('ws_modules_assist_label')} ${t(SLOT_LABEL[key])}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    openModulePicker(key, 'assist')
-                  }}
-                >
-                  <ModuleSlotFrame
-                    slot={key}
-                    shape={art.shape}
-                    frameRole="assist"
-                    locked={!assistChassis.unlocked}
-                    moduleId={assistChassis.moduleId}
-                    moduleRarity={assistChassis.rarity}
-                  />
-                </button>
-                {assistChassis.unlocked ? (
-                  <>
-                    <AssistStoneEfficiencyInput
+                <div className="modules-assist-stack">
+                  <button
+                    type="button"
+                    className="modules-assist-hit"
+                    aria-label={`${t('ws_modules_assist_label')} ${t(SLOT_LABEL[key])}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openModulePicker(key, 'assist')
+                    }}
+                  >
+                    <ModuleSlotFrame
+                      slot={key}
+                      shape={art.shape}
+                      frameRole="assist"
+                      locked={!assistChassis.unlocked}
+                      moduleId={assistChassis.moduleId}
+                      moduleRarity={assistChassis.rarity}
+                      showNameBelow={false}
+                    />
+                  </button>
+                  {assistChassis.unlocked ? (
+                    <AssistStoneEfficiencyDisplay
                       slot={key}
                       value={assistChassis.stoneEfficiency}
-                      onCommit={(next) =>
-                        patch({
-                          [ASSIST_STONE_EFFICIENCY_KEY[key]]: next,
-                        })
-                      }
                     />
-                  </>
-                ) : null}
+                  ) : null}
+                </div>
               </div>
             )
 
