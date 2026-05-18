@@ -265,6 +265,9 @@ export const STRINGS_EN = {
   app_settings_submodules_catalog_label: 'Show sub-module effects wiki table on Modules tab',
   app_settings_submodules_catalog_hint:
     'When on, shows the sub-module effects reference below the hub. When off, assign sub-effects in the module picker only.',
+  app_settings_cards_stat_overlay_label: 'Show card effect on card art (Cards tab)',
+  app_settings_cards_stat_overlay_hint:
+    'When on, the scaled star effect (× mastery) appears over each card image. When off, it appears below the stars.',
 
   ws_title: 'Workshop',
   ws_tab_upgrade: 'Upgrade',
@@ -1172,6 +1175,9 @@ export const STRINGS_ES = {
     'Mostrar tabla wiki de efectos sub-módulo en la pestaña Módulos',
   app_settings_submodules_catalog_hint:
     'Si está activo, muestra la referencia de sub-módulos bajo el hub. Si no, asígnalos solo en el selector del módulo.',
+  app_settings_cards_stat_overlay_label: 'Mostrar efecto de carta sobre el arte (pestaña Cartas)',
+  app_settings_cards_stat_overlay_hint:
+    'Si está activo, el efecto escalado (× maestría) aparece sobre la imagen. Si no, aparece bajo las estrellas.',
 
   ws_title: 'Taller',
   ws_tab_upgrade: 'Mejorar',

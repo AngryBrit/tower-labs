@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-05-18
+
+### Added
+
+- **Cards stat overlay**: Optional badge on card art for the scaled star effect (× Card Mastery); toggle in **Tools / Settings** (`cardsStatOverlayVisibility`, `WorkshopCardsPanel`).
+
+### Changed
+
+- **i18n**: EN/ES strings for the cards stat overlay setting.
+
 ## [2.5.0] - 2026-05-18
 
 ### Added

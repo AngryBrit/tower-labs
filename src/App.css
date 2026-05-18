@@ -4203,6 +4203,7 @@ span.research-card__costIcon .workshop-power-stone-svg {
 }
 
 .cards-tile__art {
+  position: relative;
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
@@ -4444,6 +4445,28 @@ span.research-card__costIcon .workshop-power-stone-svg {
   text-align: center;
   color: #7dd3fc;
   font-variant-numeric: tabular-nums;
+}
+
+.cards-tile__stat--overlay {
+  position: absolute;
+  z-index: 2;
+  bottom: 0.22rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.1rem 0.38rem;
+  border-radius: 0.22rem;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  background: rgba(8, 12, 24, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.cards-tile--mastery .cards-tile__stat--overlay {
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #bbf7d0;
 }
 
 .cards-tile__stat--prominent {

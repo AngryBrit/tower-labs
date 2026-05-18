@@ -27,6 +27,7 @@ import {
   workshopCardMasteryUnlockedSet,
 } from '../data/workshopCardMastery'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
+import { useCardsStatOverlayVisible } from '../cardsStatOverlayVisibility'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import type { ResearchData } from '../types/research'
@@ -254,6 +255,7 @@ function CardsStarTile({
   equipped = false,
   masteryUnlocked = false,
   statsLocked = false,
+  statOverlay = true,
   onToggleEquip,
   onBump,
   onCommit,
@@ -269,6 +271,7 @@ function CardsStarTile({
   equipped?: boolean
   masteryUnlocked?: boolean
   statsLocked?: boolean
+  statOverlay?: boolean
   onToggleEquip?: () => void
   onBump: (dir: -1 | 1) => void
   onCommit: (parsed: number) => void
@@ -322,6 +325,9 @@ function CardsStarTile({
         ) : (
           <span className="cards-tile__glyph">{glyph}</span>
         )}
+        {valueHint && statOverlay ? (
+          <p className="cards-tile__stat cards-tile__stat--overlay">{valueHint}</p>
+        ) : null}
       </div>
       <CardStars stars={stars} maxStars={maxStars} />
       {statsLocked ? null : (
@@ -340,7 +346,7 @@ function CardsStarTile({
           />
         </div>
       )}
-      {valueHint ? <p className="cards-tile__stat">{valueHint}</p> : null}
+      {valueHint && !statOverlay ? <p className="cards-tile__stat">{valueHint}</p> : null}
     </li>
   )
 }
@@ -352,6 +358,7 @@ export function WorkshopCardsPanel({
   labLevelOverrides,
 }: WorkshopCardsPanelProps) {
   const { t } = useI18n()
+  const [cardsStatOverlayVisible] = useCardsStatOverlayVisible()
   const presetIndex = clampWorkshopCardActivePresetIndex(
     workshopPersisted.cardActivePresetIndex,
   )
@@ -479,6 +486,7 @@ export function WorkshopCardsPanel({
         equipped={equippedSet.has(id)}
         masteryUnlocked={masteryUnlocked.has(id)}
         statsLocked={opts.active === true}
+        statOverlay={cardsStatOverlayVisible}
         onToggleEquip={
           opts.inventory || opts.active ? () => toggleEquip(id) : undefined
         }

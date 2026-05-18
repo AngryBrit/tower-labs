@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.5.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.5.1-2ea44f)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7c57c118-c5d2-4b8c-a8db-3cd2eb32a4de/deploy-status)](https://app.netlify.com/projects/towerlabs/deploys)
 
 ---
@@ -20,14 +20,14 @@
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
 - **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves).
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
-- **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Equipped cards on the active preset feed workshop displayed-stat formulas.
+- **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Scaled effect values can show as an overlay on card art or below the stars (toggle in **Tools / Settings**). Equipped cards on the active preset feed workshop displayed-stat formulas.
 - **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
 - **Relics** — **Relics** tab tracks owned relic IDs from the wiki catalog and optional displayed-damage bonus for workshop sim formulas.
 - **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
 - **Unified CSV backup** — Export and import a single **tower CSV** (`tower_csv_v1`) with one or more **named builds** (lab levels, workshop `ws,…` rows, card stars/presets) plus optional global **theme** owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts). Carries the **active** module/relic sim fields; the five **module loadout presets** stay in browser workshop storage (and in lab compare named presets), not in tower CSV rows.
 - **Shareable builds** — Encode lab levels, workshop snapshot, optional build name, and owned theme IDs in the `?tower=` query string (share codec **v4**); optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
-- **Persistence** — Section collapse state, locale, last-selected main panel (Research, Workshop, Modules, Cards, Relics, Themes, Tools / Settings), workshop snapshot (including chassis modules, five module loadout presets, relics, and submodule picks), lab compare named presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
+- **Persistence** — Section collapse state, locale, last-selected main panel (Research, Workshop, Modules, Cards, Relics, Themes, Tools / Settings), workshop snapshot (including chassis modules, five module loadout presets, relics, and submodule picks), lab compare named presets (with themes), theme owned/selection state, and optional budget-panel, module-catalog, and **cards stat overlay** visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
 
 
 For release history, see [`CHANGELOG.md`](CHANGELOG.md).
