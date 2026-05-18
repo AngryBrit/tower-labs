@@ -831,10 +831,12 @@ export const STRINGS_EN = {
   sr_reset_modules_confirm_body:
     'Clears module levels, equipped chassis modules, and sub-module effect picks. Workshop upgrade levels, cards, and lab research are not changed.',
 
-  sr_footer_nav_aria: 'App version and changelog',
+  sr_footer_nav_aria: 'App version, changelog, and sponsorship',
   sr_version_aria: 'Version {{version}}',
   sr_changelog: 'Changelog',
   sr_changelog_title: 'Release notes on GitHub (opens in a new tab)',
+  sr_sponsor: 'Sponsor',
+  sr_sponsor_title: 'Support TowerSmith on GitHub Sponsors (opens in a new tab)',
   sr_locale_aria: 'Language',
   sr_locale_option_en: 'English',
   sr_locale_option_es: 'Español',
@@ -1742,10 +1744,13 @@ export const STRINGS_ES = {
   sr_reset_modules_confirm_body:
     'Borra niveles de módulos, módulos de chasis equipados y efectos de submódulos. No cambia mejoras del taller, cartas ni investigación del laboratorio.',
 
-  sr_footer_nav_aria: 'Versión de la app y registro de cambios',
+  sr_footer_nav_aria: 'Versión de la app, registro de cambios y patrocinio',
   sr_version_aria: 'Versión {{version}}',
   sr_changelog: 'Cambios',
   sr_changelog_title: 'Notas de versión en GitHub (se abre en una pestaña nueva)',
+  sr_sponsor: 'Patrocinar',
+  sr_sponsor_title:
+    'Apoya TowerSmith en GitHub Sponsors (se abre en una pestaña nueva)',
   sr_locale_aria: 'Idioma',
   sr_locale_option_en: 'Inglés',
   sr_locale_option_es: 'Español',

@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { LabPresetsRow } from './LabPresetsRow'
-import { APP_VERSION, CHANGELOG_URL } from '../appVersion'
+import { APP_VERSION, CHANGELOG_URL, SPONSOR_URL } from '../appVersion'
 import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
 import { buildLabDomIdTables, getLabSlugFromUrl } from '../labSlug'
 import {
@@ -1549,15 +1549,26 @@ export const SelectResearch = forwardRef<
           >
             v{APP_VERSION}
           </span>
-          <a
-            className="select-research__changelog-link"
-            href={CHANGELOG_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={t('sr_changelog_title')}
-          >
-            {t('sr_changelog')}
-          </a>
+          <div className="select-research__version-badge-links">
+            <a
+              className="select-research__footer-link"
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t('sr_changelog_title')}
+            >
+              {t('sr_changelog')}
+            </a>
+            <a
+              className="select-research__footer-link"
+              href={SPONSOR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t('sr_sponsor_title')}
+            >
+              {t('sr_sponsor')}
+            </a>
+          </div>
         </nav>
       </footer>
       ) : null}

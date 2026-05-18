@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { APP_VERSION, CHANGELOG_URL } from './appVersion'
+import { APP_VERSION, CHANGELOG_URL, SPONSOR_URL } from './appVersion'
 import type { SelectResearchHandle } from './components/SelectResearch'
 import { SelectResearch } from './components/SelectResearch'
 import { ToolsSettingsPage } from './components/ToolsSettingsPage'
@@ -392,15 +392,26 @@ export default function App() {
                     >
                       v{APP_VERSION}
                     </span>
-                    <a
-                      className="select-research__changelog-link"
-                      href={CHANGELOG_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={t('sr_changelog_title')}
-                    >
-                      {t('sr_changelog')}
-                    </a>
+                    <div className="select-research__version-badge-links">
+                      <a
+                        className="select-research__footer-link"
+                        href={CHANGELOG_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={t('sr_changelog_title')}
+                      >
+                        {t('sr_changelog')}
+                      </a>
+                      <a
+                        className="select-research__footer-link"
+                        href={SPONSOR_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={t('sr_sponsor_title')}
+                      >
+                        {t('sr_sponsor')}
+                      </a>
+                    </div>
                   </nav>
                 </footer>
               </section>
