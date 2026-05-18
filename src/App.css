@@ -2506,8 +2506,32 @@ span.research-card__costIcon .workshop-power-stone-svg {
 }
 
 .modules-slot-pair--assist-before .modules-slot-pair__connector,
-.modules-slot-pair--assist-after .modules-slot-pair__connector {
+.modules-slot-pair.modules-slot--br .modules-slot-pair__connector {
   margin-inline: -3px;
+}
+
+/* Generator (top-right): longer bridge toward main module */
+.modules-slot-pair.modules-slot--tr .modules-slot-pair__connector {
+  width: clamp(
+    2.25rem,
+    calc((var(--module-pair-main-size) - var(--module-pair-assist-size)) / 2 + 2.5rem),
+    5.5rem
+  );
+  margin-left: -0.9rem;
+  margin-right: -3px;
+}
+
+/* Align with core assist below: same column edge + stacked label / frame / Eff. */
+.modules-slot-pair.modules-slot--tr .modules-assist-col {
+  width: max-content;
+  max-width: none;
+  min-width: var(--module-pair-assist-size);
+  align-items: center;
+  margin-left: -0.4rem;
+}
+
+.modules-slot-pair.modules-slot--tr .modules-assist-stack {
+  align-self: center;
 }
 
 .modules-assist-col {
