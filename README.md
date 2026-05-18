@@ -1,8 +1,9 @@
-# The Armoury — workshop, cards, labs & themes
+# TowerSmith — workshop, cards, labs & themes
 
-Static web app for **The Tower**: browse research trees from exported JSON, model workshop upgrades and card loadouts, track cosmetic themes, compare builds, and share lab configurations from the browser.
+**TowerSmith** is a static web app for [**The Tower**](https://thetowergame.com/): browse research trees from exported JSON, model workshop upgrades and card loadouts, track cosmetic themes, compare builds, and share lab configurations from the browser.
 
-**Repository:** [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs)
+**Live site:** [thetower.thatangrybrit.com](https://thetower.thatangrybrit.com/)  
+**Repository:** [AngryBrit/tower-labs](https://github.com/AngryBrit/tower-labs) (npm package name `tower_export` is internal only; user-facing branding is always **TowerSmith**).
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
@@ -19,13 +20,14 @@ Static web app for **The Tower**: browse research trees from exported JSON, mode
 - **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets. The **Enhance** tab covers attack, defense, and utility enhancements (unlock gates, tier ladders, recovery package, orb size, and related utility curves).
 - **Displayed stats** — Wiki-aligned **displayed damage** and **displayed attack speed** on workshop cards, folding in lab multipliers, enhancement tiers, equipped card stars (active preset × Card Mastery), relics, perk quantity, and assist-module substats from your lab levels.
 - **Cards page** — Full **31-card** inventory with wiki art, star tables (Lv.1–7), rarities, five **preset loadouts**, equip-slot limits (gems / Harmony), and Card Mastery tier scaling from the research `card-mastery` section. Equipped cards on the active preset feed workshop displayed-stat formulas.
-- **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded.
+- **Modules** — Top-level **Modules** tab with assist chassis levels, equipped **cannon / armor / core / generator** chassis modules (epic→ancestral tiers), per-slot **sub-module effect** picks, browsable catalogs with WebP art, and wiki-aligned submodule reference. Module substats pull from MODULES research labs when data is loaded. **Five module loadout presets** save hub levels, chassis, assist, and sub-module picks (`workshopModulePresets`).
 - **Relics** — **Relics** tab tracks owned relic IDs from the wiki catalog and optional displayed-damage bonus for workshop sim formulas.
 - **Themes** — **Themes** tab catalogs tower milestone skins, event/guild tower and background art, menu guild seasons, banners, music, and guardians; track owned skins, active selection per category, and coin-bonus rollups (`ThemesPage`, `gameThemes.ts`, `public/themes/`).
 - **Unified CSV backup** — Export and import a single CSV with one or more **named builds** (lab levels, workshop snapshot, card stars/presets) plus optional global **theme** selection and owned IDs via [`src/towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts).
 - **Shareable builds** — Encode lab levels, workshop snapshot, optional build name, and owned theme IDs in the `?tower=` query string (share codec **v4**); optional QR code for sharing.
 - **Languages** — English and Spanish UI; Spanish titles and card names are overlaid from bundled JSON (see [Internationalization](#internationalization)).
-- **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Modules, Cards, Relics, Themes, Tools), workshop snapshot (including chassis modules, relics, and submodule picks), lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`).
+- **Persistence** — Section collapse state, locale, last-selected main panel (LAB, Workshop, Modules, Cards, Relics, Themes, Tools), workshop snapshot (including chassis modules, module loadout presets, relics, and submodule picks), lab presets (with themes), theme owned/selection state, and optional budget-panel visibility survive reloads (`localStorage`, keys prefixed `tower-export-`).
+
 
 For release history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -67,6 +69,8 @@ npm run preview
 | `npm run lint` | Run ESLint on the repo. |
 | `npm run test` | Run Vitest unit tests (`src/**/*.test.ts`). |
 | `npm run import-lab` | Wrapper for [`scripts/import-lab-csv.mjs`](scripts/import-lab-csv.mjs) (CSV → lab helper). |
+| `npm run icons` | Rasterize [`public/app-icon.svg`](public/app-icon.svg) into favicon and PWA PNGs under `public/`. |
+| `npm run og-banner` | Regenerate [`public/og-banner.svg`](public/og-banner.svg) and [`public/og-banner.png`](public/og-banner.png) (1200×630 social preview). |
 
 ---
 
@@ -84,6 +88,9 @@ These are run with Node directly when you update data or regenerate assets:
 | [`gen-enhancement-coin-discount-labs.mjs`](scripts/gen-enhancement-coin-discount-labs.mjs) | Generate enhancement coin discount lab rows and patch `tower-labs.json`. |
 | [`gen-utility-enhance-coins.mjs`](scripts/gen-utility-enhance-coins.mjs) | Regenerate utility enhancement coin ladders (`workshopEnhanceUtilityTier200`, free upgrades, enemy level skip) from a wiki table scrape. |
 | [`gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs) | Regenerate ultimate-weapon workshop tables from exported data. |
+| [`build-app-icon-svg.mjs`](scripts/build-app-icon-svg.mjs) | Legacy: rebuild `app-icon.svg` from `app-icon-maskable.svg` (canonical source is `public/app-icon.svg`). |
+| [`generate-app-icons.mjs`](scripts/generate-app-icons.mjs) | Rasterize `app-icon.svg` → favicon / apple-touch / PWA PNGs (`npm run icons`). |
+| [`generate-og-banner.mjs`](scripts/generate-og-banner.mjs) | Build OG/Twitter banner SVG + PNG (`npm run og-banner`). |
 
 Example:
 
@@ -107,7 +114,10 @@ node scripts/write-research-overlay.mjs
 | [`public/modules/`](public/modules/) | Chassis module and rarity-frame WebP art (cannon, armor, core, generator). |
 | [`public/themes/`](public/themes/) | Theme preview art (tower, background, banners, menus, guardian). |
 | [`src/towerDataThemes.ts`](src/towerDataThemes.ts) | Theme selection/owned snapshot helpers for CSV and presets. |
-| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module simulators, and Vitest coverage. |
+| [`src/data/workshop*.ts`](src/data/) | Per-stat upgrade/enhance curves, displayed-stat helpers, full card wiki/loadouts, chassis module catalogs, relic stats, submodule selection, module loadout presets, module simulators, and Vitest coverage. |
+| [`public/manifest.webmanifest`](public/manifest.webmanifest) | PWA name **TowerSmith**, theme colours, and icon list for Add to Home Screen. |
+| [`public/app-icon.svg`](public/app-icon.svg), [`public/og-banner.png`](public/og-banner.png) | Brand icon and social preview image (regenerate with `npm run icons` / `npm run og-banner` after edits). |
+| [`index.html`](index.html) | Document title, `theme-color`, favicon links, and Open Graph / Twitter Card meta tags. |
 | [`public/*.webp`](public/) | Resource glyphs (coin, cash, …) and per-card art (`Damage.webp`, `Berserker.webp`, …) used by the Cards UI. |
 | [`src/i18n/`](src/i18n/) | Locale provider, copy, Spanish research overlay, and benefit translation helpers. |
 | [`src/labCompare.ts`](src/labCompare.ts), [`src/labBudgetAggregates.ts`](src/labBudgetAggregates.ts), [`src/workshopCompare.ts`](src/workshopCompare.ts), [`src/workshopBudgetAggregates.ts`](src/workshopBudgetAggregates.ts), … | Lab and workshop comparison, budgets, presets, slugs, share codec, and unified CSV. |
@@ -135,7 +145,8 @@ The app serializes lab levels (and optional workshop, build name, and owned them
 ## Development notes
 
 - **Lint and tests** — Run `npm run lint` and `npm run test` before pushing substantive changes.
-- **Windows / OneDrive** — This repo sets Vite [`cacheDir`](vite.config.ts) to `.vite` in the project root to reduce permission issues when the tree lives under OneDrive or aggressive antivirus. If you still see EPERM on cache clears, keep the project outside synced folders or exclude `.vite` from sync.
+- **Branding assets** — After editing [`public/app-icon.svg`](public/app-icon.svg), run `npm run icons` so favicon and PWA PNGs stay in sync. After changing the banner layout or title in [`scripts/generate-og-banner.mjs`](scripts/generate-og-banner.mjs), run `npm run og-banner`. [`index.html`](index.html) and [`public/manifest.webmanifest`](public/manifest.webmanifest) hold the display name **TowerSmith** for tabs, unfurlers, and install prompts.
+- **Windows / OneDrive** — This repo sets Vite [`cacheDir`](vite.config.ts) to the system temp directory (`vite-cache-tower_export`) to reduce permission issues when the tree lives under OneDrive or aggressive antivirus. If you still see EPERM on cache clears, keep the project outside synced folders or exclude the Vite cache from sync.
 
 ---
 

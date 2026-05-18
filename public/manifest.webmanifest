@@ -1,6 +1,6 @@
 {
-  "name": "The Armoury",
-  "short_name": "The Armoury",
+  "name": "TowerSmith",
+  "short_name": "TowerSmith",
   "description": "Workshop upgrades, card loadouts, lab research, and shareable Tower builds.",
   "start_url": "/",
   "scope": "/",

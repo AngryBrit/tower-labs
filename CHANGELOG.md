@@ -9,13 +9,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Changed
 
+- **Branding**: App display name is **TowerSmith** (browser title, PWA manifest, Open Graph / Twitter previews, OG banner, and in-app copy). Replaces the previous **The Armoury** / **The Forge** names.
 - **Chassis module levels**: Wiki-aligned per-rarity level caps (Epic 60, Legendary 100, Mythic 140, Ancestral 300); picker clamps on rarity change and shows the correct max in the level control (`workshopChassisModuleMaxLevel`, `clampWorkshopChassisModuleLevel`).
 - **Sub-module slots**: Eight effect slots with unlock gates at Lv. 1, 1, 41, 101, 141, 161, 201, and 241; slots above the current rarity max show a dedicated locked state in the module picker.
 - **i18n**: EN/ES copy for sub-module slots blocked by rarity max level.
 
 ### Added
 
-- **Tests**: Vitest coverage for rarity level caps and clamping (`workshopChassisModuleShared.test.ts`).
+- **Module loadout presets**: Five module configurations (hub levels, chassis, assist, sub-modules) on the **Modules** tab, persisted with the workshop snapshot (`workshopModulePresets`, `WorkshopModulesPanel`).
+- **Tests**: Vitest coverage for rarity level caps and clamping (`workshopChassisModuleShared.test.ts`) and module preset select/snapshot round-trip (`workshopModulePresets.test.ts`).
 
 ## [2.4.1] - 2026-05-17
 
@@ -160,7 +162,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 - **Social link previews**: Open Graph and Twitter Card meta tags in `index.html` so URLs unfurl to a rich preview card in Discord, Slack, iMessage, and other unfurlers. Title, description, site name, locale, and a `summary_large_image` card are all declared.
-- **OG banner**: `public/og-banner.png` (real PNG, 1200×630) used as the `og:image` / `twitter:image`; shows a stylized lab/research dashboard alongside the Tower Labs brand and tagline.
+- **OG banner**: `public/og-banner.png` (real PNG, 1200×630) used as the `og:image` / `twitter:image`; shows a stylized lab/research dashboard alongside the app brand and tagline.
 
 ### Changed
 

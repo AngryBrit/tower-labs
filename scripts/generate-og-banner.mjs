@@ -116,7 +116,7 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
     <image href="data:image/png;base64,${iconB64}" x="${iconX}" y="${iconY}" width="${iconSize}" height="${iconSize}" preserveAspectRatio="xMidYMid meet"/>
   </g>
 
-  <text x="${brandCenterX}" y="${titleY}" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="800" fill="#f8fafc" letter-spacing="0.02em">The Armoury</text>
+  <text x="${brandCenterX}" y="${titleY}" text-anchor="middle" font-family="'Agency FB', sans-serif" font-size="52" font-weight="bold" fill="#f8fafc" letter-spacing="0.04em">TowerSmith</text>
   <text x="${brandCenterX}" y="${subtitleY}" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="22" fill="#94a3b8">Workshop · Cards · Lab · Themes</text>
   <text x="${brandCenterX}" y="${taglineY}" text-anchor="middle" font-family="system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="18" fill="#64748b">Plan builds, compare upgrades, share configurations</text>
 </svg>

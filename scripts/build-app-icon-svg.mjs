@@ -18,7 +18,7 @@ const bgRect = raw.match(/<rect[^>]*fill="#0B1220"[^>]*\/>/i)?.[0] ?? ''
 const artwork = pathBlocks
 
 const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2138 2138" width="512" height="512" role="img" aria-label="The Armoury">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2138 2138" width="512" height="512" role="img" aria-label="TowerSmith">
   <defs>
     <mask id="icon-round-mask">
       <rect width="2138" height="2138" rx="454" ry="454" fill="#fff"/>

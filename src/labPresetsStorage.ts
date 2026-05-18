@@ -70,6 +70,15 @@ import {
   type WorkshopGameCardId,
 } from './data/workshopGameCards'
 import {
+  clampWorkshopModuleActivePresetIndex,
+  defaultModulePresetSnapshots,
+  defaultWorkshopModulesPersistedFields,
+  extractWorkshopModulePresetSnapshot,
+  sanitizeModulePresetSnapshots,
+  workshopPersistedWithModulePresets,
+  type WorkshopModulePresetSnapshot,
+} from './data/workshopModulePresets'
+import {
   clampWorkshopCardEquipSlots,
   defaultCardPresetLoadouts,
   sanitizeCardPresetLoadouts,
@@ -233,6 +242,10 @@ export type WorkshopPersistedV1 = {
   simArmorAssistStoneEfficiency: number
   simGeneratorAssistStoneEfficiency: number
   simCoreAssistStoneEfficiency: number
+  /** Full module hub snapshot per preset tab (Preset 1…5). */
+  modulePresetSnapshots: WorkshopModulePresetSnapshot[]
+  /** Active module preset tab (drives sim* module fields). */
+  moduleActivePresetIndex: number
 } & WorkshopUltimateLevels &
   WorkshopUltimateActiveFlags
 
@@ -281,25 +294,9 @@ export function resetWorkshopCards(current: WorkshopPersistedV1): WorkshopPersis
  * Preserves workshop upgrade / enhance / ultimate levels, cards, and other sim fields.
  */
 export function resetWorkshopModules(current: WorkshopPersistedV1): WorkshopPersistedV1 {
-  const d = defaultWorkshopPersisted()
   return {
     ...current,
-    simAttackSpeedModuleSubEffect: d.simAttackSpeedModuleSubEffect,
-    simAssistModuleSlot: d.simAssistModuleSlot,
-    simCannonModuleLevel: d.simCannonModuleLevel,
-    simArmorModuleLevel: d.simArmorModuleLevel,
-    simGeneratorModuleLevel: d.simGeneratorModuleLevel,
-    simCoreModuleLevel: d.simCoreModuleLevel,
-    simCannonChassisModuleId: d.simCannonChassisModuleId,
-    simArmorChassisModuleId: d.simArmorChassisModuleId,
-    simGeneratorChassisModuleId: d.simGeneratorChassisModuleId,
-    simCoreChassisModuleId: d.simCoreChassisModuleId,
-    simCannonChassisModuleRarity: d.simCannonChassisModuleRarity,
-    simArmorChassisModuleRarity: d.simArmorChassisModuleRarity,
-    simGeneratorChassisModuleRarity: d.simGeneratorChassisModuleRarity,
-    simCoreChassisModuleRarity: d.simCoreChassisModuleRarity,
-    simSubmoduleSelections: d.simSubmoduleSelections,
-    ...defaultAssistChassisFields(),
+    ...defaultWorkshopModulesPersistedFields(),
   }
 }
 
@@ -348,6 +345,8 @@ export function resetWorkshopUpgradeLevels(
     simArmorAssistStoneEfficiency: current.simArmorAssistStoneEfficiency,
     simGeneratorAssistStoneEfficiency: current.simGeneratorAssistStoneEfficiency,
     simCoreAssistStoneEfficiency: current.simCoreAssistStoneEfficiency,
+    modulePresetSnapshots: current.modulePresetSnapshots,
+    moduleActivePresetIndex: current.moduleActivePresetIndex,
     relicOwnedIds: current.relicOwnedIds,
     simRelicsBonusFraction: current.simRelicsBonusFraction,
     simPerkDamageQuantity: current.simPerkDamageQuantity,
@@ -444,26 +443,11 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
       cardPresetLoadouts,
       cardActivePresetIndex,
     }),
-    simAttackSpeedModuleSubEffect: 0,
     simBerserkerDamageTaken: 0,
     relicOwnedIds: [],
     simRelicsBonusFraction: 0,
     simPerkDamageQuantity: 0,
-    simAssistModuleSlot: 'cannon',
-    simCannonModuleLevel: 0,
-    simArmorModuleLevel: 0,
-    simGeneratorModuleLevel: 0,
-    simCoreModuleLevel: 0,
-    simCannonChassisModuleId: '',
-    simArmorChassisModuleId: '',
-    simGeneratorChassisModuleId: '',
-    simCoreChassisModuleId: '',
-    simCannonChassisModuleRarity: 'epic',
-    simArmorChassisModuleRarity: 'epic',
-    simGeneratorChassisModuleRarity: 'epic',
-    simCoreChassisModuleRarity: 'epic',
-    simSubmoduleSelections: defaultWorkshopSubmoduleSelections(),
-    ...defaultAssistChassisFields(),
+    ...defaultWorkshopModulesPersistedFields(),
     ...defaultUltimateLevels(),
     ...defaultUltimateActive(),
   }
@@ -503,7 +487,7 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
     ? (Number(m) as WorkshopPersistedV1['multiplier'])
     : d.multiplier
 
-  return {
+  const base = {
     hideMaxed,
     mainTab,
     category,
@@ -772,6 +756,26 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
     ),
     simCoreAssistStoneEfficiency: clampAssistStoneEfficiency(Number(o.simCoreAssistStoneEfficiency)),
   } as WorkshopPersistedV1
+
+  const moduleActivePresetIndex = clampWorkshopModuleActivePresetIndex(
+    Number(o.moduleActivePresetIndex),
+  )
+
+  if (o.modulePresetSnapshots != null) {
+    return workshopPersistedWithModulePresets(
+      base,
+      sanitizeModulePresetSnapshots(o.modulePresetSnapshots, base),
+      moduleActivePresetIndex,
+    )
+  }
+
+  const modulePresetSnapshots = defaultModulePresetSnapshots()
+  modulePresetSnapshots[0] = extractWorkshopModulePresetSnapshot(base)
+  return {
+    ...base,
+    moduleActivePresetIndex,
+    modulePresetSnapshots,
+  }
 }
 
 export type LabPreset = {

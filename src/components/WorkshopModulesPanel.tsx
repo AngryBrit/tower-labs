@@ -68,6 +68,11 @@ import {
   workshopCannonModuleDef,
 } from '../data/workshopCannonModules'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
+import {
+  clampWorkshopModuleActivePresetIndex,
+  patchWorkshopModules,
+  selectWorkshopModulePreset,
+} from '../data/workshopModulePresets'
 import { useModulesCatalogVisible } from '../modulesCatalogVisibility'
 import { useSubmodulesCatalogVisible } from '../submodulesCatalogVisibility'
 import { useI18n } from '../i18n'
@@ -80,6 +85,14 @@ const SLOT_LABEL: Record<WorkshopAssistModuleSlot, StringId> = {
   generator: 'ws_sim_module_generator',
   core: 'ws_sim_module_core',
 }
+
+const MODULE_PRESET_KEYS = [
+  'ws_cards_preset_1',
+  'ws_cards_preset_2',
+  'ws_cards_preset_3',
+  'ws_cards_preset_4',
+  'ws_cards_preset_5',
+] as const satisfies readonly StringId[]
 
 type WorkshopModulesPanelProps = {
   workshopPersisted: WorkshopPersistedV1
@@ -410,7 +423,24 @@ export function WorkshopModulesPanel({
   const { t } = useI18n()
   const [modulesCatalogVisible] = useModulesCatalogVisible()
   const [submodulesCatalogVisible] = useSubmodulesCatalogVisible()
+  const presetIndex = clampWorkshopModuleActivePresetIndex(
+    workshopPersisted.moduleActivePresetIndex,
+  )
   const slot = workshopPersisted.simAssistModuleSlot
+
+  const patch = useCallback(
+    (partial: Partial<WorkshopPersistedV1>) => {
+      onWorkshopPersistedChange(patchWorkshopModules(workshopPersisted, partial))
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const selectPreset = useCallback(
+    (i: number) => {
+      onWorkshopPersistedChange(selectWorkshopModulePreset(workshopPersisted, i))
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
 
   const labPercents = useMemo(() => {
     if (researchData == null) {
@@ -426,17 +456,17 @@ export function WorkshopModulesPanel({
 
   const selectSlot = useCallback(
     (next: WorkshopAssistModuleSlot) => {
-      onWorkshopPersistedChange({ ...workshopPersisted, simAssistModuleSlot: next })
+      patch({ simAssistModuleSlot: next })
     },
-    [onWorkshopPersistedChange, workshopPersisted],
+    [patch],
   )
 
   const setModuleLevel = useCallback(
     (target: WorkshopAssistModuleSlot, level: number) => {
       const key = ASSIST_MODULE_LEVEL_KEY[target]
-      onWorkshopPersistedChange({ ...workshopPersisted, [key]: level })
+      patch({ [key]: level })
     },
-    [onWorkshopPersistedChange, workshopPersisted],
+    [patch],
   )
 
   const activeChassisSelection = workshopChassisModuleSelection(workshopPersisted, slot)
@@ -451,9 +481,9 @@ export function WorkshopModulesPanel({
       if (moduleId !== '' && assistModuleConflictsWithMain(targetSlot, workshopPersisted, moduleId)) {
         next[ASSIST_CHASSIS_MODULE_ID_KEY[targetSlot]] = ''
       }
-      onWorkshopPersistedChange(next)
+      patch(next)
     },
-    [onWorkshopPersistedChange, workshopPersisted],
+    [patch, workshopPersisted],
   )
 
   const selectAssistChassisModule = useCallback(
@@ -461,13 +491,12 @@ export function WorkshopModulesPanel({
       if (moduleId !== '' && assistModuleConflictsWithMain(targetSlot, workshopPersisted, moduleId)) {
         return
       }
-      onWorkshopPersistedChange({
-        ...workshopPersisted,
+      patch({
         [ASSIST_CHASSIS_MODULE_ID_KEY[targetSlot]]: moduleId,
         [ASSIST_CHASSIS_MODULE_RARITY_KEY[targetSlot]]: rarity,
       })
     },
-    [onWorkshopPersistedChange, workshopPersisted],
+    [patch, workshopPersisted],
   )
 
   type ModulePickerTarget = { slot: WorkshopAssistModuleSlot; role: 'main' | 'assist' }
@@ -507,15 +536,28 @@ export function WorkshopModulesPanel({
         rarity,
         cellValue,
       )
-      onWorkshopPersistedChange(
+      patch(
         workshopPersistedWithSubmoduleSelections(workshopPersisted, slot, nextSlotSelections),
       )
     },
-    [activeSubmoduleSelections, onWorkshopPersistedChange, slot, workshopPersisted],
+    [activeSubmoduleSelections, patch, slot, workshopPersisted],
   )
 
   return (
     <div className="modules-layout">
+      <div className="cards-presets" role="toolbar" aria-label={t('ws_cards_presets_aria')}>
+        {MODULE_PRESET_KEYS.map((key, i) => (
+          <button
+            key={key}
+            type="button"
+            className={presetIndex === i ? 'cards-preset cards-preset--on' : 'cards-preset'}
+            aria-pressed={presetIndex === i}
+            onClick={() => selectPreset(i)}
+          >
+            {t(key)}
+          </button>
+        ))}
+      </div>
       <div className="modules-hub" role="group" aria-label={t('ws_modules_hub_aria')}>
         <div className="modules-hub__stage">
           <div className="modules-hub__pcb" aria-hidden />
@@ -564,8 +606,7 @@ export function WorkshopModulesPanel({
                       slot={key}
                       value={assistChassis.stoneEfficiency}
                       onCommit={(next) =>
-                        onWorkshopPersistedChange({
-                          ...workshopPersisted,
+                        patch({
                           [ASSIST_STONE_EFFICIENCY_KEY[key]]: next,
                         })
                       }
