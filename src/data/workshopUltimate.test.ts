@@ -4,6 +4,7 @@ import {
   workshopUltimateMaxLevel,
   workshopUltimateNextMarginalStones,
   workshopUltimateStatDisplay,
+  workshopUltimateTotalStonesToMaxFrom,
 } from './workshopUltimate'
 
 describe('workshop ultimate wiki spot checks', () => {
@@ -25,6 +26,22 @@ describe('workshop ultimate wiki spot checks', () => {
   it('Death Wave cooldown L10 shows 3m 20s with next cost 168', () => {
     expect(workshopUltimateStatDisplay('deathWaveCooldownLevel', 10)).toBe('3m 20s')
     expect(workshopUltimateNextMarginalStones('deathWaveCooldownLevel', 10)).toBe(168)
+  })
+
+  it('Death Wave basic upgrades match wiki totals (29,391 stones)', () => {
+    expect(workshopUltimateMaxLevel('deathWaveDamageLevel')).toBe(30)
+    expect(workshopUltimateMaxLevel('deathWaveQuantityLevel')).toBe(4)
+    expect(workshopUltimateMaxLevel('deathWaveCooldownLevel')).toBe(25)
+    expect(workshopUltimateStatDisplay('deathWaveDamageLevel', 30)).toBe('x9119')
+    expect(workshopUltimateStatDisplay('deathWaveCooldownLevel', 25)).toBe('50s')
+    expect(workshopUltimateTotalStonesToMaxFrom('deathWaveDamageLevel', 0)).toBe(17_591)
+    expect(workshopUltimateTotalStonesToMaxFrom('deathWaveQuantityLevel', 0)).toBe(2_950)
+    expect(workshopUltimateTotalStonesToMaxFrom('deathWaveCooldownLevel', 0)).toBe(8_850)
+    expect(
+      workshopUltimateTotalStonesToMaxFrom('deathWaveDamageLevel', 0) +
+        workshopUltimateTotalStonesToMaxFrom('deathWaveQuantityLevel', 0) +
+        workshopUltimateTotalStonesToMaxFrom('deathWaveCooldownLevel', 0),
+    ).toBe(29_391)
   })
 
   it('Golden Tower bonus L16 shows x17.8 with next cost 950', () => {

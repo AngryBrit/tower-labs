@@ -16,10 +16,14 @@ const outputs = [
   { file: 'apple-touch-icon.png', size: 180 },
   { file: 'icon-192.png', size: 192 },
   { file: 'icon-512.png', size: 512 },
-  { file: 'icon-maskable-512.png', size: 512 },
+  { file: 'icon-maskable-512.png', size: 512, maskable: true },
 ]
 
-for (const { file, size } of outputs) {
-  writeFileSync(join(root, 'public', file), renderAppIconPng(size, iconSvgPath))
-  console.log(`wrote ${file} (${size}×${size}) from app-icon.svg`)
+for (const { file, size, maskable = false } of outputs) {
+  writeFileSync(
+    join(root, 'public', file),
+    renderAppIconPng(size, iconSvgPath, { maskable }),
+  )
+  const kind = maskable ? 'maskable safe-zone' : 'app-icon.svg'
+  console.log(`wrote ${file} (${size}×${size}) from ${kind}`)
 }

@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-05-18
+
+### Fixed
+
+- **Death Wave basic upgrades**: Wiki-aligned damage max tier stone cost (×9119), five missing cooldown tiers down to **50s**, and stone totals (**17,591** / **2,950** / **8,850** → **29,391**).
+
+### Changed
+
+- **PWA maskable icon**: `icon-maskable-512.png` uses the W3C safe zone (80% scale on `#0B1220`); `render-app-icon-png.mjs` / `generate-app-icons.mjs`.
+
 ## [2.5.1] - 2026-05-18
 
 ### Added

@@ -1178,7 +1178,7 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
     },
     {
       value: 9119,
-      marginalStones: 4081
+      marginalStones: 3406
     }
   ]
 },
@@ -1293,6 +1293,26 @@ export const WORKSHOP_ULTIMATE_TRACKS: Record<WorkshopUltimateUpgradeKey, Worksh
     {
       value: 100,
       marginalStones: 512
+    },
+    {
+      value: 90,
+      marginalStones: 688
+    },
+    {
+      value: 80,
+      marginalStones: 874
+    },
+    {
+      value: 70,
+      marginalStones: 1070
+    },
+    {
+      value: 60,
+      marginalStones: 1276
+    },
+    {
+      value: 50,
+      marginalStones: 1492
     }
   ]
 },
