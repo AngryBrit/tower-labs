@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2026-05-18
+
+### Changed
+
+- **Chassis module levels**: Wiki-aligned per-rarity level caps (Epic 60, Legendary 100, Mythic 140, Ancestral 300); picker clamps on rarity change and shows the correct max in the level control (`workshopChassisModuleMaxLevel`, `clampWorkshopChassisModuleLevel`).
+- **Sub-module slots**: Eight effect slots with unlock gates at Lv. 1, 1, 41, 101, 141, 161, 201, and 241; slots above the current rarity max show a dedicated locked state in the module picker.
+- **i18n**: EN/ES copy for sub-module slots blocked by rarity max level.
+
+### Added
+
+- **Tests**: Vitest coverage for rarity level caps and clamping (`workshopChassisModuleShared.test.ts`).
+
 ## [2.4.1] - 2026-05-17
 
 ### Changed

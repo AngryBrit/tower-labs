@@ -11,6 +11,33 @@ export const WORKSHOP_CHASSIS_MODULE_RARITIES: readonly WorkshopChassisModuleRar
   'ancestral',
 ] as const
 
+/**
+ * Wiki module upgrade max level by merge tier (Epic … Ancestral 5★).
+ * Planner chassis rarities map to Epic / Legendary / Mythic / full Ancestral line.
+ */
+export const WORKSHOP_CHASSIS_MODULE_MAX_LEVEL_BY_RARITY: Record<
+  WorkshopChassisModuleRarity,
+  number
+> = {
+  epic: 60,
+  legendary: 100,
+  mythic: 140,
+  ancestral: 300,
+}
+
+export function workshopChassisModuleMaxLevel(rarity: WorkshopChassisModuleRarity): number {
+  return WORKSHOP_CHASSIS_MODULE_MAX_LEVEL_BY_RARITY[rarity]
+}
+
+export function clampWorkshopChassisModuleLevel(
+  level: number,
+  rarity: WorkshopChassisModuleRarity,
+): number {
+  if (!Number.isFinite(level)) return 0
+  const max = workshopChassisModuleMaxLevel(rarity)
+  return Math.max(0, Math.min(max, Math.trunc(level)))
+}
+
 /** CSS class per chassis module rarity (see `.modules-rarity--*` in App.css). */
 export const WORKSHOP_CHASSIS_MODULE_RARITY_CLASS: Record<
   WorkshopChassisModuleRarity,

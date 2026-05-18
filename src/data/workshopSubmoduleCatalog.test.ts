@@ -3,6 +3,7 @@ import { CANNON_SUBMODULE_ATTACK_SPEED_ADD } from './workshopSubmoduleEffects'
 import {
   cannonSubmoduleAttackSpeedByRarity,
   WORKSHOP_SUBMODULE_SECTIONS,
+  WORKSHOP_SUBMODULE_SLOT_COUNT,
   WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL,
   formatSubmoduleCellDisplay,
   parseSubmoduleCellNumber,
@@ -10,8 +11,11 @@ import {
 } from './workshopSubmoduleCatalog'
 
 describe('workshopSubmoduleCatalog', () => {
-  it('unlocks six sub-module slots at wiki module levels', () => {
-    expect(WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL).toEqual([1, 1, 41, 101, 141, 161])
+  it('unlocks eight sub-module slots at wiki module levels', () => {
+    expect(WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL).toEqual([
+      1, 1, 41, 101, 141, 161, 201, 241,
+    ])
+    expect(WORKSHOP_SUBMODULE_SLOT_COUNT).toBe(8)
   })
 
   it('has submodule tables for all four chassis slots', () => {

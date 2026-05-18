@@ -439,6 +439,7 @@ export const STRINGS_EN = {
   ws_modules_picker_unique_effect: 'Unique Effect',
   ws_modules_picker_done: 'Done',
   ws_modules_submodule_unlocks_at: 'Unlocks at Lv.',
+  ws_modules_submodule_locked_rarity_max: 'Needs Lv. {{level}} (max {{max}} at this rarity)',
   ws_modules_assist_stone_efficiency: 'Stone efficiency',
   ws_modules_assist_efficiency_prefix: 'Eff.',
   ws_modules_assist_efficiency_hint:
@@ -1342,6 +1343,8 @@ export const STRINGS_ES = {
   ws_modules_picker_unique_effect: 'Efecto único',
   ws_modules_picker_done: 'Listo',
   ws_modules_submodule_unlocks_at: 'Se desbloquea en nv.',
+  ws_modules_submodule_locked_rarity_max:
+    'Requiere nv. {{level}} (máx. {{max}} con esta rareza)',
   ws_modules_assist_stone_efficiency: 'Eficiencia de piedras',
   ws_modules_assist_efficiency_prefix: 'Ef.',
   ws_modules_assist_efficiency_hint:

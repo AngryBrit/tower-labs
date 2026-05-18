@@ -101,10 +101,10 @@ export function submoduleEffectPickerSlotText(cell: string, effectLabel: string)
   return `${value} ${name}`
 }
 
-/** In-game sub-module effect slot count and level gates (planner UI). */
-export const WORKSHOP_SUBMODULE_SLOT_COUNT = 6
-
-/** In-game: two slots at Lv.1; then 41, 101, 141, 161 unlock one each (wiki “additional” slots). */
+/**
+ * In-game sub-module effect slot unlock levels (wiki Modules → Main Effect).
+ * Two slots at Lv.1; then one each at 41, 101, 141, 161, 201, and 241.
+ */
 export const WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL: readonly number[] = [
   1,
   1,
@@ -112,7 +112,11 @@ export const WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL: readonly number[] = [
   101,
   141,
   161,
+  201,
+  241,
 ]
+
+export const WORKSHOP_SUBMODULE_SLOT_COUNT = WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL.length
 
 /** Highest sub-module slot unlock (wiki). */
 export const WORKSHOP_SUBMODULE_MAX_UNLOCK_LEVEL =

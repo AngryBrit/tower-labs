@@ -5,19 +5,18 @@ import {
   type WorkshopChassisModuleHeroStatContext,
 } from '../data/workshopChassisModuleHeroStat'
 import {
+  clampWorkshopChassisModuleLevel,
   formatWorkshopChassisModuleAbility,
   WORKSHOP_CHASSIS_MODULE_RARITIES,
   WORKSHOP_CHASSIS_MODULE_RARITY_CLASS,
+  workshopChassisModuleMaxLevel,
   type WorkshopChassisModuleRarity,
 } from '../data/workshopChassisModuleShared'
 import {
   CHASSIS_MODULE_ORDERS,
   workshopChassisModuleDefForSlot,
 } from '../data/workshopChassisModuleSelection'
-import {
-  clampWorkshopAssistModuleLevel,
-  type WorkshopAssistModuleSlot,
-} from '../data/workshopSimModules'
+import type { WorkshopAssistModuleSlot } from '../data/workshopSimModules'
 import {
   workshopChassisModuleDedicatedImageUrl,
   workshopChassisModuleHasDedicatedArt,
@@ -26,7 +25,6 @@ import {
   WORKSHOP_SUBMODULE_SECTIONS,
   WORKSHOP_SUBMODULE_SLOT_COUNT,
   WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL,
-  WORKSHOP_MODULE_LEVEL_MAX,
   formatSubmoduleCellDisplay,
   submoduleEffectId,
   submoduleEffectPickerSlotText,
@@ -88,14 +86,17 @@ const ABILITY_VALUE_HIGHLIGHT =
 
 function PickerModuleLevelInput({
   slot,
+  rarity,
   value,
   onCommit,
 }: {
   slot: WorkshopAssistModuleSlot
+  rarity: WorkshopChassisModuleRarity
   value: number
   onCommit: (level: number) => void
 }) {
   const { t } = useI18n()
+  const maxLevel = workshopChassisModuleMaxLevel(rarity)
   const [draft, setDraft] = useState(String(value))
 
   useEffect(() => {
@@ -113,7 +114,7 @@ function PickerModuleLevelInput({
       setDraft(String(value))
       return
     }
-    onCommit(clampWorkshopAssistModuleLevel(n))
+    onCommit(clampWorkshopChassisModuleLevel(n, rarity))
   }
 
   return (
@@ -138,7 +139,7 @@ function PickerModuleLevelInput({
           }
         }}
       />
-      <span className="modules-picker__hero-level-suffix">/ {WORKSHOP_MODULE_LEVEL_MAX}</span>
+      <span className="modules-picker__hero-level-suffix">/ {maxLevel}</span>
     </label>
   )
 }
@@ -283,6 +284,7 @@ export function ChassisModulePickerDialog({
             )}
             <PickerModuleLevelInput
               slot={slot}
+              rarity={pickerRarity}
               value={moduleLevel}
               onCommit={onModuleLevelCommit}
             />
@@ -351,6 +353,9 @@ export function ChassisModulePickerDialog({
             onChange={(e) => {
               const rarity = e.target.value as WorkshopChassisModuleRarity
               setPickerRarity(rarity)
+              if (moduleLevel > workshopChassisModuleMaxLevel(rarity)) {
+                onModuleLevelCommit(clampWorkshopChassisModuleLevel(moduleLevel, rarity))
+              }
               if (pickerModuleId != null) {
                 applyModule(pickerModuleId, rarity)
               }
@@ -426,7 +431,9 @@ export function ChassisModulePickerDialog({
           <ul className="modules-picker__effect-slots">
             {Array.from({ length: WORKSHOP_SUBMODULE_SLOT_COUNT }, (_, index) => {
               const unlockAt = WORKSHOP_SUBMODULE_SLOT_UNLOCK_LEVEL[index] ?? 1
-              const unlocked = moduleLevel >= unlockAt
+              const rarityMax = workshopChassisModuleMaxLevel(pickerRarity)
+              const blockedByRarity = unlockAt > rarityMax
+              const unlocked = !blockedByRarity && moduleLevel >= unlockAt
               const entry = selectedSubmodules[index]
               return (
                 <li
@@ -434,6 +441,7 @@ export function ChassisModulePickerDialog({
                   className={[
                     'modules-picker__effect-slot',
                     unlocked ? '' : 'modules-picker__effect-slot--locked',
+                    blockedByRarity ? 'modules-picker__effect-slot--rarity-cap' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -473,6 +481,12 @@ export function ChassisModulePickerDialog({
                     ) : (
                       <span className="modules-picker__effect-empty">—</span>
                     )
+                  ) : blockedByRarity ? (
+                    <span className="modules-picker__effect-locked">
+                      {t('ws_modules_submodule_locked_rarity_max')
+                        .replace('{{level}}', String(unlockAt))
+                        .replace('{{max}}', String(rarityMax))}
+                    </span>
                   ) : (
                     <span className="modules-picker__effect-locked">
                       {t('ws_modules_submodule_unlocks_at')} {unlockAt}
