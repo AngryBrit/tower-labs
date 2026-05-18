@@ -36,6 +36,7 @@ export const MODULE_HUB_SLOT_ART: Record<WorkshopAssistModuleSlot, ModuleHubSlot
     placement: 'tl',
     shape: 'circle',
     glowRgb: '244, 63, 94',
+    /** Assist on the outer (left) side; main toward the tower. */
     assistSide: 'before',
   },
   armor: {
@@ -48,6 +49,7 @@ export const MODULE_HUB_SLOT_ART: Record<WorkshopAssistModuleSlot, ModuleHubSlot
     placement: 'tr',
     shape: 'triangle',
     glowRgb: '245, 158, 11',
+    /** Assist on the outer (right) side; main toward the tower. */
     assistSide: 'after',
   },
   core: {

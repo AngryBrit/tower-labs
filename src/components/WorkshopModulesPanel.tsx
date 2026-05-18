@@ -393,10 +393,10 @@ function ModulesHubLines() {
       preserveAspectRatio="none"
       aria-hidden
     >
-      <polyline className="modules-hub__line" points="26,30 50,42" />
-      <polyline className="modules-hub__line" points="74,30 50,42" />
-      <polyline className="modules-hub__line" points="26,70 50,58" />
-      <polyline className="modules-hub__line" points="74,70 50,58" />
+      <polyline className="modules-hub__line" points="38,36 50,44" />
+      <polyline className="modules-hub__line" points="62,36 50,44" />
+      <polyline className="modules-hub__line" points="38,64 50,56" />
+      <polyline className="modules-hub__line" points="62,64 50,56" />
     </svg>
   )
 }

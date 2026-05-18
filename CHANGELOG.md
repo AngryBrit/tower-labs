@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-05-18
+
+### Changed
+
+- **Modules hub layout**: Tighter cross grid with content-sized corner cells, centered stage (`max-width` cap), main chassis frames toward the tower and assist slots on the outer side, shorter assist connectors, and connector lines aligned to the compact hub.
+- **Hub tower graphic**: Larger central tower preview with expanded center grid track.
+- **Assist efficiency row**: Tighter `Eff.` input sizing (`2ch` / `field-sizing: content`) so the percent suffix sits flush without extra gap.
+
 ## [2.4.2] - 2026-05-18
 
 ### Changed
