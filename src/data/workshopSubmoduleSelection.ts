@@ -24,13 +24,6 @@ export type WorkshopSubmoduleSelections = Record<
   WorkshopSubmoduleSelectionMap
 >
 
-const SLOTS: readonly WorkshopAssistModuleSlot[] = [
-  'cannon',
-  'armor',
-  'generator',
-  'core',
-]
-
 export function defaultWorkshopSubmoduleSelections(): WorkshopSubmoduleSelections {
   return { cannon: {}, armor: {}, generator: {}, core: {} }
 }

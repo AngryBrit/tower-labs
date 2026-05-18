@@ -31,6 +31,7 @@ const FILTER_ORDER: readonly RelicFilter[] = [
   'birthday',
   'event',
   'guild',
+  'other',
 ]
 
 const FILTER_LABEL_IDS: Record<RelicFilter, StringId> = {
@@ -40,6 +41,7 @@ const FILTER_LABEL_IDS: Record<RelicFilter, StringId> = {
   birthday: 'ws_relics_filter_birthday',
   event: 'ws_relics_filter_event',
   guild: 'ws_relics_filter_guild',
+  other: 'ws_relics_filter_other',
 }
 
 const RARITY_LABEL_IDS: Record<WorkshopRelicDef['rarity'], StringId> = {

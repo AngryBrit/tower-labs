@@ -170,6 +170,7 @@ function selectedSubmoduleEntries(
   const section = WORKSHOP_SUBMODULE_SECTIONS[slot]
   return Object.entries(selections)
     .map(([effectId, rarity]) => {
+      if (rarity == null) return null
       const row = section.rows.find((r) => submoduleEffectId(r.label) === effectId)
       if (row == null) return null
       const cell = row.cells[rarity]
@@ -447,7 +448,7 @@ export function ChassisModulePickerDialog({
                     .join(' ')}
                 >
                   {unlocked ? (
-                    entry != null ? (
+                    entry != null && entry.rarity != null ? (
                       <>
                         <span
                           className={[

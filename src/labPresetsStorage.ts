@@ -46,13 +46,9 @@ import {
   sanitizeChassisModuleRarity,
 } from './data/workshopChassisModuleSelection'
 import { sanitizeRelicOwnedIds } from './data/workshopRelics'
-import {
-  clampAssistStoneEfficiency,
-  defaultAssistChassisFields,
-} from './data/workshopAssistChassisModule'
+import { clampAssistStoneEfficiency } from './data/workshopAssistChassisModule'
 import {
   cannonSubmoduleAttackSpeedFromSelections,
-  defaultWorkshopSubmoduleSelections,
   parseSubmoduleSelectionsJson,
   type WorkshopSubmoduleSelections,
 } from './data/workshopSubmoduleSelection'

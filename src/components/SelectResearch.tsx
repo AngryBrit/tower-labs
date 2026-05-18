@@ -874,11 +874,12 @@ export const SelectResearch = forwardRef<
             }))
             setPresets((prev) => [...prev, ...imported])
             const first = imported[0]!
+            const firstWorkshop = sanitizeWorkshopPersisted(first.workshop)
             setActivePresetId(first.id)
             setLevelOverrides({ ...first.levelOverrides })
-            setWorkshopPersisted(first.workshop)
+            setWorkshopPersisted(firstWorkshop)
             setScratchSnapshot({ ...first.levelOverrides })
-            setScratchWorkshopPersisted({ ...first.workshop })
+            setScratchWorkshopPersisted(firstWorkshop)
             setImportNotice(fmt.importedTowerBuilds(imported.length))
             return
           }

@@ -7,7 +7,6 @@ import {
   formatWorkshopChassisModuleValue,
   type WorkshopChassisModuleDef,
   type WorkshopChassisModuleRarity,
-  type WorkshopChassisModuleValueKind,
 } from './workshopChassisModuleShared'
 
 export type {

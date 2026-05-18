@@ -8,7 +8,6 @@
  * an interim placeholder.
  */
 
-import { formatCoinAbbrev } from '../labCosts'
 import {
   formatAdditiveCount,
   formatAdditiveNumeric,

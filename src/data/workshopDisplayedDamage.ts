@@ -16,10 +16,7 @@ import {
   type ResearchData,
 } from '../types/research'
 import { workshopEnhanceAttackTierMultiplier } from './workshopEnhanceAttackShared'
-import {
-  workshopBerserkerDisplayedDamageAdd,
-  workshopDamageCardMultiplier,
-} from './workshopSimCards'
+import { workshopBerserkerDisplayedDamageAdd } from './workshopSimCards'
 import { workshopCannonModulePercentFromLabs } from './workshopSimModules'
 import { workshopDamageStatAtLevel } from './workshopDamage'
 

@@ -235,7 +235,7 @@ export function workshopGameCardGlow(id: WorkshopGameCardId): WorkshopGameCardGl
   return CARD_GLOW[id]
 }
 
-export function workshopGameCardMaxStars(id: WorkshopGameCardId): number {
+export function workshopGameCardMaxStars(_id: WorkshopGameCardId): number {
   return WORKSHOP_GAME_CARD_MAX_STARS
 }
 

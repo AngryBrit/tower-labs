@@ -16,7 +16,6 @@ import {
 import {
   ASSIST_CHASSIS_MODULE_ID_KEY,
   ASSIST_CHASSIS_MODULE_RARITY_KEY,
-  ASSIST_CHASSIS_UNLOCKED_KEY,
   assistModuleConflictsWithMain,
   workshopAssistChassisModuleSelection,
 } from '../data/workshopAssistChassisModule'

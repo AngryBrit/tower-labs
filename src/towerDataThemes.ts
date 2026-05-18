@@ -50,7 +50,11 @@ export function sanitizeThemeSelection(raw: unknown): ThemeSelectionState {
 
 export function sanitizeThemeOwnedIds(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [...readThemeOwnedIds()]
-  return [...new Set(raw.filter((x): x is string => typeof x === 'string' && x.trim()))]
+  return [
+    ...new Set(
+      raw.filter((x): x is string => typeof x === 'string' && x.trim().length > 0),
+    ),
+  ]
     .map((s) => s.trim())
     .sort()
 }

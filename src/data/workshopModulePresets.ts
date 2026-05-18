@@ -102,10 +102,18 @@ export function defaultWorkshopModulePresetSnapshot(): WorkshopModulePresetSnaps
     simArmorAssistChassisModuleId: assist.simArmorAssistChassisModuleId,
     simGeneratorAssistChassisModuleId: assist.simGeneratorAssistChassisModuleId,
     simCoreAssistChassisModuleId: assist.simCoreAssistChassisModuleId,
-    simCannonAssistChassisModuleRarity: assist.simCannonAssistChassisModuleRarity,
-    simArmorAssistChassisModuleRarity: assist.simArmorAssistChassisModuleRarity,
-    simGeneratorAssistChassisModuleRarity: assist.simGeneratorAssistChassisModuleRarity,
-    simCoreAssistChassisModuleRarity: assist.simCoreAssistChassisModuleRarity,
+    simCannonAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      assist.simCannonAssistChassisModuleRarity,
+    ),
+    simArmorAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      assist.simArmorAssistChassisModuleRarity,
+    ),
+    simGeneratorAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      assist.simGeneratorAssistChassisModuleRarity,
+    ),
+    simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
+      assist.simCoreAssistChassisModuleRarity,
+    ),
     simCannonAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simArmorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simGeneratorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,

@@ -5,7 +5,7 @@ import {
   workshopCardAddPercentPoints,
   workshopCardMultProduct,
 } from './workshopCardWorkshopDisplay'
-import { workshopCardMirrorsPatch } from './workshopGameCards'
+import { workshopCardMirrorsPatch, type WorkshopGameCardId } from './workshopGameCards'
 
 describe('workshopCardWorkshopDisplay', () => {
   it('mergeLabAndCardMult combines lab and equipped card', () => {
@@ -17,7 +17,7 @@ describe('workshopCardWorkshopDisplay', () => {
     const base = defaultWorkshopPersisted()
     const cardStars = { ...base.cardStars, damage: 7 }
     const cardPresetLoadouts = base.cardPresetLoadouts.map((row, i) =>
-      i === 0 ? (['damage'] as const) : row,
+      i === 0 ? (['damage'] as WorkshopGameCardId[]) : [...row],
     )
     const ws = {
       ...base,

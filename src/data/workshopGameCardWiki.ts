@@ -32,7 +32,7 @@ export const WORKSHOP_CARD_SLOT_GEM_COSTS: readonly number[] = [
   3500, 4500, 5500, 6500, 7500, 8500, 10000,
 ] as const
 
-export const WORKSHOP_CARD_MAX_SLOTS_GEMS = WORKSHOP_CARD_SLOT_GEM_COSTS.length as const
+export const WORKSHOP_CARD_MAX_SLOTS_GEMS = WORKSHOP_CARD_SLOT_GEM_COSTS.length
 export const WORKSHOP_CARD_MAX_SLOTS_HARMONY = 28 as const
 export const WORKSHOP_CARD_DEFAULT_EQUIP_SLOTS = 1 as const
 export const WORKSHOP_CARD_PRESET_COUNT = 5 as const

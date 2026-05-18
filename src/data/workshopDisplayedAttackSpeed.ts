@@ -9,7 +9,6 @@ import { workshopCardMultProduct } from './workshopCardWorkshopDisplay'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 import { attackResearchAttackSpeedLabMultiplier, type ResearchData } from '../types/research'
 import { workshopEnhanceAttackSpeedMultiplier } from './workshopEnhanceAttack'
-import { workshopAttackSpeedCardMultiplier } from './workshopSimCards'
 import { workshopAttackSpeedStatValue } from './workshopAttackSpeed'
 
 export type WorkshopAttackSpeedDisplayOpts = {
