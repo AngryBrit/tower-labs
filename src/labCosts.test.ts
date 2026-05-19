@@ -8,7 +8,7 @@ import {
 describe('formatCoinAbbrev', () => {
   it('shows quadrillion q from 0.1 q (1e14), not T', () => {
     expect(formatCoinAbbrev(250_000_000_000_000)).toBe('0.25 q')
-    expect(formatCoinAbbrev(99_000_000_000_000)).toBe('0.10 q')
+    expect(formatCoinAbbrev(100_000_000_000_000)).toBe('0.10 q')
     expect(formatCoinAbbrev(50_000_000_000_000)).toBe('50.00 T')
   })
 
