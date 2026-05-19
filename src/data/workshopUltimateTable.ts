@@ -68,6 +68,7 @@ export function workshopUltimateTrackClampLevel(
   track: WorkshopUltimateTrack,
   level: number,
 ): number {
+  if (!Number.isFinite(level)) return 0
   return Math.max(0, Math.min(workshopUltimateTrackMaxLevel(track), Math.trunc(level)))
 }
 

@@ -1,0 +1,183 @@
+import { MedalGlyph } from './MedalGlyph'
+import { useI18n } from '../i18n'
+import type { StringId } from '../i18n/dictionary'
+import {
+  WORKSHOP_BOT_WEAPON_STATS,
+  workshopBotIsActive,
+  workshopBotMaxLevel,
+  workshopBotNextMarginalMedals,
+  workshopBotSpecialIsUnlocked,
+  workshopBotStatDisplay,
+  type WorkshopBotId,
+  type WorkshopBotUpgradeKey,
+} from '../data/workshopBots'
+import { formatPowerStoneAmount } from '../labCosts'
+import type { WorkshopPersistedV1 } from '../labPresetsStorage'
+import { WorkshopBotSpecialCard } from './WorkshopBotSpecialCard'
+
+const BOT_TITLE: Record<WorkshopBotId, StringId> = {
+  flame: 'ws_bot_flame',
+  thunder: 'ws_bot_thunder',
+  golden: 'ws_bot_golden',
+  amplify: 'ws_bot_amplify',
+  botBot: 'ws_bot_botBot',
+}
+
+const BOT_STAT_LABEL: Record<string, StringId> = {
+  duration: 'ws_uw_stat_duration',
+  cooldown: 'ws_uw_stat_cooldown',
+  linger: 'ws_bot_stat_linger',
+  bonus: 'ws_uw_stat_bonus',
+  damageReduction: 'ws_bot_stat_damageReduction',
+  damage: 'ws_uw_stat_damage',
+  range: 'ws_bot_stat_range',
+}
+
+const BOT_ICON_SRC: Record<WorkshopBotId, string> = {
+  flame: '/bots/flame_bot.webp',
+  thunder: '/bots/thunder_bot.webp',
+  golden: '/bots/golden_bot.webp',
+  amplify: '/bots/amplify_bot.webp',
+  botBot: '/bots/bot_bot.webp',
+}
+
+function BotIcon({ botId }: { botId: WorkshopBotId }) {
+  return (
+    <img
+      src={BOT_ICON_SRC[botId]}
+      alt=""
+      width={48}
+      height={48}
+      className="workshop__uw-icon-svg"
+      aria-hidden
+    />
+  )
+}
+
+export type WorkshopBotCardProps = {
+  botId: WorkshopBotId
+  levels: Record<WorkshopBotUpgradeKey, number>
+  workshop: WorkshopPersistedV1
+  onBump: (key: WorkshopBotUpgradeKey, direction: -1 | 1) => void
+  onToggleActive: (botId: WorkshopBotId) => void
+  onSpecialUnlock: (botId: WorkshopBotId) => void
+}
+
+export function WorkshopBotCard({
+  botId,
+  levels,
+  workshop,
+  onBump,
+  onToggleActive,
+  onSpecialUnlock,
+}: WorkshopBotCardProps) {
+  const { t } = useI18n()
+  const stats = WORKSHOP_BOT_WEAPON_STATS[botId]
+  const title = t(BOT_TITLE[botId])
+  const active = workshopBotIsActive(workshop, botId)
+  const specialUnlocked = workshopBotSpecialIsUnlocked(workshop, botId)
+
+  return (
+    <li className="workshop__uw-stack">
+      <div
+        className={
+          active ? 'workshop__uw-card' : 'workshop__uw-card workshop__uw-card--inactive'
+        }
+      >
+        <div className="workshop__uw-head">
+          <span className="workshop__uw-title">{title}</span>
+          <button
+            type="button"
+            className={
+              active
+                ? 'workshop__uw-active-toggle workshop__uw-active-toggle--on'
+                : 'workshop__uw-active-toggle'
+            }
+            aria-pressed={active}
+            aria-label={
+              active ? `${title} — ${t('ws_bot_toggle_off')}` : `${title} — ${t('ws_bot_toggle_on')}`
+            }
+            onClick={() => onToggleActive(botId)}
+          >
+            {active ? t('ws_bot_toggle_on') : t('ws_bot_toggle_off')}
+          </button>
+        </div>
+        <div className="workshop__uw-body">
+          <div className="workshop__uw-icon-wrap">
+            <BotIcon botId={botId} />
+          </div>
+          <div className="workshop__uw-stats workshop__uw-stats--bots" role="group">
+            {stats.map(({ key, stat }) => {
+              const level = levels[key] ?? 0
+              const max = workshopBotMaxLevel(key)
+              const maxed = level >= max
+              const nextMedals = workshopBotNextMarginalMedals(key, level)
+              const labelId = BOT_STAT_LABEL[stat]
+              const statName = labelId ? t(labelId) : stat
+
+              return (
+                <div
+                  key={key}
+                  className={maxed ? 'workshop__uw-col workshop__uw-col--max' : 'workshop__uw-col'}
+                >
+                  <div className="workshop__uw-col-top">
+                    <span className="workshop__uw-stat-label">{statName}</span>
+                    <span className="workshop__uw-stat-value">
+                      {workshopBotStatDisplay(key, level)}
+                    </span>
+                  </div>
+                  <div className="workshop__uw-col-foot">
+                    <button
+                      type="button"
+                      className="workshop__uw-level-step"
+                      aria-label={`${statName} — ${t('ws_defense_level_down_aria')}`}
+                      disabled={!active || level <= 0}
+                      onClick={() => onBump(key, -1)}
+                    >
+                      −
+                    </button>
+                    <div
+                      className={
+                        maxed
+                          ? 'workshop__uw-col-cost workshop__card-cost--max'
+                          : 'workshop__uw-col-cost'
+                      }
+                      title={maxed ? t('ws_max') : t('ws_bot_medal_cost_title')}
+                    >
+                      {maxed ? (
+                        <>
+                          <span>{t('ws_max')}</span>
+                          <MedalGlyph className="workshop__uw-medal" />
+                        </>
+                      ) : (
+                        <>
+                          <span>{formatPowerStoneAmount(nextMedals ?? 0)}</span>
+                          <MedalGlyph className="workshop__uw-medal" />
+                        </>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="workshop__uw-level-step"
+                      aria-label={`${statName} — ${t('ws_defense_level_up_aria')}`}
+                      disabled={!active || maxed}
+                      onClick={() => onBump(key, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <WorkshopBotSpecialCard
+          botId={botId}
+          unlocked={specialUnlocked}
+          active={active}
+          onUnlock={onSpecialUnlock}
+        />
+      </div>
+    </li>
+  )
+}

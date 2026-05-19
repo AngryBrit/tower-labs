@@ -234,15 +234,16 @@ function WorkshopDemoToolbar({
   hideMaxed,
   setHideMaxed,
   onResetDemo,
-  ultimateResetMode,
+  workshopCategory,
 }: {
   hideMaxed: boolean
   setHideMaxed: (v: boolean) => void
   onResetDemo: () => void
-  ultimateResetMode: boolean
+  workshopCategory: WorkshopCategory
 }) {
   const { t } = useI18n()
-  const resetLabelKey = ultimateResetMode ? 'ws_reset_ultimate_demo' : 'ws_reset_demo'
+  const resetLabelKey =
+    workshopCategory === 'ultimate' ? 'ws_reset_ultimate_demo' : 'ws_reset_demo'
   return (
     <div className="select-research__toolbar-quick">
       <label className="glow-btn glow-btn--toggle">
@@ -3305,7 +3306,7 @@ export function WorkshopPage({
               hideMaxed={hideMaxed}
               setHideMaxed={setHideMaxed}
               onResetDemo={openResetWorkshopConfirm}
-              ultimateResetMode={category === 'ultimate'}
+              workshopCategory={category}
             />,
             toolbarMount,
           )
@@ -3317,7 +3318,7 @@ export function WorkshopPage({
             hideMaxed={hideMaxed}
             setHideMaxed={setHideMaxed}
             onResetDemo={openResetWorkshopConfirm}
-            ultimateResetMode={category === 'ultimate'}
+            workshopCategory={category}
           />
         </div>
       ) : null}

@@ -1,6 +1,7 @@
 export type MainPanel =
   | 'research'
   | 'workshop'
+  | 'bots'
   | 'modules'
   | 'cards'
   | 'relics'
@@ -12,6 +13,7 @@ export const MAIN_PANEL_STORAGE_KEY = 'tower-export-main-panel-v1'
 const MAIN_PANELS: readonly MainPanel[] = [
   'research',
   'workshop',
+  'bots',
   'modules',
   'cards',
   'relics',

@@ -33,6 +33,17 @@ import {
   type WorkshopUltimateUpgradeKey,
 } from './data/workshopUltimate'
 import {
+  WORKSHOP_BOT_ACTIVE_ORDER,
+  WORKSHOP_BOT_SPECIAL_BY_BOT,
+  WORKSHOP_BOT_UPGRADE_ORDER,
+  WORKSHOP_BOT_ORDER,
+  workshopBotActiveKey,
+  workshopBotClampLevel,
+  type WorkshopBotActiveKey,
+  type WorkshopBotSpecialKey,
+  type WorkshopBotUpgradeKey,
+} from './data/workshopBots'
+import {
   defaultUltimatePlusLevels,
   workshopUltimatePlusLevelsFromPersisted,
   type WorkshopUltimatePlusLevelKey,
@@ -123,6 +134,30 @@ function defaultUltimateOwned(): WorkshopUltimateOwnedFlags {
   return Object.fromEntries(
     WORKSHOP_ULTIMATE_WEAPON_ORDER.map((id) => [workshopUltimateOwnedKey(id), false]),
   ) as WorkshopUltimateOwnedFlags
+}
+
+type WorkshopBotLevels = { [K in WorkshopBotUpgradeKey]: number }
+
+function defaultBotLevels(): WorkshopBotLevels {
+  return Object.fromEntries(
+    WORKSHOP_BOT_UPGRADE_ORDER.map((key) => [key, 0]),
+  ) as WorkshopBotLevels
+}
+
+type WorkshopBotActiveFlags = { [K in WorkshopBotActiveKey]: boolean }
+
+function defaultBotActive(): WorkshopBotActiveFlags {
+  return Object.fromEntries(
+    WORKSHOP_BOT_ORDER.map((id) => [workshopBotActiveKey(id), true]),
+  ) as WorkshopBotActiveFlags
+}
+
+type WorkshopBotSpecialFlags = { [K in WorkshopBotSpecialKey]: boolean }
+
+function defaultBotSpecial(): WorkshopBotSpecialFlags {
+  return Object.fromEntries(
+    WORKSHOP_BOT_ORDER.map((id) => [WORKSHOP_BOT_SPECIAL_BY_BOT[id], false]),
+  ) as WorkshopBotSpecialFlags
 }
 
 function applyLegacyUltimateOwned(ws: WorkshopPersistedV1): WorkshopPersistedV1 {
@@ -291,7 +326,10 @@ export type WorkshopPersistedV1 = {
 } & WorkshopUltimateLevels &
   WorkshopUltimateActiveFlags &
   WorkshopUltimateOwnedFlags &
-  { [K in WorkshopUltimatePlusLevelKey]: number }
+  { [K in WorkshopUltimatePlusLevelKey]: number } &
+  WorkshopBotLevels &
+  WorkshopBotActiveFlags &
+  WorkshopBotSpecialFlags
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
 
@@ -355,6 +393,15 @@ export function resetWorkshopUltimates(current: WorkshopPersistedV1): WorkshopPe
     ...defaultUltimateActive(),
     ...defaultUltimateOwned(),
     ...defaultUltimatePlusLevels(),
+  }
+}
+
+export function resetWorkshopBots(current: WorkshopPersistedV1): WorkshopPersistedV1 {
+  return {
+    ...current,
+    ...defaultBotLevels(),
+    ...defaultBotActive(),
+    ...defaultBotSpecial(),
   }
 }
 
@@ -514,6 +561,9 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     ...defaultUltimateActive(),
     ...defaultUltimateOwned(),
     ...defaultUltimatePlusLevels(),
+    ...defaultBotLevels(),
+    ...defaultBotActive(),
+    ...defaultBotSpecial(),
   }
 }
 
@@ -743,6 +793,24 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
       ]),
     ),
     ...workshopUltimatePlusLevelsFromPersisted(o),
+    ...Object.fromEntries(
+      WORKSHOP_BOT_UPGRADE_ORDER.map((key) => {
+        const raw = Number(o[key])
+        return [key, workshopBotClampLevel(key, Number.isFinite(raw) ? raw : 0)]
+      }),
+    ),
+    ...Object.fromEntries(
+      WORKSHOP_BOT_ACTIVE_ORDER.map((key) => [
+        key,
+        (o as Record<string, unknown>)[key] !== false,
+      ]),
+    ),
+    ...Object.fromEntries(
+      WORKSHOP_BOT_ORDER.map((id) => [
+        WORKSHOP_BOT_SPECIAL_BY_BOT[id],
+        (o as Record<string, unknown>)[WORKSHOP_BOT_SPECIAL_BY_BOT[id]] === true,
+      ]),
+    ),
     ...(() => {
       const cardStars = workshopCardStarsFromLegacy(o)
       const cardPresetLoadouts = sanitizeCardPresetLoadouts(o.cardPresetLoadouts)

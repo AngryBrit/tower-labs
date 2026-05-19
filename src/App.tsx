@@ -7,6 +7,7 @@ import { CardsPage } from './components/CardsPage'
 import { ModulesPage } from './components/ModulesPage'
 import { RelicsPage } from './components/RelicsPage'
 import { ThemesPage } from './components/ThemesPage'
+import { BotsPage } from './components/BotsPage'
 import { WorkshopPage } from './components/WorkshopPage'
 import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from './labPresetsStorage'
 import { useI18n } from './i18n'
@@ -119,8 +120,8 @@ export default function App() {
                 <nav
                   className={
                     MODULES_PANEL_ENABLED
-                      ? 'select-research__inpanel-tabs select-research__inpanel-tabs--seven'
-                      : 'select-research__inpanel-tabs select-research__inpanel-tabs--six'
+                      ? 'select-research__inpanel-tabs select-research__inpanel-tabs--eight'
+                      : 'select-research__inpanel-tabs select-research__inpanel-tabs--seven'
                   }
                   role="tablist"
                 >
@@ -144,6 +145,21 @@ export default function App() {
                     }}
                   >
                     {t('app_nav_workshop')}
+                  </button>
+                  <button
+                    id="inpanel-tab-lab"
+                    type="button"
+                    role="tab"
+                    aria-selected={mainPanel === 'research'}
+                    aria-controls="inpanel-panel-lab"
+                    className={
+                      mainPanel === 'research'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--lab select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--lab'
+                    }
+                    onClick={() => setMainPanel('research')}
+                  >
+                    {t('app_nav_research')}
                   </button>
                   <button
                     id="inpanel-tab-cards"
@@ -184,19 +200,19 @@ export default function App() {
                     </button>
                   ) : null}
                   <button
-                    id="inpanel-tab-lab"
+                    id="inpanel-tab-bots"
                     type="button"
                     role="tab"
-                    aria-selected={mainPanel === 'research'}
-                    aria-controls="inpanel-panel-lab"
+                    aria-selected={mainPanel === 'bots'}
+                    aria-controls="inpanel-panel-bots"
                     className={
-                      mainPanel === 'research'
-                        ? 'select-research__inpanel-tab select-research__inpanel-tab--lab select-research__inpanel-tab--on'
-                        : 'select-research__inpanel-tab select-research__inpanel-tab--lab'
+                      mainPanel === 'bots'
+                        ? 'select-research__inpanel-tab select-research__inpanel-tab--bots select-research__inpanel-tab--on'
+                        : 'select-research__inpanel-tab select-research__inpanel-tab--bots'
                     }
-                    onClick={() => setMainPanel('research')}
+                    onClick={() => setMainPanel('bots')}
                   >
-                    {t('app_nav_research')}
+                    {t('app_nav_bots')}
                   </button>
                   <button
                     id="inpanel-tab-themes"
@@ -234,6 +250,7 @@ export default function App() {
                     role="tab"
                     aria-selected={mainPanel === 'toolsSettings'}
                     aria-controls="inpanel-panel-tools-settings"
+                    aria-label={t('app_nav_tools_settings')}
                     className={
                       mainPanel === 'toolsSettings'
                         ? 'select-research__inpanel-tab select-research__inpanel-tab--tools-settings select-research__inpanel-tab--on'
@@ -241,7 +258,10 @@ export default function App() {
                     }
                     onClick={() => setMainPanel('toolsSettings')}
                   >
-                    {t('app_nav_tools_settings')}
+                    <span className="select-research__inpanel-tab-lines" aria-hidden>
+                      <span>{t('app_nav_tools')}</span>
+                      <span>{t('app_nav_settings')}</span>
+                    </span>
                   </button>
                 </nav>
 
@@ -263,6 +283,7 @@ export default function App() {
                   className="select-research__inpanel-workshop-toolbar-slot"
                   hidden={
                     mainPanel !== 'workshop' &&
+                    mainPanel !== 'bots' &&
                     mainPanel !== 'cards' &&
                     mainPanel !== 'relics' &&
                     mainPanel !== 'modules' &&
@@ -305,6 +326,21 @@ export default function App() {
                     onWorkshopPersistedChange={setWorkshopPersisted}
                     researchData={data}
                     labLevelOverrides={labLevelOverrides}
+                  />
+                </div>
+                <div
+                  id="inpanel-panel-bots"
+                  role="tabpanel"
+                  aria-labelledby="inpanel-tab-bots"
+                  hidden={mainPanel !== 'bots'}
+                >
+                  <BotsPage
+                    embeddedInPanel
+                    toolbarMount={
+                      mainPanel === 'bots' ? inpanelWorkshopToolbarMount : null
+                    }
+                    workshopPersisted={workshopPersisted}
+                    onWorkshopPersistedChange={setWorkshopPersisted}
                   />
                 </div>
                 <div

@@ -8,7 +8,9 @@ import {
   resetWorkshopRelics,
   resetWorkshopUltimates,
   resetWorkshopUpgradeLevels,
+  sanitizeWorkshopPersisted,
 } from './labPresetsStorage'
+import { workshopBotStatDisplay } from './data/workshopBots'
 
 describe('parseLabPresetsFile', () => {
   it('accepts a valid v1 file', () => {
@@ -164,5 +166,15 @@ describe('buildLabPresetsPayload', () => {
     const p = buildLabPresetsPayload(null, [], { '1-1': 3 }, {}, def, def)
     expect(p.scratchOverrides).toEqual({ '1-1': 3 })
     expect(p.scratchWorkshop).toEqual(def)
+  })
+})
+
+describe('sanitizeWorkshopPersisted', () => {
+  it('fills missing bot levels and legacy workshop category', () => {
+    const ws = sanitizeWorkshopPersisted({ category: 'bots', hideMaxed: true })
+    expect(ws.category).toBe('attack')
+    expect(ws.hideMaxed).toBe(true)
+    expect(ws.flameBotDamageLevel).toBe(0)
+    expect(() => workshopBotStatDisplay('flameBotDamageLevel', ws.flameBotDamageLevel)).not.toThrow()
   })
 })
