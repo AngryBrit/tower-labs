@@ -1238,7 +1238,7 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
       expect(researchTimeForNextUpgrade(attack!, 99, max)).toBe('107d 23h 53m')
     })
 
-    it('Dissonant Echo - Attack wiki Value (0.50%/level), ladder, and year-style research times', () => {
+    it('Dissonant Echo - Attack wiki Value (0.50%×(level+1)), ladder, and year-style research times', () => {
       const lab = main.items.find((i) => i.name === 'Dissonant Echo - Attack')
       expect(lab).toBeDefined()
       const max = lab!.maxLevel ?? 20
@@ -1249,11 +1249,15 @@ describe('benefitLineWithNextUpgrade (research-card__benefit)', () => {
         readFileSync(join(srcDir, 'data/tower-labs.json'), 'utf-8'),
       ) as Record<string, Record<string, { COST: number; DURATION: number }>>
       const attack = towerLabs['Dissonant Echo - Attack']
-      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.00%')
-      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.00% » 0.50%')
-      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe('2.00% » 2.50%')
-      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('9.50% » 10.00%')
-      expect(benefitDisplayForCard(lab!, 20, max)).toBe('10.00%')
+      expect(benefitDisplayForCard(lab!, 0, max)).toBe('0.50%')
+      expect(benefitDisplayForCard(lab!, 1, max)).toBe('1.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 0, max)).toBe('0.50% » 1.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 1, max)).toBe('1.00% » 1.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 3, max)).toBe('2.00% » 2.50%')
+      expect(benefitLineWithNextUpgrade(lab!, 4, max)).toBe('2.50% » 3.00%')
+      expect(benefitDisplayForCard(lab!, 19, max)).toBe('10.00%')
+      expect(benefitLineWithNextUpgrade(lab!, 19, max)).toBe('10.00% » 10.50%')
+      expect(benefitDisplayForCard(lab!, 20, max)).toBe('10.50%')
       expect(toolkitMarginalCoinCost('Dissonant Echo - Attack', 0)).toBe(
         attack['1'].COST,
       )

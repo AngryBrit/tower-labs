@@ -1500,7 +1500,7 @@ const ENHANCEMENT_COIN_DISCOUNT_LABS = new Set([
 
 /**
  * Dissonant Echo — one lab per category (Attack / Defense / Utility / Ultimate Weapons).
- * In-game **Value** is echo chance: **0.50% × lab level** (Lv.0→0.00%, Lv.1→0.50%, Lv.20→10.00%).
+ * In-game **Value** is echo chance: **0.50% × (lab level + 1)** (Lv.0→0.50%, Lv.1→1.00%, Lv.20→10.50%; wiki table Level 1…20).
  * Wiki cost table rows 1–20 match toolkit marginal levels (see `scripts/gen-dissonant-echo-labs.mjs`).
  * Wiki per-tier echo boost scales as `(Dissonance Boost − 1) × lab percentage` (additive across tiers).
  */
@@ -1564,7 +1564,7 @@ export function enhancementCoinDiscountValuePercentDisplay(
 }
 
 /**
- * Dissonant Echo labs — **0.50%** per level from Lv.1 (Lv.20→10.00% max).
+ * Dissonant Echo labs — wiki **Value** = **0.50% × (lab level + 1)** (Lv.1→1.00% … Lv.20→10.50%).
  * Marginal **Time** / **Coins** (cost **×2.25** per level from **1 q**) live in `tower-labs.json`
  * (see `scripts/gen-dissonant-echo-labs.mjs`).
  */
@@ -1572,12 +1572,20 @@ export function dissonantEchoBoostChancePercentDisplay(
   effectiveLevel: number,
   maxLevelCap: number,
 ): string {
+  const v = dissonantEchoBoostChancePercentValue(effectiveLevel, maxLevelCap)
+  return `${v.toFixed(2)}%`
+}
+
+/** Echo chance % at simulator lab level (matches wiki table Level = effectiveLevel). */
+export function dissonantEchoBoostChancePercentValue(
+  effectiveLevel: number,
+  maxLevelCap: number,
+): number {
   const capped =
     maxLevelCap > 0
       ? Math.min(Math.max(0, effectiveLevel), maxLevelCap)
       : Math.max(0, effectiveLevel)
-  const v = 0.5 * capped
-  return `${v.toFixed(2)}%`
+  return 0.5 * (capped + 1)
 }
 
 const TIER_BENEFIT_RE = /^T(\d+)\s+(\d+)$/
@@ -2082,7 +2090,6 @@ export function benefitLineWithNextUpgrade(
   if (item.name === 'Spotlight Missiles' && effectiveLevel <= 0) {
     return benefitDisplayForCard(item, effectiveLevel, maxLevelCap)
   }
-
   const current = benefitDisplayForCard(item, effectiveLevel, maxLevelCap)
 
   if (maxLevelCap <= 0) {

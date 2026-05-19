@@ -8,14 +8,14 @@
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.7.0-2ea44f)
+![Version](https://img.shields.io/badge/version-2.7.1-2ea44f)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7c57c118-c5d2-4b8c-a8db-3cd2eb32a4de/deploy-status)](https://app.netlify.com/projects/towerlabs/deploys)
 
 ---
 
 ## Features
 
-- **Research browser** — Loads [`public/research/manifest.json`](public/research/manifest.json) and every section file it lists (main, attack, defense, utility, ultimate weapon, cards, perks, bots, enemies, modules, card mastery, battle conditions). Cards show costs and benefits where data allows.
+- **Research browser** — Loads [`public/research/manifest.json`](public/research/manifest.json) and every section file it lists (main, attack, defense, utility, ultimate weapon, cards, perks, bots, enemies, modules, card mastery, battle conditions). Cards show costs and benefits where data allows (e.g. **Dissonant Echo** labs: wiki **Value** = **0.50% × (level + 1)**, Lv.0→0.50% … Lv.20→10.50%).
 - **Lab economics** — Upgrade costs and build times from [`src/data/tower-labs.json`](src/data/tower-labs.json), aligned with the in-game lab grid.
 - **Lab compare** — Side-by-side comparison, budget-style rollups, named presets (stored locally), and safe handling of pasted or imported level payloads.
 - **Workshop** — Top-level **Workshop**, **Modules**, and **Cards** areas model in-game upgrade and enhance ladders (attack, defense, utility, ultimate weapons), with coin costs, marginal spend, and category budgets (coins on attack/defense/utility; **power stones** on the ultimate tab, including Plus tracks). The **Enhance** tab is locked until **Workshop Enhancements** is researched in Main Research; then attack, defense, and utility enhancements use wiki coin-spend unlock gates, tier ladders, recovery package, orb size, and related utility curves. **Ultimate weapon** basic upgrades (power stones) for all nine weapons follow wiki milestone tables in [`workshopUltimateData.ts`](src/data/workshopUltimateData.ts) (source: [`scripts/gen-workshop-ultimate-data.mjs`](scripts/gen-workshop-ultimate-data.mjs); Vitest locks per-weapon stone totals). **Ultimate Weapon Plus** adds nine wiki secondary abilities (Smite, Cover Fire, Death Creep, …) with ordered unlock costs and per-ability upgrade tracks on each weapon card ([`workshopUltimatePlusData.ts`](src/data/workshopUltimatePlusData.ts), [`workshopUltimatePlus.ts`](src/data/workshopUltimatePlus.ts)).
