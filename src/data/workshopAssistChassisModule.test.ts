@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { defaultWorkshopPersisted } from '../labPresetsStorage'
+import { defaultWorkshopPersisted, type WorkshopPersistedV1 } from '../labPresetsStorage'
 import {
   assistModuleConflictsWithMain,
   mainModuleConflictsWithAssist,
   sanitizeAssistModuleIdAgainstMain,
   clampAssistStoneEfficiency,
   workshopAssistChassisModuleSelection,
-  type WorkshopAssistChassisPersisted,
 } from './workshopAssistChassisModule'
 
 describe('workshopAssistChassisModule', () => {
@@ -29,7 +28,7 @@ describe('workshopAssistChassisModule', () => {
       simCannonAssistSubStoneEfficiency: _s,
       ...rest
     } = defaultWorkshopPersisted()
-    const ws = { ...rest, simCannonAssistStoneEfficiency: 12 } as unknown as WorkshopAssistChassisPersisted
+    const ws = { ...rest, simCannonAssistStoneEfficiency: 12 } as WorkshopPersistedV1
     expect(workshopAssistChassisModuleSelection(ws, 'cannon')).toMatchObject({
       mainStoneEfficiency: 12,
       subStoneEfficiency: 12,
@@ -37,7 +36,7 @@ describe('workshopAssistChassisModule', () => {
   })
 
   it('mainModuleConflictsWithAssist mirrors assist vs main id check', () => {
-    const ws = {
+    const ws: WorkshopPersistedV1 = {
       ...defaultWorkshopPersisted(),
       simCannonChassisModuleId: 'deathPenalty',
       simCannonAssistChassisModuleId: 'astralDeliverance',
@@ -47,7 +46,7 @@ describe('workshopAssistChassisModule', () => {
   })
 
   it('sanitizeAssistModuleIdAgainstMain drops assist when same as main', () => {
-    const ws = {
+    const ws: WorkshopPersistedV1 = {
       ...defaultWorkshopPersisted(),
       simCannonChassisModuleId: 'deathPenalty',
       simCannonAssistChassisModuleId: 'deathPenalty',
@@ -59,7 +58,7 @@ describe('workshopAssistChassisModule', () => {
   })
 
   it('detects duplicate main/assist module names', () => {
-    const ws = {
+    const ws: WorkshopPersistedV1 = {
       ...defaultWorkshopPersisted(),
       simCannonChassisModuleId: 'deathPenalty',
       simCannonAssistChassisModuleId: 'astralDeliverance',
@@ -69,7 +68,7 @@ describe('workshopAssistChassisModule', () => {
   })
 
   it('keeps unique rarity separate from equipped module tier', () => {
-    const ws = {
+    const ws: WorkshopPersistedV1 = {
       ...defaultWorkshopPersisted(),
       simCannonAssistChassisModuleRarity: 'legendary',
       simCannonAssistUniqueRarity: 'mythic',

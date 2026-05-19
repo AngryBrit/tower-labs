@@ -8,6 +8,7 @@ import {
   sanitizeChassisModuleRarity,
   workshopChassisModuleDefForSlot,
   workshopChassisModuleSelection,
+  type WorkshopChassisModulePersisted,
   type WorkshopChassisModuleSelection,
 } from './workshopChassisModuleSelection'
 import type { WorkshopAssistModuleSlot } from './workshopSimModules'
@@ -82,6 +83,10 @@ export type WorkshopAssistChassisPersisted = {
   [K in (typeof ASSIST_SUB_STONE_EFFICIENCY_KEY)[WorkshopAssistModuleSlot]]: number
 }
 
+/** Assist fields plus main chassis module ids (for duplicate-name checks). */
+export type WorkshopAssistChassisModulePersisted = WorkshopAssistChassisPersisted &
+  WorkshopChassisModulePersisted
+
 export function clampAssistStoneEfficiency(n: number): number {
   if (!Number.isFinite(n)) return ASSIST_STONE_EFFICIENCY_DEFAULT
   return Math.max(0, Math.min(ASSIST_STONE_EFFICIENCY_MAX, Math.trunc(n)))
@@ -121,7 +126,7 @@ export function assistUniqueRarityFromPersisted(
 }
 
 export function workshopAssistChassisModuleSelection(
-  ws: WorkshopAssistChassisPersisted,
+  ws: WorkshopAssistChassisModulePersisted,
   slot: WorkshopAssistModuleSlot,
 ): WorkshopChassisModuleSelection & {
   unlocked: boolean
@@ -155,7 +160,7 @@ export function workshopAssistChassisModuleSelection(
 
 /** True when assist cannot share the same module id as the main chassis module on this slot. */
 export function sanitizeAssistModuleIdAgainstMain(
-  ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
+  ws: WorkshopAssistChassisModulePersisted,
   slot: WorkshopAssistModuleSlot,
   assistModuleId: string | null,
 ): string | null {
@@ -166,7 +171,7 @@ export function sanitizeAssistModuleIdAgainstMain(
 
 export function assistModuleConflictsWithMain(
   slot: WorkshopAssistModuleSlot,
-  ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
+  ws: WorkshopAssistChassisModulePersisted,
   assistModuleId: string,
 ): boolean {
   if (assistModuleId === '') return false
@@ -177,7 +182,7 @@ export function assistModuleConflictsWithMain(
 /** True when main selection would duplicate the equipped assist module on this slot. */
 export function mainModuleConflictsWithAssist(
   slot: WorkshopAssistModuleSlot,
-  ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
+  ws: WorkshopAssistChassisModulePersisted,
   mainModuleId: string,
 ): boolean {
   if (mainModuleId === '') return false
