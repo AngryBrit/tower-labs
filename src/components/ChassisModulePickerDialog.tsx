@@ -7,6 +7,7 @@ import {
 import {
   clampWorkshopChassisModuleLevel,
   formatWorkshopChassisModuleAbility,
+  formatWorkshopChassisModuleValue,
   WORKSHOP_CHASSIS_MODULE_RARITIES,
   WORKSHOP_CHASSIS_MODULE_RARITY_CLASS,
   workshopChassisModuleMaxLevel,
@@ -64,6 +65,8 @@ const SUB_RARITY_LABEL: Record<WorkshopSubmoduleRarity, StringId> = {
 type ChassisModulePickerDialogProps = {
   slot: WorkshopAssistModuleSlot
   pickerRole?: 'main' | 'assist'
+  /** Assist unique-effect tier (unlock panel); defaults to selected module tier for main. */
+  uniqueEffectRarity?: WorkshopChassisModuleRarity
   excludeModuleIds?: readonly string[]
   selectedModuleId: string | null
   selectedRarity: WorkshopChassisModuleRarity
@@ -83,6 +86,35 @@ type ChassisModulePickerDialogProps = {
 
 const ABILITY_VALUE_HIGHLIGHT =
   /^(\d+(?:\.\d+)?(?:s|%|x|m)|×\d+(?:\.\d+)?|\+\d+(?:\.\d+)?m)$/i
+
+const SUFFIX_VALUE_PATTERN = String.raw`\d+(?:\.\d+)?(?:s|%|x|m)`
+const TIMES_VALUE_PATTERN = String.raw`×\d+(?:\.\d+)?`
+const METERS_VALUE_PATTERN = String.raw`\+\d+(?:\.\d+)?m`
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export function splitModuleAbilityUniqueParts(
+  text: string,
+  highlightTokens: readonly string[] = [],
+): string[] {
+  const tokens = [...new Set(highlightTokens.filter((token) => token !== ''))].sort(
+    (a, b) => b.length - a.length,
+  )
+  const patterns = [SUFFIX_VALUE_PATTERN, TIMES_VALUE_PATTERN, METERS_VALUE_PATTERN, ...tokens.map(escapeRegExp)]
+  return text.split(new RegExp(`(${patterns.join('|')})`, 'gi'))
+}
+
+export function shouldHighlightModuleAbilityPart(
+  part: string,
+  highlightTokens: readonly string[],
+): boolean {
+  if (highlightTokens.some((token) => token !== '' && part.toLowerCase() === token.toLowerCase())) {
+    return true
+  }
+  return ABILITY_VALUE_HIGHLIGHT.test(part)
+}
 
 function PickerModuleLevelInput({
   slot,
@@ -144,13 +176,19 @@ function PickerModuleLevelInput({
   )
 }
 
-function ModuleAbilityUniqueText({ text }: { text: string }) {
-  const parts = text.split(/(\d+(?:\.\d+)?(?:s|%|x|m)|×\d+(?:\.\d+)?|\+\d+(?:\.\d+)?m)/gi)
+function ModuleAbilityUniqueText({
+  text,
+  highlightTokens = [],
+}: {
+  text: string
+  highlightTokens?: readonly string[]
+}) {
+  const parts = splitModuleAbilityUniqueParts(text, highlightTokens)
   return (
     <>
       {parts.map((part, index) => {
         if (part === '') return null
-        if (ABILITY_VALUE_HIGHLIGHT.test(part)) {
+        if (shouldHighlightModuleAbilityPart(part, highlightTokens)) {
           return (
             <span key={index} className="modules-picker__unique-highlight">
               {part}
@@ -188,6 +226,7 @@ function selectedSubmoduleEntries(
 export function ChassisModulePickerDialog({
   slot,
   pickerRole = 'main',
+  uniqueEffectRarity,
   excludeModuleIds = [],
   selectedModuleId,
   selectedRarity,
@@ -211,6 +250,7 @@ export function ChassisModulePickerDialog({
   const section = WORKSHOP_SUBMODULE_SECTIONS[slot]
   const equipped =
     pickerModuleId != null ? workshopChassisModuleDefForSlot(slot, pickerModuleId) : null
+  const uniqueRarity = uniqueEffectRarity ?? pickerRarity
   const iconUrl =
     pickerModuleId != null && workshopChassisModuleHasDedicatedArt(slot, pickerModuleId)
       ? workshopChassisModuleDedicatedImageUrl(slot, pickerModuleId)
@@ -509,9 +549,19 @@ export function ChassisModulePickerDialog({
             </h3>
             <p className="modules-picker__unique">
               <ModuleAbilityUniqueText
-                text={formatWorkshopChassisModuleAbility(equipped, pickerRarity)}
+                text={formatWorkshopChassisModuleAbility(equipped, uniqueRarity)}
+                highlightTokens={[
+                  formatWorkshopChassisModuleValue(equipped.kind, equipped.values[uniqueRarity]),
+                ]}
               />
             </p>
+            {pickerRole === 'assist' && uniqueRarity !== pickerRarity ? (
+              <p className="modules-picker__hero-equipped">
+                {t('ws_modules_picker_assist_unique_tier')
+                  .replace('{{unique}}', t(RARITY_LABEL[uniqueRarity]))
+                  .replace('{{module}}', t(RARITY_LABEL[pickerRarity]))}
+              </p>
+            ) : null}
           </section>
         ) : null}
 

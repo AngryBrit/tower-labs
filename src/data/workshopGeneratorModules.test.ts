@@ -27,7 +27,12 @@ describe('workshopGeneratorModules', () => {
     expect(formatWorkshopGeneratorModuleAbility('singularityHarness', 'epic')).toContain('+5m')
     expect(formatWorkshopGeneratorModuleAbility('galaxyCompressor', 'mythic')).toContain('17s')
     expect(formatWorkshopGeneratorModuleAbility('restorativeBonus', 'epic')).toContain('for 15s')
-    expect(formatWorkshopGeneratorModuleAbility('blackHoleDigestor', 'legendary')).toContain('5%')
+    expect(formatWorkshopGeneratorModuleAbility('blackHoleDigestor', 'legendary')).toContain('get 5% extra')
+    expect(formatWorkshopGeneratorModuleAbility('blackHoleDigestor', 'ancestral')).not.toContain('%%')
+    expect(formatWorkshopGeneratorModuleAbility('projectFunding', 'epic')).toContain('multiplied by 12.5%')
+    expect(formatWorkshopGeneratorModuleAbility('projectFunding', 'epic')).not.toContain('%%')
+    expect(formatWorkshopGeneratorModuleAbility('pulsarHarvester', 'epic')).toContain('1% chance')
+    expect(formatWorkshopGeneratorModuleAbility('pulsarHarvester', 'epic')).not.toContain('%%')
   })
 
   it('formats meter tier cells with m suffix', () => {

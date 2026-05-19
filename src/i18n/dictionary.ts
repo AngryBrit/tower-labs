@@ -451,6 +451,8 @@ export const STRINGS_EN = {
   ws_modules_picker_equipped: 'Equipped',
   ws_modules_picker_equipped_primary: 'Primary',
   ws_modules_picker_equipped_assist: 'Assist',
+  ws_modules_picker_assist_unique_tier:
+    'Unique effect: {{unique}} tier (module at {{module}}; raise Unique effect boost in Assist unlocks).',
   ws_modules_picker_module_aria: 'Chassis module',
   ws_modules_picker_effects: 'Effects',
   ws_modules_picker_options: 'Options',

@@ -26,9 +26,17 @@ describe('workshopCoreModules', () => {
   })
 
   it('fills [x] in ability descriptions', () => {
-    expect(formatWorkshopCoreModuleAbility('omChip', 'epic')).toContain('×2')
+    expect(formatWorkshopCoreModuleAbility('omChip', 'epic')).toContain('increasing by ×2')
+    expect(formatWorkshopCoreModuleAbility('omChip', 'ancestral')).not.toContain('××')
     expect(formatWorkshopCoreModuleAbility('multiverseNexus', 'epic')).toContain('20')
-    expect(formatWorkshopCoreModuleAbility('primordialCollapse', 'ancestral')).toContain('80%')
+    expect(formatWorkshopCoreModuleAbility('harmonyConductor', 'ancestral')).toContain(
+      '30% chance',
+    )
+    expect(formatWorkshopCoreModuleAbility('harmonyConductor', 'ancestral')).not.toContain('%%')
+    expect(formatWorkshopCoreModuleAbility('primordialCollapse', 'ancestral')).toContain(
+      'decreased by 80%',
+    )
+    expect(formatWorkshopCoreModuleAbility('primordialCollapse', 'ancestral')).not.toContain('%%')
   })
 
   it('includes Dimension Core wiki notes', () => {

@@ -31,5 +31,7 @@ describe('workshopCannonModules', () => {
       'Chance of 8%',
     )
     expect(formatWorkshopCannonModuleAbility('amplifyingStrike', 'epic')).toContain('for 5s')
+    expect(formatWorkshopCannonModuleAbility('havocBringer', 'ancestral')).toContain('20% chance')
+    expect(formatWorkshopCannonModuleAbility('havocBringer', 'ancestral')).not.toContain('%%')
   })
 })

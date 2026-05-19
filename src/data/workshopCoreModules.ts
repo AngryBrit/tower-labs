@@ -26,13 +26,13 @@ export const WORKSHOP_CORE_MODULES: Record<WorkshopCoreModuleId, WorkshopCoreMod
   omChip: {
     name: 'Om Chip',
     description:
-      'Spotlight will rotate to focus a boss. Bosses reflect the light around it to nearby enemies, increasing by ×[x] the damage they receive.',
+      'Spotlight will rotate to focus a boss. Bosses reflect the light around it to nearby enemies, increasing by [x] the damage they receive.',
     kind: 'mult',
     values: { epic: 2, legendary: 4, mythic: 7, ancestral: 15 },
   },
   harmonyConductor: {
     name: 'Harmony Conductor',
-    description: '[x]% chance of poisoned enemies to miss-attack (bosses chance is halved).',
+    description: '[x] chance of poisoned enemies to miss-attack (bosses chance is halved).',
     kind: 'percent',
     values: { epic: 15, legendary: 20, mythic: 25, ancestral: 30 },
   },
@@ -60,7 +60,7 @@ export const WORKSHOP_CORE_MODULES: Record<WorkshopCoreModuleId, WorkshopCoreMod
   primordialCollapse: {
     name: 'Primordial Collapse',
     description:
-      'Spawns one additional Black Hole. Damage from enemies within a Black Hole is decreased by [x]%',
+      'Spawns one additional Black Hole. Damage from enemies within a Black Hole is decreased by [x]',
     kind: 'percent',
     values: { epic: 50, legendary: 55, mythic: 65, ancestral: 80 },
   },

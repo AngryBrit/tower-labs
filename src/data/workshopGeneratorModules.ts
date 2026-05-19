@@ -43,21 +43,21 @@ export const WORKSHOP_GENERATOR_MODULES: Record<
   pulsarHarvester: {
     name: 'Pulsar Harvester',
     description:
-      "Each time a projectile hits an enemy, there is a [x]% chance that it will reduce the enemy's Health and Attack level by 1 (diminishing returns after 100 reductions)",
+      "Each time a projectile hits an enemy, there is a [x] chance that it will reduce the enemy's Health and Attack level by 1 (diminishing returns after 100 reductions)",
     kind: 'percent',
     values: { epic: 1.0, legendary: 1.5, mythic: 2.0, ancestral: 2.5 },
   },
   blackHoleDigestor: {
     name: 'Black Hole Digestor',
     description:
-      'Temporarily get [x]% extra Coins/ Kill Bonus for each free upgrade you got on the current wave. Free Upgrades can not increase Tower Range.',
+      'Temporarily get [x] extra Coins/ Kill Bonus for each free upgrade you got on the current wave. Free Upgrades can not increase Tower Range.',
     kind: 'percent',
     values: { epic: 3, legendary: 5, mythic: 7, ancestral: 10 },
   },
   projectFunding: {
     name: 'Project Funding',
     description:
-      'Tower damage is multiplied by [x]% of the number of digits in your current cash',
+      'Tower damage is multiplied by [x] of the number of digits in your current cash',
     kind: 'percent',
     values: { epic: 12.5, legendary: 25, mythic: 50, ancestral: 100 },
   },

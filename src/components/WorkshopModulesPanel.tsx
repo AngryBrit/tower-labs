@@ -316,7 +316,7 @@ function ModulesLabDetail({
             'workshop__card--active',
             'workshop__card--sim',
             'workshop__card--sim-wide',
-            WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.rarity],
+            WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.uniqueRarity],
           ].join(' ')}
         >
           <div className="workshop__card-damage-head">
@@ -324,11 +324,16 @@ function ModulesLabDetail({
               {t('ws_modules_assist_label')}: {assistEquipped.name}
             </span>
             <span className="workshop__card-value">
+              {formatWorkshopChassisModuleValue(
+                assistEquipped.kind,
+                assistEquipped.values[assist.uniqueRarity],
+              )}
+              {' · '}
               {assist.mainStoneEfficiency}% / {assist.subStoneEfficiency}%
             </span>
           </div>
           <p className="workshop__sim-foot">
-            {formatWorkshopChassisModuleAbility(assistEquipped, assist.rarity)}
+            {formatWorkshopChassisModuleAbility(assistEquipped, assist.uniqueRarity)}
           </p>
           <p className="workshop__sim-foot">{t('ws_modules_assist_efficiency_hint')}</p>
         </li>
@@ -773,6 +778,12 @@ export function WorkshopModulesPanel({
             pickerTarget.role === 'main'
               ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).rarity
               : workshopAssistChassisModuleSelection(workshopPersisted, pickerTarget.slot).rarity
+          }
+          uniqueEffectRarity={
+            pickerTarget.role === 'assist'
+              ? workshopAssistChassisModuleSelection(workshopPersisted, pickerTarget.slot)
+                  .uniqueRarity
+              : undefined
           }
           moduleLevel={workshopAssistModuleLevel(workshopPersisted, pickerTarget.slot)}
           onModuleLevelCommit={(next) => setModuleLevel(pickerTarget.slot, next)}

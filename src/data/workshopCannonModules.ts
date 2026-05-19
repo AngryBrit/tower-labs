@@ -32,7 +32,7 @@ export const WORKSHOP_CANNON_MODULES: Record<WorkshopCannonModuleId, WorkshopCan
   astralDeliverance: {
     name: 'Astral Deliverance',
     description:
-      "Bounce shot's range is increased by 3% of the tower's total range. Each bounce increases the projectile's damage by [x]%",
+      "Bounce shot's range is increased by 3% of the tower's total range. Each bounce increases the projectile's damage by [x]",
     kind: 'percent',
     values: { epic: 20, legendary: 40, mythic: 60, ancestral: 80 },
   },
@@ -46,20 +46,20 @@ export const WORKSHOP_CANNON_MODULES: Record<WorkshopCannonModuleId, WorkshopCan
   deathPenalty: {
     name: 'Death Penalty',
     description:
-      'Chance of [x]% to mark an enemy for death when it spawns, causing the first hit to destroy it.',
+      'Chance of [x] to mark an enemy for death when it spawns, causing the first hit to destroy it.',
     kind: 'percent',
     values: { epic: 5, legendary: 8, mythic: 11, ancestral: 15 },
   },
   havocBringer: {
     name: 'Havoc Bringer',
-    description: '[x]% chance for rend armor to instantly go to max.',
+    description: '[x] chance for rend armor to instantly go to max.',
     kind: 'percent',
     values: { epic: 10, legendary: 13, mythic: 15, ancestral: 20 },
   },
   shrinkRay: {
     name: 'Shrink Ray',
     description:
-      "Attacks have a 1% chance to apply a non-stacking effect that decreases the enemy's mass by [x]%",
+      "Attacks have a 1% chance to apply a non-stacking effect that decreases the enemy's mass by [x]",
     kind: 'percent',
     values: { epic: 10, legendary: 20, mythic: 30, ancestral: 40 },
   },

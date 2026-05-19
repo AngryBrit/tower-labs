@@ -441,6 +441,8 @@ export const STRINGS_DE = {
   ws_modules_picker_equipped: 'Ausgerüstet',
   ws_modules_picker_equipped_primary: 'Primär',
   ws_modules_picker_equipped_assist: 'Assist',
+  ws_modules_picker_assist_unique_tier:
+    'Unique-Effekt: {{unique}} (Modul {{module}}; „Unique-Effekt-Boost“ unter Assist-Freischaltungen).',
   ws_modules_picker_module_aria: 'Chassis-Modul',
   ws_modules_picker_effects: 'Effekte',
   ws_modules_picker_options: 'Optionen',

@@ -451,6 +451,8 @@ export const STRINGS_ES = {
   ws_modules_picker_equipped: 'Equipado',
   ws_modules_picker_equipped_primary: 'Principal',
   ws_modules_picker_equipped_assist: 'Apoyo',
+  ws_modules_picker_assist_unique_tier:
+    'Efecto único: {{unique}} (módulo {{module}}; sube «Mejora de efecto único» en desbloqueos de apoyo).',
   ws_modules_picker_module_aria: 'Módulo de chasis',
   ws_modules_picker_effects: 'Efectos',
   ws_modules_picker_options: 'Opciones',

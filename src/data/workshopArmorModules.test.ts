@@ -29,8 +29,10 @@ describe('workshopArmorModules', () => {
     expect(formatWorkshopArmorModuleAbility('antiCubePortal', 'epic')).toContain('10x damage')
     expect(formatWorkshopArmorModuleAbility('sharpFortitude', 'legendary')).toContain('×1.5')
     expect(formatWorkshopArmorModuleAbility('negativeMassProjector', 'ancestral')).toContain(
-      '2.5%',
+      'by 2.5% per hit',
     )
+    expect(formatWorkshopArmorModuleAbility('spaceDisplacer', 'epic')).toContain('15% chance')
+    expect(formatWorkshopArmorModuleAbility('spaceDisplacer', 'epic')).not.toContain('%%')
   })
 
   it('includes wiki notes', () => {
