@@ -113,18 +113,20 @@ function ModuleLevelDisplay({ value }: { value: number }) {
 
 function AssistStoneEfficiencyDisplay({
   slot,
-  value,
+  main,
+  sub,
 }: {
   slot: WorkshopAssistModuleSlot
-  value: number
+  main: number
+  sub: number
 }) {
   const { t } = useI18n()
   return (
     <span
       className="modules-slot__efficiency modules-slot__efficiency--display"
-      aria-label={`${t('ws_modules_assist_stone_efficiency')} ${t(SLOT_LABEL[slot])}: ${value}%`}
+      aria-label={`${t('ws_modules_assist_stone_efficiency')} ${t(SLOT_LABEL[slot])}: ${main}% / ${sub}%`}
     >
-      {t('ws_modules_assist_efficiency_prefix')} {value}%
+      {t('ws_modules_assist_efficiency_prefix')} {main}% / {sub}%
     </span>
   )
 }
@@ -541,6 +543,11 @@ export function WorkshopModulesPanel({
                 ? workshopChassisModuleDefForSlot(key, chassis.moduleId).name
                 : t('ws_modules_none_selected')
 
+            const assistEquipped =
+              assistChassis.moduleId != null
+                ? workshopChassisModuleDefForSlot(key, assistChassis.moduleId)
+                : null
+
             const assistCol = (
               <div className="modules-assist-col">
                 <span className="modules-slot__chassis modules-slot__chassis--assist" aria-hidden>
@@ -566,13 +573,23 @@ export function WorkshopModulesPanel({
                       showNameBelow={false}
                     />
                   </button>
-                  {assistChassis.unlocked ? (
-                    <AssistStoneEfficiencyDisplay
-                      slot={key}
-                      value={assistChassis.mainStoneEfficiency}
-                    />
-                  ) : null}
                 </div>
+                {assistChassis.unlocked && assistEquipped != null ? (
+                  <div className="modules-assist-meta">
+                    <div className="modules-assist-meta__copy">
+                      <ModuleSlotMetaBelow
+                        name={assistEquipped.name}
+                        moduleRarity={assistChassis.rarity}
+                        frameRole="assist"
+                      />
+                      <AssistStoneEfficiencyDisplay
+                        slot={key}
+                        main={assistChassis.mainStoneEfficiency}
+                        sub={assistChassis.subStoneEfficiency}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )
 

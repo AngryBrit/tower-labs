@@ -1,4 +1,4 @@
-import { useCallback, type CSSProperties } from 'react'
+import { useCallback } from 'react'
 import {
   ASSIST_CHASSIS_MODULE_RARITY_KEY,
   ASSIST_CHASSIS_UNLOCKED_KEY,
@@ -44,14 +44,20 @@ const RARITY_LABEL: Record<WorkshopChassisModuleRarity, StringId> = {
   ancestral: 'ws_modules_col_ancestral',
 }
 
-function AssistSlotIcon({ slot }: { slot: WorkshopAssistModuleSlot }) {
+function AssistSlotIcon({
+  slot,
+  rarityClass,
+}: {
+  slot: WorkshopAssistModuleSlot
+  /** Same class as the Unique column value (`modules-rarity--*`). */
+  rarityClass?: string
+}) {
   const art = MODULE_HUB_SLOT_ART[slot]
   const frameDef = MODULE_FRAME_SHAPE[art.shape]
   return (
     <svg
-      className="workshop__uw-assist-icon"
+      className={['workshop__uw-assist-icon', rarityClass ?? ''].filter(Boolean).join(' ')}
       viewBox="0 0 100 100"
-      style={{ '--assist-glow-rgb': art.glowRgb } as CSSProperties}
       aria-hidden
     >
       {frameDef.type === 'circle' ? (
@@ -186,6 +192,10 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
     ? null
     : assistStoneEfficiencyMarginalCost(assist.subStoneEfficiency + 1)
 
+  const uniqueRarityClass = assist.unlocked
+    ? WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.rarity]
+    : undefined
+
   return (
     <li
       className={
@@ -207,15 +217,13 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
       </div>
       <div className="workshop__uw-body">
         <div className="workshop__uw-icon-wrap">
-          <AssistSlotIcon slot={slot} />
+          <AssistSlotIcon slot={slot} rarityClass={uniqueRarityClass} />
         </div>
         <div className="workshop__uw-stats" role="group" aria-label={title}>
           <AssistUnlockCol
             label={t('ws_assist_unlocks_unique')}
             value={assist.unlocked ? t(RARITY_LABEL[assist.rarity]) : '—'}
-            valueClass={
-              assist.unlocked ? WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.rarity] : undefined
-            }
+            valueClass={uniqueRarityClass}
             nextCost={assist.unlocked ? rarityCost : ASSIST_SLOT_UNLOCK_STONE_COST}
             maxed={assist.unlocked && rarityMaxed}
             active={assist.unlocked}

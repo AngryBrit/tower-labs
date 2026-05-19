@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.2] - 2026-05-19
+
+### Changed
+
+- **Modules hub — assist slots** — When an assist module is equipped, show **Eff. {main}% / {sub}%** under the module name (matches unlock-panel stone efficiency). Hidden when no assist module is selected.
+- **Assist unlock cards** — Slot icon uses the same rarity color class as the Unique column.
+
+### Docs
+
+- README version **2.7.2**.
+
 ## [2.7.1] - 2026-05-19
 
 ### Fixed
