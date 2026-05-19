@@ -17,6 +17,7 @@ import {
   ASSIST_CHASSIS_MODULE_ID_KEY,
   ASSIST_CHASSIS_MODULE_RARITY_KEY,
   assistModuleConflictsWithMain,
+  mainModuleConflictsWithAssist,
   workshopAssistChassisModuleSelection,
 } from '../data/workshopAssistChassisModule'
 import {
@@ -444,7 +445,7 @@ export function WorkshopModulesPanel({
         [CHASSIS_MODULE_ID_KEY[targetSlot]]: moduleId,
         [CHASSIS_MODULE_RARITY_KEY[targetSlot]]: rarity,
       }
-      if (moduleId !== '' && assistModuleConflictsWithMain(targetSlot, workshopPersisted, moduleId)) {
+      if (mainModuleConflictsWithAssist(targetSlot, workshopPersisted, moduleId)) {
         next[ASSIST_CHASSIS_MODULE_ID_KEY[targetSlot]] = ''
       }
       patch(next)
@@ -746,13 +747,23 @@ export function WorkshopModulesPanel({
         <ChassisModulePickerDialog
           slot={pickerTarget.slot}
           pickerRole={pickerTarget.role}
-          excludeModuleIds={
-            pickerTarget.role === 'assist'
-              ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId != null
-                ? [workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId!]
-                : []
-              : []
-          }
+          excludeModuleIds={(() => {
+            const main = workshopChassisModuleSelection(
+              workshopPersisted,
+              pickerTarget.slot,
+            )
+            const assist = workshopAssistChassisModuleSelection(
+              workshopPersisted,
+              pickerTarget.slot,
+            )
+            if (pickerTarget.role === 'assist' && main.moduleId != null) {
+              return [main.moduleId]
+            }
+            if (pickerTarget.role === 'main' && assist.moduleId != null) {
+              return [assist.moduleId]
+            }
+            return []
+          })()}
           selectedModuleId={
             pickerTarget.role === 'main'
               ? workshopChassisModuleSelection(workshopPersisted, pickerTarget.slot).moduleId

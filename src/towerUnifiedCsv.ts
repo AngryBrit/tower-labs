@@ -136,6 +136,10 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'simArmorAssistChassisModuleRarity',
   'simGeneratorAssistChassisModuleRarity',
   'simCoreAssistChassisModuleRarity',
+  'simCannonAssistUniqueRarity',
+  'simArmorAssistUniqueRarity',
+  'simGeneratorAssistUniqueRarity',
+  'simCoreAssistUniqueRarity',
   'simCannonAssistStoneEfficiency',
   'simArmorAssistStoneEfficiency',
   'simGeneratorAssistStoneEfficiency',
@@ -349,7 +353,11 @@ function parseWsRow(wsRaw: Record<string, unknown>, wsKey: keyof WorkshopPersist
     wsKey === 'simCannonAssistChassisModuleRarity' ||
     wsKey === 'simArmorAssistChassisModuleRarity' ||
     wsKey === 'simGeneratorAssistChassisModuleRarity' ||
-    wsKey === 'simCoreAssistChassisModuleRarity'
+    wsKey === 'simCoreAssistChassisModuleRarity' ||
+    wsKey === 'simCannonAssistUniqueRarity' ||
+    wsKey === 'simArmorAssistUniqueRarity' ||
+    wsKey === 'simGeneratorAssistUniqueRarity' ||
+    wsKey === 'simCoreAssistUniqueRarity'
   ) {
     const t = valCell.toLowerCase()
     if (t !== 'epic' && t !== 'legendary' && t !== 'mythic' && t !== 'ancestral') return false

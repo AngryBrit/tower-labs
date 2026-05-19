@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { defaultWorkshopPersisted } from '../labPresetsStorage'
 import {
   assistModuleConflictsWithMain,
+  mainModuleConflictsWithAssist,
+  sanitizeAssistModuleIdAgainstMain,
   clampAssistStoneEfficiency,
   workshopAssistChassisModuleSelection,
   type WorkshopAssistChassisPersisted,
@@ -14,6 +16,7 @@ describe('workshopAssistChassisModule', () => {
       unlocked: true,
       moduleId: null,
       rarity: 'epic',
+      uniqueRarity: 'epic',
       mainStoneEfficiency: 1,
       subStoneEfficiency: 1,
       stoneEfficiency: 1,
@@ -33,6 +36,28 @@ describe('workshopAssistChassisModule', () => {
     })
   })
 
+  it('mainModuleConflictsWithAssist mirrors assist vs main id check', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      simCannonChassisModuleId: 'deathPenalty',
+      simCannonAssistChassisModuleId: 'astralDeliverance',
+    }
+    expect(mainModuleConflictsWithAssist('cannon', ws, 'astralDeliverance')).toBe(true)
+    expect(mainModuleConflictsWithAssist('cannon', ws, 'deathPenalty')).toBe(false)
+  })
+
+  it('sanitizeAssistModuleIdAgainstMain drops assist when same as main', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      simCannonChassisModuleId: 'deathPenalty',
+      simCannonAssistChassisModuleId: 'deathPenalty',
+    }
+    expect(sanitizeAssistModuleIdAgainstMain(ws, 'cannon', 'deathPenalty')).toBeNull()
+    expect(
+      workshopAssistChassisModuleSelection(ws, 'cannon').moduleId,
+    ).toBeNull()
+  })
+
   it('detects duplicate main/assist module names', () => {
     const ws = {
       ...defaultWorkshopPersisted(),
@@ -41,6 +66,18 @@ describe('workshopAssistChassisModule', () => {
     }
     expect(assistModuleConflictsWithMain('cannon', ws, 'deathPenalty')).toBe(true)
     expect(assistModuleConflictsWithMain('cannon', ws, 'astralDeliverance')).toBe(false)
+  })
+
+  it('keeps unique rarity separate from equipped module tier', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      simCannonAssistChassisModuleRarity: 'legendary',
+      simCannonAssistUniqueRarity: 'mythic',
+    }
+    expect(workshopAssistChassisModuleSelection(ws, 'cannon')).toMatchObject({
+      rarity: 'legendary',
+      uniqueRarity: 'mythic',
+    })
   })
 
   it('clamps stone efficiency to 0–70', () => {

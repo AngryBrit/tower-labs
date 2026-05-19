@@ -47,6 +47,10 @@ export type WorkshopModulePresetSnapshot = {
   simArmorAssistChassisModuleRarity: WorkshopChassisModuleRarity
   simGeneratorAssistChassisModuleRarity: WorkshopChassisModuleRarity
   simCoreAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  simCannonAssistUniqueRarity: WorkshopChassisModuleRarity
+  simArmorAssistUniqueRarity: WorkshopChassisModuleRarity
+  simGeneratorAssistUniqueRarity: WorkshopChassisModuleRarity
+  simCoreAssistUniqueRarity: WorkshopChassisModuleRarity
   simCannonAssistStoneEfficiency: number
   simArmorAssistStoneEfficiency: number
   simGeneratorAssistStoneEfficiency: number
@@ -118,6 +122,12 @@ export function defaultWorkshopModulePresetSnapshot(): WorkshopModulePresetSnaps
     simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
       assist.simCoreAssistChassisModuleRarity,
     ),
+    simCannonAssistUniqueRarity: sanitizeChassisModuleRarity(assist.simCannonAssistUniqueRarity),
+    simArmorAssistUniqueRarity: sanitizeChassisModuleRarity(assist.simArmorAssistUniqueRarity),
+    simGeneratorAssistUniqueRarity: sanitizeChassisModuleRarity(
+      assist.simGeneratorAssistUniqueRarity,
+    ),
+    simCoreAssistUniqueRarity: sanitizeChassisModuleRarity(assist.simCoreAssistUniqueRarity),
     simCannonAssistStoneEfficiency: assist.simCannonAssistStoneEfficiency,
     simArmorAssistStoneEfficiency: assist.simArmorAssistStoneEfficiency,
     simGeneratorAssistStoneEfficiency: assist.simGeneratorAssistStoneEfficiency,
@@ -172,6 +182,10 @@ export function extractWorkshopModulePresetSnapshot(
     simArmorAssistChassisModuleRarity: ws.simArmorAssistChassisModuleRarity,
     simGeneratorAssistChassisModuleRarity: ws.simGeneratorAssistChassisModuleRarity,
     simCoreAssistChassisModuleRarity: ws.simCoreAssistChassisModuleRarity,
+    simCannonAssistUniqueRarity: ws.simCannonAssistUniqueRarity,
+    simArmorAssistUniqueRarity: ws.simArmorAssistUniqueRarity,
+    simGeneratorAssistUniqueRarity: ws.simGeneratorAssistUniqueRarity,
+    simCoreAssistUniqueRarity: ws.simCoreAssistUniqueRarity,
     simCannonAssistStoneEfficiency: ws.simCannonAssistStoneEfficiency,
     simArmorAssistStoneEfficiency: ws.simArmorAssistStoneEfficiency,
     simGeneratorAssistStoneEfficiency: ws.simGeneratorAssistStoneEfficiency,
@@ -234,6 +248,12 @@ export function applyWorkshopModulePresetSnapshot(
     simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
       snap.simCoreAssistChassisModuleRarity,
     ),
+    simCannonAssistUniqueRarity: sanitizeChassisModuleRarity(snap.simCannonAssistUniqueRarity),
+    simArmorAssistUniqueRarity: sanitizeChassisModuleRarity(snap.simArmorAssistUniqueRarity),
+    simGeneratorAssistUniqueRarity: sanitizeChassisModuleRarity(
+      snap.simGeneratorAssistUniqueRarity,
+    ),
+    simCoreAssistUniqueRarity: sanitizeChassisModuleRarity(snap.simCoreAssistUniqueRarity),
     simCannonAssistStoneEfficiency: clampAssistStoneEfficiency(snap.simCannonAssistStoneEfficiency),
     simArmorAssistStoneEfficiency: clampAssistStoneEfficiency(snap.simArmorAssistStoneEfficiency),
     simGeneratorAssistStoneEfficiency: clampAssistStoneEfficiency(
@@ -324,6 +344,18 @@ function sanitizeSnapshotFromUnknown(raw: unknown): WorkshopModulePresetSnapshot
     ),
     simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
       o.simCoreAssistChassisModuleRarity,
+    ),
+    simCannonAssistUniqueRarity: sanitizeChassisModuleRarity(
+      o.simCannonAssistUniqueRarity ?? o.simCannonAssistChassisModuleRarity,
+    ),
+    simArmorAssistUniqueRarity: sanitizeChassisModuleRarity(
+      o.simArmorAssistUniqueRarity ?? o.simArmorAssistChassisModuleRarity,
+    ),
+    simGeneratorAssistUniqueRarity: sanitizeChassisModuleRarity(
+      o.simGeneratorAssistUniqueRarity ?? o.simGeneratorAssistChassisModuleRarity,
+    ),
+    simCoreAssistUniqueRarity: sanitizeChassisModuleRarity(
+      o.simCoreAssistUniqueRarity ?? o.simCoreAssistChassisModuleRarity,
     ),
     simCannonAssistStoneEfficiency: clampAssistStoneEfficiency(
       Number(o.simCannonAssistStoneEfficiency),

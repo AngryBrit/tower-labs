@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import {
-  ASSIST_CHASSIS_MODULE_RARITY_KEY,
   ASSIST_CHASSIS_UNLOCKED_KEY,
+  ASSIST_UNIQUE_RARITY_KEY,
   assistStoneEfficiencyPatch,
   workshopAssistChassisModuleSelection,
 } from '../data/workshopAssistChassisModule'
@@ -158,15 +158,15 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
   const { t } = useI18n()
   const assist = workshopAssistChassisModuleSelection(workshop, slot)
   const title = t(SLOT_LABEL[slot])
-  const rarityKey = ASSIST_CHASSIS_MODULE_RARITY_KEY[slot]
+  const uniqueRarityKey = ASSIST_UNIQUE_RARITY_KEY[slot]
   const unlockedKey = ASSIST_CHASSIS_UNLOCKED_KEY[slot]
 
   const setRarity = useCallback(
     (delta: -1 | 1) => {
-      const next = stepAssistUniqueRarity(assist.rarity, delta)
-      onPatch({ [rarityKey]: next })
+      const next = stepAssistUniqueRarity(assist.uniqueRarity, delta)
+      onPatch({ [uniqueRarityKey]: next })
     },
-    [assist.rarity, onPatch, rarityKey],
+    [assist.uniqueRarity, onPatch, uniqueRarityKey],
   )
 
   const setEfficiency = useCallback(
@@ -181,10 +181,10 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
     onPatch({ [unlockedKey]: true })
   }, [onPatch, unlockedKey])
 
-  const rarityMaxed = assist.rarity === 'ancestral'
+  const rarityMaxed = assist.uniqueRarity === 'ancestral'
   const mainMaxed = assist.mainStoneEfficiency >= 70
   const subMaxed = assist.subStoneEfficiency >= 70
-  const rarityCost = assistUniqueRarityUpgradeCost(assist.rarity)
+  const rarityCost = assistUniqueRarityUpgradeCost(assist.uniqueRarity)
   const mainNext = mainMaxed
     ? null
     : assistStoneEfficiencyMarginalCost(assist.mainStoneEfficiency + 1)
@@ -193,7 +193,7 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
     : assistStoneEfficiencyMarginalCost(assist.subStoneEfficiency + 1)
 
   const uniqueRarityClass = assist.unlocked
-    ? WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.rarity]
+    ? WORKSHOP_CHASSIS_MODULE_RARITY_CLASS[assist.uniqueRarity]
     : undefined
 
   return (
@@ -222,12 +222,12 @@ function AssistUnlockCard({ slot, workshop, onPatch }: AssistUnlockCardProps) {
         <div className="workshop__uw-stats" role="group" aria-label={title}>
           <AssistUnlockCol
             label={t('ws_assist_unlocks_unique')}
-            value={assist.unlocked ? t(RARITY_LABEL[assist.rarity]) : '—'}
+            value={assist.unlocked ? t(RARITY_LABEL[assist.uniqueRarity]) : '—'}
             valueClass={uniqueRarityClass}
             nextCost={assist.unlocked ? rarityCost : ASSIST_SLOT_UNLOCK_STONE_COST}
             maxed={assist.unlocked && rarityMaxed}
             active={assist.unlocked}
-            decreaseDisabled={assist.rarity === 'epic'}
+            decreaseDisabled={assist.uniqueRarity === 'epic'}
             increaseDisabled={rarityMaxed}
             onDecrease={() => setRarity(-1)}
             onIncrease={() => (assist.unlocked ? setRarity(1) : unlock())}

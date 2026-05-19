@@ -36,6 +36,14 @@ export const ASSIST_CHASSIS_MODULE_RARITY_KEY = {
   core: 'simCoreAssistChassisModuleRarity',
 } as const
 
+/** Unique-effect tier (unlock panel); separate from equipped module tier on the hub. */
+export const ASSIST_UNIQUE_RARITY_KEY = {
+  cannon: 'simCannonAssistUniqueRarity',
+  armor: 'simArmorAssistUniqueRarity',
+  generator: 'simGeneratorAssistUniqueRarity',
+  core: 'simCoreAssistUniqueRarity',
+} as const
+
 /** @deprecated Legacy single track; migrated to main/sub on read. */
 export const ASSIST_STONE_EFFICIENCY_KEY = {
   cannon: 'simCannonAssistStoneEfficiency',
@@ -64,6 +72,8 @@ export type WorkshopAssistChassisPersisted = {
   [K in (typeof ASSIST_CHASSIS_MODULE_ID_KEY)[WorkshopAssistModuleSlot]]: string
 } & {
   [K in (typeof ASSIST_CHASSIS_MODULE_RARITY_KEY)[WorkshopAssistModuleSlot]]: WorkshopChassisModuleRarity
+} & {
+  [K in (typeof ASSIST_UNIQUE_RARITY_KEY)[WorkshopAssistModuleSlot]]: WorkshopChassisModuleRarity
 } & {
   [K in (typeof ASSIST_STONE_EFFICIENCY_KEY)[WorkshopAssistModuleSlot]]: number
 } & {
@@ -97,11 +107,25 @@ export function assistSubStoneEfficiencyFromPersisted(
   return clampAssistStoneEfficiency(Number(raw))
 }
 
+export function assistUniqueRarityFromPersisted(
+  ws: WorkshopAssistChassisPersisted,
+  slot: WorkshopAssistModuleSlot,
+): WorkshopChassisModuleRarity {
+  const uniqueKey = ASSIST_UNIQUE_RARITY_KEY[slot]
+  const moduleKey = ASSIST_CHASSIS_MODULE_RARITY_KEY[slot]
+  const rawUnique = (ws as Record<string, unknown>)[uniqueKey]
+  if (rawUnique != null) {
+    return sanitizeChassisModuleRarity(rawUnique)
+  }
+  return sanitizeChassisModuleRarity((ws as Record<string, unknown>)[moduleKey])
+}
+
 export function workshopAssistChassisModuleSelection(
   ws: WorkshopAssistChassisPersisted,
   slot: WorkshopAssistModuleSlot,
 ): WorkshopChassisModuleSelection & {
   unlocked: boolean
+  uniqueRarity: WorkshopChassisModuleRarity
   mainStoneEfficiency: number
   subStoneEfficiency: number
   /** @deprecated Use mainStoneEfficiency */
@@ -114,12 +138,30 @@ export function workshopAssistChassisModuleSelection(
   const subStoneEfficiency = assistSubStoneEfficiencyFromPersisted(ws, slot)
   return {
     unlocked,
+    uniqueRarity: assistUniqueRarityFromPersisted(ws, slot),
     mainStoneEfficiency,
     subStoneEfficiency,
     stoneEfficiency: mainStoneEfficiency,
-    moduleId: unlocked ? sanitizeChassisModuleId(slot, ws[idKey]) : null,
+    moduleId: unlocked
+      ? sanitizeAssistModuleIdAgainstMain(
+          ws,
+          slot,
+          sanitizeChassisModuleId(slot, ws[idKey]),
+        )
+      : null,
     rarity: sanitizeChassisModuleRarity(ws[rKey]),
   }
+}
+
+/** True when assist cannot share the same module id as the main chassis module on this slot. */
+export function sanitizeAssistModuleIdAgainstMain(
+  ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
+  slot: WorkshopAssistModuleSlot,
+  assistModuleId: string | null,
+): string | null {
+  if (assistModuleId == null || assistModuleId === '') return assistModuleId
+  if (assistModuleConflictsWithMain(slot, ws, assistModuleId)) return null
+  return assistModuleId
 }
 
 export function assistModuleConflictsWithMain(
@@ -127,8 +169,20 @@ export function assistModuleConflictsWithMain(
   ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
   assistModuleId: string,
 ): boolean {
+  if (assistModuleId === '') return false
   const main = workshopChassisModuleSelection(ws, slot)
   return main.moduleId != null && main.moduleId === assistModuleId
+}
+
+/** True when main selection would duplicate the equipped assist module on this slot. */
+export function mainModuleConflictsWithAssist(
+  slot: WorkshopAssistModuleSlot,
+  ws: WorkshopAssistChassisPersisted & Parameters<typeof workshopChassisModuleSelection>[0],
+  mainModuleId: string,
+): boolean {
+  if (mainModuleId === '') return false
+  const assist = workshopAssistChassisModuleSelection(ws, slot)
+  return assist.unlocked && assist.moduleId != null && assist.moduleId === mainModuleId
 }
 
 export function defaultAssistChassisFields(): WorkshopAssistChassisPersisted {
@@ -145,6 +199,10 @@ export function defaultAssistChassisFields(): WorkshopAssistChassisPersisted {
     simArmorAssistChassisModuleRarity: 'epic',
     simGeneratorAssistChassisModuleRarity: 'epic',
     simCoreAssistChassisModuleRarity: 'epic',
+    simCannonAssistUniqueRarity: 'epic',
+    simArmorAssistUniqueRarity: 'epic',
+    simGeneratorAssistUniqueRarity: 'epic',
+    simCoreAssistUniqueRarity: 'epic',
     simCannonAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simArmorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simGeneratorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,

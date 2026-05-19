@@ -58,6 +58,7 @@ import { sanitizeRelicOwnedIds } from './data/workshopRelics'
 import {
   assistMainStoneEfficiencyFromPersisted,
   assistSubStoneEfficiencyFromPersisted,
+  assistUniqueRarityFromPersisted,
   clampAssistStoneEfficiency,
   type WorkshopAssistChassisPersisted,
 } from './data/workshopAssistChassisModule'
@@ -266,6 +267,10 @@ export type WorkshopPersistedV1 = {
   simArmorAssistChassisModuleRarity: WorkshopChassisModuleRarity
   simGeneratorAssistChassisModuleRarity: WorkshopChassisModuleRarity
   simCoreAssistChassisModuleRarity: WorkshopChassisModuleRarity
+  simCannonAssistUniqueRarity: WorkshopChassisModuleRarity
+  simArmorAssistUniqueRarity: WorkshopChassisModuleRarity
+  simGeneratorAssistUniqueRarity: WorkshopChassisModuleRarity
+  simCoreAssistUniqueRarity: WorkshopChassisModuleRarity
   /** Assist main/sub stone efficiency (0–70%). */
   simCannonAssistStoneEfficiency: number
   simArmorAssistStoneEfficiency: number
@@ -394,6 +399,10 @@ export function resetWorkshopUpgradeLevels(
     simArmorAssistChassisModuleRarity: current.simArmorAssistChassisModuleRarity,
     simGeneratorAssistChassisModuleRarity: current.simGeneratorAssistChassisModuleRarity,
     simCoreAssistChassisModuleRarity: current.simCoreAssistChassisModuleRarity,
+    simCannonAssistUniqueRarity: current.simCannonAssistUniqueRarity,
+    simArmorAssistUniqueRarity: current.simArmorAssistUniqueRarity,
+    simGeneratorAssistUniqueRarity: current.simGeneratorAssistUniqueRarity,
+    simCoreAssistUniqueRarity: current.simCoreAssistUniqueRarity,
     simCannonAssistStoneEfficiency: current.simCannonAssistStoneEfficiency,
     simArmorAssistStoneEfficiency: current.simArmorAssistStoneEfficiency,
     simGeneratorAssistStoneEfficiency: current.simGeneratorAssistStoneEfficiency,
@@ -812,6 +821,22 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
     ),
     simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
       o.simCoreAssistChassisModuleRarity,
+    ),
+    simCannonAssistUniqueRarity: assistUniqueRarityFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'cannon',
+    ),
+    simArmorAssistUniqueRarity: assistUniqueRarityFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'armor',
+    ),
+    simGeneratorAssistUniqueRarity: assistUniqueRarityFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'generator',
+    ),
+    simCoreAssistUniqueRarity: assistUniqueRarityFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'core',
     ),
     simCannonAssistStoneEfficiency: clampAssistStoneEfficiency(
       Number(o.simCannonAssistStoneEfficiency),
