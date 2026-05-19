@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] - 2026-05-19
+
+### Fixed
+
+- **Chassis module picker — unique effect text** — Tier values no longer render with duplicated suffixes (`%%`, `××`) when the wiki template already includes `%` or `×` and the formatter adds them again (generator, core, cannon, armor catalogs).
+- **Chassis module picker — value highlight** — Plain count tier values (e.g. Being Annihilator “next **3** attacks”) are highlighted like `%`, `s`, and `×` values.
+- **Assist modules** — Unique-effect rarity is separate from the equipped module’s merge tier in the picker and hub; main and assist cannot equip the same module (pickers exclude the other slot; conflicting selections clear on load).
+
+### Docs
+
+- README version **2.7.3**.
+
 ## [2.7.2] - 2026-05-19
 
 ### Changed
