@@ -1,7 +1,9 @@
 import {
   WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_OWNED_ORDER,
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
 } from './data/workshopUltimate'
+import { WORKSHOP_ULTIMATE_PLUS_LEVEL_ORDER } from './data/workshopUltimatePlusData'
 import { serializeSubmoduleSelections } from './data/workshopSubmoduleSelection'
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
 
@@ -128,8 +130,18 @@ const WORKSHOP_COMPARE_KEYS: readonly (keyof WorkshopPersistedV1)[] = [
   'simArmorAssistStoneEfficiency',
   'simGeneratorAssistStoneEfficiency',
   'simCoreAssistStoneEfficiency',
+  'simCannonAssistMainStoneEfficiency',
+  'simArmorAssistMainStoneEfficiency',
+  'simGeneratorAssistMainStoneEfficiency',
+  'simCoreAssistMainStoneEfficiency',
+  'simCannonAssistSubStoneEfficiency',
+  'simArmorAssistSubStoneEfficiency',
+  'simGeneratorAssistSubStoneEfficiency',
+  'simCoreAssistSubStoneEfficiency',
   ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  ...WORKSHOP_ULTIMATE_OWNED_ORDER,
+  ...WORKSHOP_ULTIMATE_PLUS_LEVEL_ORDER,
 ]
 
 /** Row-wise string compare for persisted workshop state (for Tools / compare UI). */

@@ -6,6 +6,7 @@ import {
   resetWorkshopCards,
   resetWorkshopModules,
   resetWorkshopRelics,
+  resetWorkshopUltimates,
   resetWorkshopUpgradeLevels,
 } from './labPresetsStorage'
 
@@ -97,6 +98,27 @@ describe('resetWorkshopRelics', () => {
     expect(after.cardStars.damage).toBe(5)
     expect(after.relicOwnedIds).toEqual([])
     expect(after.simRelicsBonusFraction).toBe(0)
+  })
+})
+
+describe('resetWorkshopUltimates', () => {
+  it('clears ultimate fields but keeps upgrade levels and cards', () => {
+    const before = {
+      ...defaultWorkshopPersisted(),
+      damageLevel: 42,
+      smartMissilesDamageLevel: 5,
+      smartMissilesOwned: true,
+      smartMissilesActive: true,
+      ultimatePlusSmartMissilesCoverFireLevel: 3,
+      cardStars: { ...defaultWorkshopPersisted().cardStars, damage: 5 },
+    }
+    const after = resetWorkshopUltimates(before)
+    expect(after.damageLevel).toBe(42)
+    expect(after.cardStars.damage).toBe(5)
+    expect(after.smartMissilesDamageLevel).toBe(0)
+    expect(after.smartMissilesOwned).toBe(false)
+    expect(after.smartMissilesActive).toBe(false)
+    expect(after.ultimatePlusSmartMissilesCoverFireLevel).toBe(-1)
   })
 })
 

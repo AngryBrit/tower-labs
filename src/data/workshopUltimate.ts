@@ -80,6 +80,111 @@ export function workshopUltimateWeaponAllMaxed(
   )
 }
 
+/** Marginal stone cost to buy the Nth ultimate weapon (1st … 9th). */
+export const WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_COSTS = [
+  5, 50, 150, 300, 800, 1250, 1750, 2400, 3000,
+] as const
+
+export const WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_TOTAL = 9705
+
+export type WorkshopUltimateOwnedKey = `${WorkshopUltimateWeaponId}Owned`
+
+export const WORKSHOP_ULTIMATE_OWNED_ORDER = WORKSHOP_ULTIMATE_WEAPON_ORDER.map(
+  (id) => `${id}Owned` as WorkshopUltimateOwnedKey,
+)
+
+export function workshopUltimateOwnedKey(
+  weaponId: WorkshopUltimateWeaponId,
+): WorkshopUltimateOwnedKey {
+  return `${weaponId}Owned`
+}
+
+function workshopUltimateWeaponHasLegacyPurchase(
+  levels: Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+  weaponId: WorkshopUltimateWeaponId,
+): boolean {
+  return workshopUltimateWeaponUpgradeKeys(weaponId).some(
+    (key) => Number(levels[key] ?? 0) > 0,
+  )
+}
+
+/** Whether this ultimate weapon has been bought with power stones. */
+export function workshopUltimateWeaponIsOwned(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>> &
+    Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+  weaponId: WorkshopUltimateWeaponId,
+): boolean {
+  if (ws[workshopUltimateOwnedKey(weaponId)] === true) return true
+  return workshopUltimateWeaponHasLegacyPurchase(ws, weaponId)
+}
+
+/** @deprecated Use {@link workshopUltimateWeaponIsOwned}. */
+export function workshopUltimateWeaponIsPurchased(
+  levels: Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+  weaponId: WorkshopUltimateWeaponId,
+): boolean {
+  return workshopUltimateWeaponIsOwned(levels, weaponId)
+}
+
+export function workshopUltimateOwnedCount(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>> &
+    Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+): number {
+  return WORKSHOP_ULTIMATE_WEAPON_ORDER.filter((id) =>
+    workshopUltimateWeaponIsOwned(ws, id),
+  ).length
+}
+
+/** Weapons bought via the unlock button (excludes legacy upgrade-only saves). */
+export function workshopUltimateExplicitOwnedCount(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>>,
+): number {
+  return WORKSHOP_ULTIMATE_WEAPON_ORDER.filter(
+    (id) => ws[workshopUltimateOwnedKey(id)] === true,
+  ).length
+}
+
+/** Stone cost for the next ultimate weapon purchase (null when all 9 owned). */
+export function workshopUltimateNextUnlockCost(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>> &
+    Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+): number | null {
+  const count = workshopUltimateOwnedCount(ws)
+  if (count >= WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_COSTS.length) return null
+  return WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_COSTS[count]!
+}
+
+/** Unlock cost for this weapon (null if already owned). */
+export function workshopUltimateUnlockCostForWeapon(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>> &
+    Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+  weaponId: WorkshopUltimateWeaponId,
+): number | null {
+  if (workshopUltimateWeaponIsOwned(ws, weaponId)) return null
+  return workshopUltimateNextUnlockCost(ws)
+}
+
+export function workshopUltimateUnlockSpentStones(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>>,
+): number {
+  const count = workshopUltimateExplicitOwnedCount(ws)
+  return WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_COSTS.slice(0, count).reduce(
+    (sum, cost) => sum + cost,
+    0,
+  )
+}
+
+export function workshopUltimateUnlockToMaxStones(
+  ws: Partial<Record<WorkshopUltimateOwnedKey, boolean>> &
+    Partial<Record<WorkshopUltimateUpgradeKey, number>>,
+): number {
+  const count = workshopUltimateOwnedCount(ws)
+  return WORKSHOP_ULTIMATE_WEAPON_UNLOCK_STONE_COSTS.slice(count).reduce(
+    (sum, cost) => sum + cost,
+    0,
+  )
+}
+
 export type WorkshopUltimateActiveKey = `${WorkshopUltimateWeaponId}Active`
 
 export const WORKSHOP_ULTIMATE_ACTIVE_ORDER = WORKSHOP_ULTIMATE_WEAPON_ORDER.map(

@@ -107,3 +107,17 @@ export function useThemeOwned(): [ReadonlySet<string>, (themeId: string, owned: 
 
   return [ownedIds, setThemeOwned]
 }
+
+/** Mark many themes owned or not (current tab + search filter). */
+export function setThemesOwnedBatch(
+  themeIds: readonly string[],
+  owned: boolean,
+): void {
+  const current = readThemeOwnedIds()
+  const next = new Set(current)
+  for (const id of themeIds) {
+    if (owned) next.add(id)
+    else next.delete(id)
+  }
+  writeThemeOwnedIds(next)
+}

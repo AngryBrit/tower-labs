@@ -116,10 +116,20 @@ import {
   workshopUltimateActiveKey,
   workshopUltimateClampLevel,
   workshopUltimateIsActive,
+  workshopUltimateOwnedKey,
+  workshopUltimateUnlockCostForWeapon,
   workshopUltimateWeaponAllMaxed,
+  workshopUltimateWeaponIsOwned,
   type WorkshopUltimateUpgradeKey,
   type WorkshopUltimateWeaponId,
 } from '../data/workshopUltimate'
+import {
+  workshopAllUltimateWeaponsReadyForPlus,
+  workshopUltimatePlusClampLevel,
+  workshopUltimatePlusIsUnlocked,
+  workshopUltimatePlusLevelKey,
+  type WorkshopUltimatePlusAbilityId,
+} from '../data/workshopUltimatePlus'
 import { WorkshopUltimateWeaponCard } from './WorkshopUltimateWeaponCard'
 import { workshopAttackSpeedDisplayOptsFromPersisted } from '../data/workshopDisplayedAttackSpeed'
 import { workshopDamageDisplayOptsFromPersisted } from '../data/workshopDisplayedDamage'
@@ -130,6 +140,7 @@ import { WorkshopEnhanceDefensePanel } from './WorkshopEnhanceDefensePanel'
 import { WorkshopEnhanceUtilityPanel } from './WorkshopEnhanceUtilityPanel'
 import { formatCoinAbbrev } from '../labCosts'
 import {
+  resetWorkshopUltimates,
   resetWorkshopUpgradeLevels,
   type WorkshopPersistedV1,
 } from '../labPresetsStorage'
@@ -223,12 +234,15 @@ function WorkshopDemoToolbar({
   hideMaxed,
   setHideMaxed,
   onResetDemo,
+  ultimateResetMode,
 }: {
   hideMaxed: boolean
   setHideMaxed: (v: boolean) => void
   onResetDemo: () => void
+  ultimateResetMode: boolean
 }) {
   const { t } = useI18n()
+  const resetLabelKey = ultimateResetMode ? 'ws_reset_ultimate_demo' : 'ws_reset_demo'
   return (
     <div className="select-research__toolbar-quick">
       <label className="glow-btn glow-btn--toggle">
@@ -244,7 +258,7 @@ function WorkshopDemoToolbar({
         className="glow-btn glow-btn--danger glow-btn--block"
         onClick={onResetDemo}
       >
-        {t('ws_reset_demo')}
+        {t(resetLabelKey)}
       </button>
     </div>
   )
@@ -3047,11 +3061,52 @@ export function WorkshopPage({
 
   const toggleUltimateActive = useCallback(
     (weaponId: WorkshopUltimateWeaponId) => {
+      if (!workshopUltimateWeaponIsOwned(workshopPersisted, weaponId)) return
       const key = workshopUltimateActiveKey(weaponId)
       onWorkshopPersistedChange({
         ...workshopPersisted,
         [key]: !workshopUltimateIsActive(workshopPersisted, weaponId),
       })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const unlockUltimateWeapon = useCallback(
+    (weaponId: WorkshopUltimateWeaponId) => {
+      if (workshopUltimateWeaponIsOwned(workshopPersisted, weaponId)) return
+      if (workshopUltimateUnlockCostForWeapon(workshopPersisted, weaponId) == null) return
+      const ownedKey = workshopUltimateOwnedKey(weaponId)
+      const activeKey = workshopUltimateActiveKey(weaponId)
+      onWorkshopPersistedChange({
+        ...workshopPersisted,
+        [ownedKey]: true,
+        [activeKey]: true,
+      })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const plusEnabled = workshopAllUltimateWeaponsReadyForPlus(workshopPersisted)
+
+  const bumpUltimatePlus = useCallback(
+    (abilityId: WorkshopUltimatePlusAbilityId, direction: -1 | 1) => {
+      const key = workshopUltimatePlusLevelKey(abilityId)
+      const cur = workshopPersisted[key] ?? -1
+      if (!workshopUltimatePlusIsUnlocked(cur)) return
+      const nv = workshopUltimatePlusClampLevel(abilityId, cur + direction)
+      if (nv === cur) return
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: nv })
+    },
+    [onWorkshopPersistedChange, workshopPersisted],
+  )
+
+  const unlockUltimatePlus = useCallback(
+    (abilityId: WorkshopUltimatePlusAbilityId) => {
+      const key = workshopUltimatePlusLevelKey(abilityId)
+      const cur = workshopPersisted[key] ?? -1
+      if (workshopUltimatePlusIsUnlocked(cur)) return
+      if (!workshopAllUltimateWeaponsReadyForPlus(workshopPersisted)) return
+      onWorkshopPersistedChange({ ...workshopPersisted, [key]: 0 })
     },
     [onWorkshopPersistedChange, workshopPersisted],
   )
@@ -3138,11 +3193,19 @@ export function WorkshopPage({
     category === 'attack' &&
     (!hideMaxed || rendArmorMultLevel < WORKSHOP_REND_ARMOR_MULT_MAX_LEVEL)
 
+  const resetWorkshopDemo = useCallback(
+    () =>
+      category === 'ultimate'
+        ? resetWorkshopUltimates(workshopPersisted)
+        : resetWorkshopUpgradeLevels(workshopPersisted),
+    [category, workshopPersisted],
+  )
+
   const performResetWorkshopDemo = useCallback(() => {
     setResetWorkshopConfirmOpen(false)
-    onWorkshopPersistedChange(resetWorkshopUpgradeLevels(workshopPersisted))
+    onWorkshopPersistedChange(resetWorkshopDemo())
     setMultiplierOpen(false)
-  }, [onWorkshopPersistedChange, workshopPersisted])
+  }, [onWorkshopPersistedChange, resetWorkshopDemo])
 
   const openResetWorkshopConfirm = useCallback(() => {
     setMultiplierOpen(false)
@@ -3184,6 +3247,13 @@ export function WorkshopPage({
   useEffect(() => {
     if (category === 'ultimate') setMultiplierOpen(false)
   }, [category])
+
+  const enhanceTabDisabled = category === 'ultimate'
+
+  useEffect(() => {
+    if (!enhanceTabDisabled || mainTab !== 'enhance') return
+    onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'upgrade' })
+  }, [enhanceTabDisabled, mainTab, onWorkshopPersistedChange, workshopPersisted])
 
   const setHideMaxed = useCallback(
     (v: boolean) => onWorkshopPersistedChange({ ...workshopPersisted, hideMaxed: v }),
@@ -3235,6 +3305,7 @@ export function WorkshopPage({
               hideMaxed={hideMaxed}
               setHideMaxed={setHideMaxed}
               onResetDemo={openResetWorkshopConfirm}
+              ultimateResetMode={category === 'ultimate'}
             />,
             toolbarMount,
           )
@@ -3246,6 +3317,7 @@ export function WorkshopPage({
             hideMaxed={hideMaxed}
             setHideMaxed={setHideMaxed}
             onResetDemo={openResetWorkshopConfirm}
+            ultimateResetMode={category === 'ultimate'}
           />
         </div>
       ) : null}
@@ -3267,10 +3339,17 @@ export function WorkshopPage({
         <button
           type="button"
           role="tab"
-          aria-selected={workshopMainTab === 'enhance'}
+          aria-selected={!enhanceTabDisabled && workshopMainTab === 'enhance'}
+          aria-disabled={enhanceTabDisabled}
+          disabled={enhanceTabDisabled}
           className={
-            workshopMainTab === 'enhance' ? 'workshop__tab workshop__tab--on' : 'workshop__tab'
+            enhanceTabDisabled
+              ? 'workshop__tab workshop__tab--disabled'
+              : workshopMainTab === 'enhance'
+                ? 'workshop__tab workshop__tab--on'
+                : 'workshop__tab'
           }
+          aria-label={enhanceTabDisabled ? t('ws_tab_enhance_unavailable_aria') : undefined}
           onClick={() =>
             onWorkshopPersistedChange({ ...workshopPersisted, mainTab: 'enhance' })
           }
@@ -3364,6 +3443,9 @@ export function WorkshopPage({
               onWorkshopPersistedChange({
                 ...workshopPersisted,
                 category: key,
+                ...(key === 'ultimate' && workshopPersisted.mainTab === 'enhance'
+                  ? { mainTab: 'upgrade' as const }
+                  : {}),
               })
             }
             aria-label={t(CATEGORY_ARIA[key])}
@@ -3555,6 +3637,11 @@ export function WorkshopPage({
                     levels={workshopPersisted}
                     onBump={bumpUltimate}
                     onToggleActive={toggleUltimateActive}
+                    onUnlockWeapon={unlockUltimateWeapon}
+                    workshop={workshopPersisted}
+                    plusEnabled={plusEnabled}
+                    onPlusBump={bumpUltimatePlus}
+                    onPlusUnlock={unlockUltimatePlus}
                   />
                 ))
               : null}
@@ -3832,13 +3919,17 @@ export function WorkshopPage({
                   id="reset-workshop-confirm-title"
                   className="select-research__reset-confirm-title"
                 >
-                  {t('ws_reset_confirm_title')}
+                  {category === 'ultimate'
+                    ? t('ws_reset_ultimate_confirm_title')
+                    : t('ws_reset_confirm_title')}
                 </h2>
                 <p
                   id="reset-workshop-confirm-desc"
                   className="select-research__reset-confirm-desc"
                 >
-                  {t('ws_reset_confirm_body')}
+                  {category === 'ultimate'
+                    ? t('ws_reset_ultimate_confirm_body')
+                    : t('ws_reset_confirm_body')}
                 </p>
                 <div className="select-research__reset-confirm-actions">
                   <button
@@ -3853,7 +3944,9 @@ export function WorkshopPage({
                     className="glow-btn glow-btn--danger glow-btn--block"
                     onClick={performResetWorkshopDemo}
                   >
-                    {t('ws_reset_demo')}
+                    {t(
+                      category === 'ultimate' ? 'ws_reset_ultimate_demo' : 'ws_reset_demo',
+                    )}
                   </button>
                 </div>
               </div>

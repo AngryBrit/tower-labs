@@ -5,11 +5,19 @@ import {
   workshopUltimateMaxLevel,
   workshopUltimateNextMarginalStones,
   workshopUltimateStatDisplay,
+  workshopUltimateUnlockCostForWeapon,
+  workshopUltimateWeaponIsOwned,
   WORKSHOP_ULTIMATE_WEAPON_STATS,
   type WorkshopUltimateUpgradeKey,
   type WorkshopUltimateWeaponId,
 } from '../data/workshopUltimate'
 import { formatPowerStoneAmount } from '../labCosts'
+import {
+  workshopUltimatePlusAbilityForWeapon,
+  type WorkshopUltimatePlusAbilityId,
+} from '../data/workshopUltimatePlus'
+import type { WorkshopPersistedV1 } from '../labPresetsStorage'
+import { WorkshopUltimatePlusAbilityCard } from './WorkshopUltimatePlusAbilityCard'
 
 const ULTIMATE_WEAPON_TITLE: Record<WorkshopUltimateWeaponId, StringId> = {
   chainLightning: 'ws_uw_chainLightning',
@@ -68,6 +76,11 @@ export type WorkshopUltimateWeaponCardProps = {
   levels: Record<WorkshopUltimateUpgradeKey, number>
   onBump: (key: WorkshopUltimateUpgradeKey, direction: -1 | 1) => void
   onToggleActive: (weaponId: WorkshopUltimateWeaponId) => void
+  onUnlockWeapon?: (weaponId: WorkshopUltimateWeaponId) => void
+  workshop?: WorkshopPersistedV1
+  plusEnabled?: boolean
+  onPlusBump?: (abilityId: WorkshopUltimatePlusAbilityId, direction: -1 | 1) => void
+  onPlusUnlock?: (abilityId: WorkshopUltimatePlusAbilityId) => void
 }
 
 export function WorkshopUltimateWeaponCard({
@@ -76,98 +89,158 @@ export function WorkshopUltimateWeaponCard({
   levels,
   onBump,
   onToggleActive,
+  onUnlockWeapon,
+  workshop,
+  plusEnabled = false,
+  onPlusBump,
+  onPlusUnlock,
 }: WorkshopUltimateWeaponCardProps) {
   const { t } = useI18n()
   const stats = WORKSHOP_ULTIMATE_WEAPON_STATS[weaponId]
   const title = t(ULTIMATE_WEAPON_TITLE[weaponId])
+  const plusAbilityId = workshopUltimatePlusAbilityForWeapon(weaponId)
+  const showPlus = workshop != null && onPlusBump != null && onPlusUnlock != null
+  const owned = workshop != null && workshopUltimateWeaponIsOwned(workshop, weaponId)
+  const runActive = owned && active
+  const unlockStones =
+    workshop != null ? workshopUltimateUnlockCostForWeapon(workshop, weaponId) : null
+
+  const handleUnlockWeapon = () => {
+    if (owned || onUnlockWeapon == null) return
+    onUnlockWeapon(weaponId)
+  }
 
   return (
-    <li className={active ? 'workshop__uw-card' : 'workshop__uw-card workshop__uw-card--inactive'}>
-      <div className="workshop__uw-head">
-        <span className="workshop__uw-title">{title}</span>
-        <button
-          type="button"
-          className={
-            active
-              ? 'workshop__uw-active-toggle workshop__uw-active-toggle--on'
-              : 'workshop__uw-active-toggle'
-          }
-          aria-pressed={active}
-          aria-label={
-            active
-              ? `${title} — ${t('ws_uw_deactivate')}`
-              : `${title} — ${t('ws_uw_activate')}`
-          }
-          onClick={() => onToggleActive(weaponId)}
-        >
-          {active ? t('ws_uw_deactivate') : t('ws_uw_activate')}
-        </button>
-      </div>
-      <div className="workshop__uw-body">
-        <div className="workshop__uw-icon-wrap">
-          <UltimateWeaponIcon weaponId={weaponId} />
+    <li className="workshop__uw-stack">
+      <div
+        className={
+          runActive ? 'workshop__uw-card' : 'workshop__uw-card workshop__uw-card--inactive'
+        }
+      >
+        <div className="workshop__uw-head">
+          <span className="workshop__uw-title">{title}</span>
+          {!owned ? (
+            <div className="workshop__uw-head-unlock">
+              <button
+                type="button"
+                className="workshop__uw-head-unlock-label"
+                aria-label={`${title} — ${t('ws_uw_unlock')}`}
+                title={t('ws_uw_unlock_cost_title')}
+                onClick={handleUnlockWeapon}
+              >
+                {t('ws_uw_unlock')}
+              </button>
+              <button
+                type="button"
+                className="workshop__uw-head-unlock-cost"
+                aria-label={`${title} — ${t('ws_uw_unlock')} ${formatPowerStoneAmount(unlockStones ?? 0)}`}
+                title={t('ws_uw_unlock_cost_title')}
+                onClick={handleUnlockWeapon}
+              >
+                <span>{formatPowerStoneAmount(unlockStones ?? 0)}</span>
+                <PowerStoneGlyph className="workshop__uw-stone" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={
+                runActive
+                  ? 'workshop__uw-active-toggle workshop__uw-active-toggle--on'
+                  : 'workshop__uw-active-toggle'
+              }
+              aria-pressed={runActive}
+              aria-label={
+                runActive
+                  ? `${title} — ${t('ws_uw_deactivate')}`
+                  : `${title} — ${t('ws_uw_activate')}`
+              }
+              onClick={() => onToggleActive(weaponId)}
+            >
+              {runActive ? t('ws_uw_deactivate') : t('ws_uw_activate')}
+            </button>
+          )}
         </div>
-        <div className="workshop__uw-stats" role="group">
-          {stats.map(({ key, stat }) => {
-            const level = levels[key] ?? 0
-            const max = workshopUltimateMaxLevel(key)
-            const maxed = level >= max
-            const nextStones = workshopUltimateNextMarginalStones(key, level)
-            const labelId = ULTIMATE_STAT_LABEL[stat]
-            const statName = labelId ? t(labelId) : stat
+        <div className="workshop__uw-body">
+          <div className="workshop__uw-icon-wrap">
+            <UltimateWeaponIcon weaponId={weaponId} />
+          </div>
+          <div className="workshop__uw-stats" role="group">
+            {stats.map(({ key, stat }) => {
+              const level = levels[key] ?? 0
+              const max = workshopUltimateMaxLevel(key)
+              const maxed = level >= max
+              const nextStones = workshopUltimateNextMarginalStones(key, level)
+              const labelId = ULTIMATE_STAT_LABEL[stat]
+              const statName = labelId ? t(labelId) : stat
 
-            return (
-              <div key={key} className={maxed ? 'workshop__uw-col workshop__uw-col--max' : 'workshop__uw-col'}>
-                <div className="workshop__uw-col-top">
-                  <span className="workshop__uw-stat-label">{statName}</span>
-                  <span className="workshop__uw-stat-value">{workshopUltimateStatDisplay(key, level)}</span>
-                </div>
-                <div className="workshop__uw-col-foot">
-                  <button
-                    type="button"
-                    className="workshop__uw-level-step"
-                    aria-label={`${statName} — ${t('ws_defense_level_down_aria')}`}
-                    disabled={!active || level <= 0}
-                    onClick={() => onBump(key, -1)}
-                  >
-                    −
-                  </button>
-                  <div
-                    className={
-                      maxed
-                        ? 'workshop__uw-col-cost workshop__card-cost--max'
-                        : 'workshop__uw-col-cost'
-                    }
-                    title={
-                      maxed ? t('ws_max') : t('researchCard_cost_stones_title')
-                    }
-                  >
-                    {maxed ? (
-                      <>
-                        <span>{t('ws_max')}</span>
-                        <PowerStoneGlyph className="workshop__uw-stone" />
-                      </>
-                    ) : (
-                      <>
-                        <span>{formatPowerStoneAmount(nextStones ?? 0)}</span>
-                        <PowerStoneGlyph className="workshop__uw-stone" />
-                      </>
-                    )}
+              return (
+                <div
+                  key={key}
+                  className={maxed ? 'workshop__uw-col workshop__uw-col--max' : 'workshop__uw-col'}
+                >
+                  <div className="workshop__uw-col-top">
+                    <span className="workshop__uw-stat-label">{statName}</span>
+                    <span className="workshop__uw-stat-value">
+                      {workshopUltimateStatDisplay(key, level)}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    className="workshop__uw-level-step"
-                    aria-label={`${statName} — ${t('ws_defense_level_up_aria')}`}
-                    disabled={!active || maxed}
-                    onClick={() => onBump(key, 1)}
-                  >
-                    +
-                  </button>
+                  <div className="workshop__uw-col-foot">
+                    <button
+                      type="button"
+                      className="workshop__uw-level-step"
+                      aria-label={`${statName} — ${t('ws_defense_level_down_aria')}`}
+                      disabled={!runActive || level <= 0}
+                      onClick={() => onBump(key, -1)}
+                    >
+                      −
+                    </button>
+                    <div
+                      className={
+                        maxed
+                          ? 'workshop__uw-col-cost workshop__card-cost--max'
+                          : 'workshop__uw-col-cost'
+                      }
+                      title={
+                        maxed ? t('ws_max') : t('researchCard_cost_stones_title')
+                      }
+                    >
+                      {maxed ? (
+                        <>
+                          <span>{t('ws_max')}</span>
+                          <PowerStoneGlyph className="workshop__uw-stone" />
+                        </>
+                      ) : (
+                        <>
+                          <span>{formatPowerStoneAmount(nextStones ?? 0)}</span>
+                          <PowerStoneGlyph className="workshop__uw-stone" />
+                        </>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="workshop__uw-level-step"
+                      aria-label={`${statName} — ${t('ws_defense_level_up_aria')}`}
+                      disabled={!runActive || maxed}
+                      onClick={() => onBump(key, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
+        {showPlus ? (
+          <WorkshopUltimatePlusAbilityCard
+            abilityId={plusAbilityId}
+            workshop={workshop}
+            plusEnabled={plusEnabled}
+            onBump={onPlusBump}
+            onUnlock={onPlusUnlock}
+          />
+        ) : null}
       </div>
     </li>
   )

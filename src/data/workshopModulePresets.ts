@@ -3,11 +3,7 @@
  */
 
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
-import {
-  ASSIST_STONE_EFFICIENCY_DEFAULT,
-  clampAssistStoneEfficiency,
-  defaultAssistChassisFields,
-} from './workshopAssistChassisModule'
+import { clampAssistStoneEfficiency, defaultAssistChassisFields } from './workshopAssistChassisModule'
 import type { WorkshopChassisModuleRarity } from './workshopChassisModuleShared'
 import {
   cannonSubmoduleAttackSpeedFromSelections,
@@ -55,6 +51,14 @@ export type WorkshopModulePresetSnapshot = {
   simArmorAssistStoneEfficiency: number
   simGeneratorAssistStoneEfficiency: number
   simCoreAssistStoneEfficiency: number
+  simCannonAssistMainStoneEfficiency: number
+  simArmorAssistMainStoneEfficiency: number
+  simGeneratorAssistMainStoneEfficiency: number
+  simCoreAssistMainStoneEfficiency: number
+  simCannonAssistSubStoneEfficiency: number
+  simArmorAssistSubStoneEfficiency: number
+  simGeneratorAssistSubStoneEfficiency: number
+  simCoreAssistSubStoneEfficiency: number
 }
 
 export function clampWorkshopModuleActivePresetIndex(n: number): number {
@@ -114,10 +118,18 @@ export function defaultWorkshopModulePresetSnapshot(): WorkshopModulePresetSnaps
     simCoreAssistChassisModuleRarity: sanitizeChassisModuleRarity(
       assist.simCoreAssistChassisModuleRarity,
     ),
-    simCannonAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
-    simArmorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
-    simGeneratorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
-    simCoreAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simCannonAssistStoneEfficiency: assist.simCannonAssistStoneEfficiency,
+    simArmorAssistStoneEfficiency: assist.simArmorAssistStoneEfficiency,
+    simGeneratorAssistStoneEfficiency: assist.simGeneratorAssistStoneEfficiency,
+    simCoreAssistStoneEfficiency: assist.simCoreAssistStoneEfficiency,
+    simCannonAssistMainStoneEfficiency: assist.simCannonAssistMainStoneEfficiency,
+    simArmorAssistMainStoneEfficiency: assist.simArmorAssistMainStoneEfficiency,
+    simGeneratorAssistMainStoneEfficiency: assist.simGeneratorAssistMainStoneEfficiency,
+    simCoreAssistMainStoneEfficiency: assist.simCoreAssistMainStoneEfficiency,
+    simCannonAssistSubStoneEfficiency: assist.simCannonAssistSubStoneEfficiency,
+    simArmorAssistSubStoneEfficiency: assist.simArmorAssistSubStoneEfficiency,
+    simGeneratorAssistSubStoneEfficiency: assist.simGeneratorAssistSubStoneEfficiency,
+    simCoreAssistSubStoneEfficiency: assist.simCoreAssistSubStoneEfficiency,
   }
 }
 
@@ -164,6 +176,14 @@ export function extractWorkshopModulePresetSnapshot(
     simArmorAssistStoneEfficiency: ws.simArmorAssistStoneEfficiency,
     simGeneratorAssistStoneEfficiency: ws.simGeneratorAssistStoneEfficiency,
     simCoreAssistStoneEfficiency: ws.simCoreAssistStoneEfficiency,
+    simCannonAssistMainStoneEfficiency: ws.simCannonAssistMainStoneEfficiency,
+    simArmorAssistMainStoneEfficiency: ws.simArmorAssistMainStoneEfficiency,
+    simGeneratorAssistMainStoneEfficiency: ws.simGeneratorAssistMainStoneEfficiency,
+    simCoreAssistMainStoneEfficiency: ws.simCoreAssistMainStoneEfficiency,
+    simCannonAssistSubStoneEfficiency: ws.simCannonAssistSubStoneEfficiency,
+    simArmorAssistSubStoneEfficiency: ws.simArmorAssistSubStoneEfficiency,
+    simGeneratorAssistSubStoneEfficiency: ws.simGeneratorAssistSubStoneEfficiency,
+    simCoreAssistSubStoneEfficiency: ws.simCoreAssistSubStoneEfficiency,
   }
 }
 
@@ -220,6 +240,30 @@ export function applyWorkshopModulePresetSnapshot(
       snap.simGeneratorAssistStoneEfficiency,
     ),
     simCoreAssistStoneEfficiency: clampAssistStoneEfficiency(snap.simCoreAssistStoneEfficiency),
+    simCannonAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simCannonAssistMainStoneEfficiency ?? snap.simCannonAssistStoneEfficiency,
+    ),
+    simArmorAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simArmorAssistMainStoneEfficiency ?? snap.simArmorAssistStoneEfficiency,
+    ),
+    simGeneratorAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simGeneratorAssistMainStoneEfficiency ?? snap.simGeneratorAssistStoneEfficiency,
+    ),
+    simCoreAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simCoreAssistMainStoneEfficiency ?? snap.simCoreAssistStoneEfficiency,
+    ),
+    simCannonAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simCannonAssistSubStoneEfficiency ?? snap.simCannonAssistStoneEfficiency,
+    ),
+    simArmorAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simArmorAssistSubStoneEfficiency ?? snap.simArmorAssistStoneEfficiency,
+    ),
+    simGeneratorAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simGeneratorAssistSubStoneEfficiency ?? snap.simGeneratorAssistStoneEfficiency,
+    ),
+    simCoreAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      snap.simCoreAssistSubStoneEfficiency ?? snap.simCoreAssistStoneEfficiency,
+    ),
   }
 }
 
@@ -289,6 +333,30 @@ function sanitizeSnapshotFromUnknown(raw: unknown): WorkshopModulePresetSnapshot
       Number(o.simGeneratorAssistStoneEfficiency),
     ),
     simCoreAssistStoneEfficiency: clampAssistStoneEfficiency(Number(o.simCoreAssistStoneEfficiency)),
+    simCannonAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simCannonAssistMainStoneEfficiency ?? o.simCannonAssistStoneEfficiency),
+    ),
+    simArmorAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simArmorAssistMainStoneEfficiency ?? o.simArmorAssistStoneEfficiency),
+    ),
+    simGeneratorAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simGeneratorAssistMainStoneEfficiency ?? o.simGeneratorAssistStoneEfficiency),
+    ),
+    simCoreAssistMainStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simCoreAssistMainStoneEfficiency ?? o.simCoreAssistStoneEfficiency),
+    ),
+    simCannonAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simCannonAssistSubStoneEfficiency ?? o.simCannonAssistStoneEfficiency),
+    ),
+    simArmorAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simArmorAssistSubStoneEfficiency ?? o.simArmorAssistStoneEfficiency),
+    ),
+    simGeneratorAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simGeneratorAssistSubStoneEfficiency ?? o.simGeneratorAssistStoneEfficiency),
+    ),
+    simCoreAssistSubStoneEfficiency: clampAssistStoneEfficiency(
+      Number(o.simCoreAssistSubStoneEfficiency ?? o.simCoreAssistStoneEfficiency),
+    ),
   }
 }
 

@@ -99,11 +99,29 @@ import {
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   WORKSHOP_ULTIMATE_WEAPON_ORDER,
   WORKSHOP_ULTIMATE_WEAPON_STATS,
-  workshopUltimateIsActive,
+
   workshopUltimateMaxLevel,
   workshopUltimateNextMarginalStones,
+  workshopUltimateNextUnlockCost,
+  workshopUltimateUnlockSpentStones,
+  workshopUltimateUnlockToMaxStones,
+  workshopUltimateIsActive,
   workshopUltimateWeaponAllMaxed,
+  workshopUltimateWeaponIsOwned,
 } from './data/workshopUltimate'
+import {
+  ULTIMATE_PLUS_MAX_LEVEL,
+  WORKSHOP_ULTIMATE_PLUS_ABILITY_ORDER,
+  workshopAllUltimateWeaponsReadyForPlus,
+  workshopUltimatePlusIsUnlocked,
+  workshopUltimatePlusLevelKey,
+  workshopUltimatePlusMaxLevel,
+  workshopUltimatePlusNextMarginalStones,
+  workshopUltimatePlusNextUnlockCost,
+  workshopUltimatePlusUnlockSpentStones,
+  workshopUltimatePlusUnlockToMaxStones,
+  workshopUltimatePlusUpgradeSpentStones,
+} from './data/workshopUltimatePlus'
 import { formatCoinAbbrev } from './labCosts'
 import type { WorkshopPersistedV1 } from './labPresetsStorage'
 import { applyWorkshopDiscountToCoins } from './types/research'
@@ -347,11 +365,25 @@ function addUltimateStoneTotals(
   ws: WorkshopPersistedV1,
   sink: { spent: number; toMax: number },
 ): void {
+  sink.spent += workshopUltimateUnlockSpentStones(ws)
+  sink.toMax += workshopUltimateUnlockToMaxStones(ws)
+
   for (const key of WORKSHOP_ULTIMATE_UPGRADE_ORDER) {
     const max = workshopUltimateMaxLevel(key)
     const level = ws[key]
     const next = (L: number) => workshopUltimateNextMarginalStones(key, L)
     sink.spent += statSpent(level, next)
+    sink.toMax += statToMax(level, max, next)
+  }
+
+  sink.spent += workshopUltimatePlusUnlockSpentStones(ws)
+  sink.toMax += workshopUltimatePlusUnlockToMaxStones(ws)
+  for (const abilityId of WORKSHOP_ULTIMATE_PLUS_ABILITY_ORDER) {
+    const level = ws[workshopUltimatePlusLevelKey(abilityId)] ?? -1
+    const max = workshopUltimatePlusMaxLevel(abilityId)
+    const next = (L: number) => workshopUltimatePlusNextMarginalStones(abilityId, L)
+    if (!workshopUltimatePlusIsUnlocked(level)) continue
+    sink.spent += workshopUltimatePlusUpgradeSpentStones(abilityId, level)
     sink.toMax += statToMax(level, max, next)
   }
 }
@@ -551,7 +583,18 @@ export function computeWorkshopStoneAggregates(ws: WorkshopPersistedV1): Worksho
   if (ws.mainTab === 'upgrade' && ws.category === 'ultimate') {
     const sum = { n: 0 }
     const { hideMaxed } = ws
+    let weaponUnlockNextCounted = false
     for (const weaponId of WORKSHOP_ULTIMATE_WEAPON_ORDER) {
+      if (!workshopUltimateWeaponIsOwned(ws, weaponId)) {
+        if (!weaponUnlockNextCounted) {
+          const unlockCost = workshopUltimateNextUnlockCost(ws)
+          if (unlockCost != null) {
+            sum.n += unlockCost
+            weaponUnlockNextCounted = true
+          }
+        }
+        continue
+      }
       if (!workshopUltimateIsActive(ws, weaponId)) continue
       if (hideMaxed && workshopUltimateWeaponAllMaxed(ws, weaponId)) continue
       for (const { key } of WORKSHOP_ULTIMATE_WEAPON_STATS[weaponId]) {
@@ -563,6 +606,33 @@ export function computeWorkshopStoneAggregates(ws: WorkshopPersistedV1): Worksho
           level,
           max,
           (L) => workshopUltimateNextMarginalStones(key, L),
+        )
+      }
+    }
+    if (workshopAllUltimateWeaponsReadyForPlus(ws)) {
+      let plusUnlockNextCounted = false
+      for (const abilityId of WORKSHOP_ULTIMATE_PLUS_ABILITY_ORDER) {
+        const levelKey = workshopUltimatePlusLevelKey(abilityId)
+        const level = ws[levelKey] ?? -1
+        const max = ULTIMATE_PLUS_MAX_LEVEL
+        const plusVisible =
+          !hideMaxed || !workshopUltimatePlusIsUnlocked(level) || level < max
+        if (!workshopUltimatePlusIsUnlocked(level)) {
+          if (plusVisible && !plusUnlockNextCounted) {
+            const unlockCost = workshopUltimatePlusNextUnlockCost(ws)
+            if (unlockCost != null) {
+              sum.n += unlockCost
+              plusUnlockNextCounted = true
+            }
+          }
+          continue
+        }
+        maybeAddNext(
+          sum,
+          plusVisible,
+          level,
+          max,
+          (L) => workshopUltimatePlusNextMarginalStones(abilityId, L),
         )
       }
     }

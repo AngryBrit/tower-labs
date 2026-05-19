@@ -10,10 +10,10 @@ import {
   FORMAT_EN,
   FORMAT_ES,
   STRINGS_EN,
-  STRINGS_ES,
   type StringId,
 } from './dictionary'
 import { STRINGS_DE } from './dictionary.de'
+import { STRINGS_ES } from './dictionary.es'
 import { LOCALE_STORAGE_KEY, readStoredLocale } from './constants'
 import { I18nReactContext, type I18nContextValue } from './I18nContext'
 import researchOverlayDe from './research-overlay.de.json' with { type: 'json' }

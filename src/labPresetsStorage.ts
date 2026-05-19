@@ -22,12 +22,21 @@ import {
 import { workshopDefenseClampLevel } from './data/workshopDefense'
 import {
   WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_OWNED_ORDER,
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   WORKSHOP_ULTIMATE_WEAPON_ORDER,
   workshopUltimateClampLevel,
+  workshopUltimateOwnedKey,
+  workshopUltimateWeaponIsOwned,
   type WorkshopUltimateActiveKey,
+  type WorkshopUltimateOwnedKey,
   type WorkshopUltimateUpgradeKey,
 } from './data/workshopUltimate'
+import {
+  defaultUltimatePlusLevels,
+  workshopUltimatePlusLevelsFromPersisted,
+  type WorkshopUltimatePlusLevelKey,
+} from './data/workshopUltimatePlus'
 import { workshopUtilityClampLevel } from './data/workshopUtility'
 import {
   WORKSHOP_ENHANCE_ATTACK_UPGRADE_ORDER,
@@ -46,7 +55,12 @@ import {
   sanitizeChassisModuleRarity,
 } from './data/workshopChassisModuleSelection'
 import { sanitizeRelicOwnedIds } from './data/workshopRelics'
-import { clampAssistStoneEfficiency } from './data/workshopAssistChassisModule'
+import {
+  assistMainStoneEfficiencyFromPersisted,
+  assistSubStoneEfficiencyFromPersisted,
+  clampAssistStoneEfficiency,
+  type WorkshopAssistChassisPersisted,
+} from './data/workshopAssistChassisModule'
 import {
   cannonSubmoduleAttackSpeedFromSelections,
   parseSubmoduleSelectionsJson,
@@ -100,6 +114,25 @@ function defaultUltimateActive(): WorkshopUltimateActiveFlags {
   return Object.fromEntries(
     WORKSHOP_ULTIMATE_WEAPON_ORDER.map((id) => [`${id}Active`, false]),
   ) as WorkshopUltimateActiveFlags
+}
+
+type WorkshopUltimateOwnedFlags = { [K in WorkshopUltimateOwnedKey]: boolean }
+
+function defaultUltimateOwned(): WorkshopUltimateOwnedFlags {
+  return Object.fromEntries(
+    WORKSHOP_ULTIMATE_WEAPON_ORDER.map((id) => [workshopUltimateOwnedKey(id), false]),
+  ) as WorkshopUltimateOwnedFlags
+}
+
+function applyLegacyUltimateOwned(ws: WorkshopPersistedV1): WorkshopPersistedV1 {
+  const patch: Partial<WorkshopUltimateOwnedFlags> = {}
+  for (const id of WORKSHOP_ULTIMATE_WEAPON_ORDER) {
+    const key = workshopUltimateOwnedKey(id)
+    if (ws[key] !== true && workshopUltimateWeaponIsOwned(ws, id)) {
+      patch[key] = true
+    }
+  }
+  return Object.keys(patch).length > 0 ? { ...ws, ...patch } : ws
 }
 
 export type WorkshopCategoryPersisted = 'attack' | 'defense' | 'utility' | 'ultimate'
@@ -238,12 +271,22 @@ export type WorkshopPersistedV1 = {
   simArmorAssistStoneEfficiency: number
   simGeneratorAssistStoneEfficiency: number
   simCoreAssistStoneEfficiency: number
+  simCannonAssistMainStoneEfficiency: number
+  simArmorAssistMainStoneEfficiency: number
+  simGeneratorAssistMainStoneEfficiency: number
+  simCoreAssistMainStoneEfficiency: number
+  simCannonAssistSubStoneEfficiency: number
+  simArmorAssistSubStoneEfficiency: number
+  simGeneratorAssistSubStoneEfficiency: number
+  simCoreAssistSubStoneEfficiency: number
   /** Full module hub snapshot per preset tab (Preset 1…5). */
   modulePresetSnapshots: WorkshopModulePresetSnapshot[]
   /** Active module preset tab (drives sim* module fields). */
   moduleActivePresetIndex: number
 } & WorkshopUltimateLevels &
-  WorkshopUltimateActiveFlags
+  WorkshopUltimateActiveFlags &
+  WorkshopUltimateOwnedFlags &
+  { [K in WorkshopUltimatePlusLevelKey]: number }
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
 
@@ -293,6 +336,20 @@ export function resetWorkshopModules(current: WorkshopPersistedV1): WorkshopPers
   return {
     ...current,
     ...defaultWorkshopModulesPersistedFields(),
+  }
+}
+
+/**
+ * Reset ultimate weapon levels, ownership, active flags, and plus abilities only.
+ * Preserves workshop upgrade / enhance levels, cards, modules, and other sim fields.
+ */
+export function resetWorkshopUltimates(current: WorkshopPersistedV1): WorkshopPersistedV1 {
+  return {
+    ...current,
+    ...defaultUltimateLevels(),
+    ...defaultUltimateActive(),
+    ...defaultUltimateOwned(),
+    ...defaultUltimatePlusLevels(),
   }
 }
 
@@ -446,6 +503,8 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     ...defaultWorkshopModulesPersistedFields(),
     ...defaultUltimateLevels(),
     ...defaultUltimateActive(),
+    ...defaultUltimateOwned(),
+    ...defaultUltimatePlusLevels(),
   }
 }
 
@@ -668,6 +727,13 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         (o as Record<string, unknown>)[key] === true ? true : false,
       ]),
     ),
+    ...Object.fromEntries(
+      WORKSHOP_ULTIMATE_OWNED_ORDER.map((key) => [
+        key,
+        (o as Record<string, unknown>)[key] === true ? true : false,
+      ]),
+    ),
+    ...workshopUltimatePlusLevelsFromPersisted(o),
     ...(() => {
       const cardStars = workshopCardStarsFromLegacy(o)
       const cardPresetLoadouts = sanitizeCardPresetLoadouts(o.cardPresetLoadouts)
@@ -755,6 +821,38 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
       Number(o.simGeneratorAssistStoneEfficiency),
     ),
     simCoreAssistStoneEfficiency: clampAssistStoneEfficiency(Number(o.simCoreAssistStoneEfficiency)),
+    simCannonAssistMainStoneEfficiency: assistMainStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'cannon',
+    ),
+    simArmorAssistMainStoneEfficiency: assistMainStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'armor',
+    ),
+    simGeneratorAssistMainStoneEfficiency: assistMainStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'generator',
+    ),
+    simCoreAssistMainStoneEfficiency: assistMainStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'core',
+    ),
+    simCannonAssistSubStoneEfficiency: assistSubStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'cannon',
+    ),
+    simArmorAssistSubStoneEfficiency: assistSubStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'armor',
+    ),
+    simGeneratorAssistSubStoneEfficiency: assistSubStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'generator',
+    ),
+    simCoreAssistSubStoneEfficiency: assistSubStoneEfficiencyFromPersisted(
+      o as WorkshopAssistChassisPersisted,
+      'core',
+    ),
   } as WorkshopPersistedV1
 
   const moduleActivePresetIndex = clampWorkshopModuleActivePresetIndex(
@@ -762,20 +860,22 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
   )
 
   if (o.modulePresetSnapshots != null) {
-    return workshopPersistedWithModulePresets(
-      base,
-      sanitizeModulePresetSnapshots(o.modulePresetSnapshots, base),
-      moduleActivePresetIndex,
+    return applyLegacyUltimateOwned(
+      workshopPersistedWithModulePresets(
+        base,
+        sanitizeModulePresetSnapshots(o.modulePresetSnapshots, base),
+        moduleActivePresetIndex,
+      ),
     )
   }
 
   const modulePresetSnapshots = defaultModulePresetSnapshots()
   modulePresetSnapshots[0] = extractWorkshopModulePresetSnapshot(base)
-  return {
+  return applyLegacyUltimateOwned({
     ...base,
     moduleActivePresetIndex,
     modulePresetSnapshots,
-  }
+  })
 }
 
 export type LabPreset = {

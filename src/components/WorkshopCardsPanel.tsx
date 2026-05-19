@@ -27,7 +27,6 @@ import {
   workshopCardMasteryUnlockedSet,
 } from '../data/workshopCardMastery'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
-import { useCardsStatOverlayVisible } from '../cardsStatOverlayVisibility'
 import { useI18n } from '../i18n'
 import type { StringId } from '../i18n/dictionary'
 import type { ResearchData } from '../types/research'
@@ -358,7 +357,6 @@ export function WorkshopCardsPanel({
   labLevelOverrides,
 }: WorkshopCardsPanelProps) {
   const { t } = useI18n()
-  const [cardsStatOverlayVisible] = useCardsStatOverlayVisible()
   const presetIndex = clampWorkshopCardActivePresetIndex(
     workshopPersisted.cardActivePresetIndex,
   )
@@ -486,7 +484,6 @@ export function WorkshopCardsPanel({
         equipped={equippedSet.has(id)}
         masteryUnlocked={masteryUnlocked.has(id)}
         statsLocked={opts.active === true}
-        statOverlay={cardsStatOverlayVisible}
         onToggleEquip={
           opts.inventory || opts.active ? () => toggleEquip(id) : undefined
         }

@@ -4,6 +4,7 @@ import {
   assistModuleConflictsWithMain,
   clampAssistStoneEfficiency,
   workshopAssistChassisModuleSelection,
+  type WorkshopAssistChassisPersisted,
 } from './workshopAssistChassisModule'
 
 describe('workshopAssistChassisModule', () => {
@@ -13,7 +14,22 @@ describe('workshopAssistChassisModule', () => {
       unlocked: true,
       moduleId: null,
       rarity: 'epic',
+      mainStoneEfficiency: 1,
+      subStoneEfficiency: 1,
       stoneEfficiency: 1,
+    })
+  })
+
+  it('migrates legacy single stone efficiency to main and sub', () => {
+    const {
+      simCannonAssistMainStoneEfficiency: _m,
+      simCannonAssistSubStoneEfficiency: _s,
+      ...rest
+    } = defaultWorkshopPersisted()
+    const ws = { ...rest, simCannonAssistStoneEfficiency: 12 } as unknown as WorkshopAssistChassisPersisted
+    expect(workshopAssistChassisModuleSelection(ws, 'cannon')).toMatchObject({
+      mainStoneEfficiency: 12,
+      subStoneEfficiency: 12,
     })
   })
 

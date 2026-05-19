@@ -173,7 +173,8 @@ export function formatCoinAbbrev(n: number): string {
   const abs = n
   if (abs >= 1e21) return `${(n / 1e21).toFixed(2)} s`
   if (abs >= 1e18) return `${(n / 1e18).toFixed(2)} Q`
-  if (abs >= 1e15) return `${(n / 1e15).toFixed(2)} q`
+  // Wiki uses q (1e15) from ~0.1 q upward; 250 T = 0.25 q (Assist Module labs, etc.)
+  if (abs >= 1e14) return `${(n / 1e15).toFixed(2)} q`
   if (abs >= 1e12) return `${(n / 1e12).toFixed(2)} T`
   if (abs >= 1e9) return `${(n / 1e9).toFixed(2)} B`
   if (abs >= 1e6) return `${(n / 1e6).toFixed(2)} M`

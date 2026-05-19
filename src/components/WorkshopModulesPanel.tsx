@@ -44,7 +44,10 @@ import {
 import { buildTowerHealthHeroStatContext } from '../data/workshopChassisModuleHeroStat'
 import { ChassisModulePickerDialog } from './ChassisModulePickerDialog'
 import { ChassisModulesCatalog } from './ChassisModulesCatalog'
+import { AssistModuleReference } from './AssistModuleReference'
+import { AssistUnlocksPanel } from './AssistUnlocksPanel'
 import { SubmoduleEffectsCatalog } from './SubmoduleEffectsCatalog'
+import { useAssistModuleCatalogVisible } from '../assistModuleCatalogVisibility'
 import {
   WORKSHOP_ARMOR_MODULE_NOTES,
   WORKSHOP_ARMOR_MODULE_ORDER,
@@ -317,7 +320,9 @@ function ModulesLabDetail({
             <span className="workshop__card-name">
               {t('ws_modules_assist_label')}: {assistEquipped.name}
             </span>
-            <span className="workshop__card-value">{assist.stoneEfficiency}%</span>
+            <span className="workshop__card-value">
+              {assist.mainStoneEfficiency}% / {assist.subStoneEfficiency}%
+            </span>
           </div>
           <p className="workshop__sim-foot">
             {formatWorkshopChassisModuleAbility(assistEquipped, assist.rarity)}
@@ -381,6 +386,7 @@ export function WorkshopModulesPanel({
   const { t } = useI18n()
   const [modulesCatalogVisible] = useModulesCatalogVisible()
   const [submodulesCatalogVisible] = useSubmodulesCatalogVisible()
+  const [assistModuleCatalogVisible] = useAssistModuleCatalogVisible()
   const presetIndex = clampWorkshopModuleActivePresetIndex(
     workshopPersisted.moduleActivePresetIndex,
   )
@@ -563,7 +569,7 @@ export function WorkshopModulesPanel({
                   {assistChassis.unlocked ? (
                     <AssistStoneEfficiencyDisplay
                       slot={key}
-                      value={assistChassis.stoneEfficiency}
+                      value={assistChassis.mainStoneEfficiency}
                     />
                   ) : null}
                 </div>
@@ -655,6 +661,11 @@ export function WorkshopModulesPanel({
         />
       </div>
 
+      <AssistUnlocksPanel
+        workshopPersisted={workshopPersisted}
+        onWorkshopPersistedChange={onWorkshopPersistedChange}
+      />
+
       {modulesCatalogVisible ? (
         slot === 'cannon' ? (
           <ChassisModulesCatalog
@@ -711,6 +722,8 @@ export function WorkshopModulesPanel({
           onSelectEffect={selectSubmoduleEffect}
         />
       ) : null}
+
+      {assistModuleCatalogVisible ? <AssistModuleReference /> : null}
 
       {pickerTarget != null ? (
         <ChassisModulePickerDialog

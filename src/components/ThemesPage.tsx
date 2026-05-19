@@ -31,7 +31,7 @@ import {
 } from '../themeCoinBonus'
 import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
 import { resetAllThemes } from '../resetThemes'
-import { isThemeOwned, useThemeOwned } from '../themeOwnedStorage'
+import { isThemeOwned, setThemesOwnedBatch, useThemeOwned } from '../themeOwnedStorage'
 import { useThemeSelection } from '../themeSelectionStorage'
 import { ThemeIcon } from './ThemeIcon'
 
@@ -333,6 +333,21 @@ export function ThemesPage({
     [visibleItems, ownedIds],
   )
 
+  const visibleThemeIds = useMemo(
+    () => visibleItems.map((entry) => entry.id),
+    [visibleItems],
+  )
+
+  const allVisibleOwned =
+    visibleThemeIds.length > 0 && ownedCountInCategory === visibleThemeIds.length
+
+  const setVisibleOwned = useCallback(
+    (owned: boolean) => {
+      setThemesOwnedBatch(visibleThemeIds, owned)
+    },
+    [visibleThemeIds],
+  )
+
   const anyVisibleInPanel = useMemo(() => {
     if (activeCategory === 'tower') {
       return (
@@ -539,6 +554,32 @@ export function ThemesPage({
           })}
         </p>
       ) : null}
+
+      <div className="themes-page__filter-bar">
+        <p className="themes-page__filter-count" aria-live="polite">
+          {withParams(t('themes_filter_count'), {
+            owned: ownedCountInCategory,
+            shown: visibleThemeIds.length,
+          })}
+        </p>
+        <button
+          type="button"
+          className="themes-page__filter-select-all"
+          disabled={visibleThemeIds.length === 0}
+          aria-label={
+            allVisibleOwned
+              ? withParams(t('themes_clear_all_shown_aria'), {
+                  count: visibleThemeIds.length,
+                })
+              : withParams(t('themes_select_all_shown_aria'), {
+                  count: visibleThemeIds.length,
+                })
+          }
+          onClick={() => setVisibleOwned(!allVisibleOwned)}
+        >
+          {allVisibleOwned ? t('themes_clear_all_shown') : t('themes_select_all_shown')}
+        </button>
+      </div>
 
       <div
         id={`themes-panel-${activeCategory}`}

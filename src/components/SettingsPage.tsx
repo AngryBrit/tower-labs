@@ -1,7 +1,7 @@
 import { APP_VERSION, CHANGELOG_URL } from '../appVersion'
 import { useBudgetPanelsVisible } from '../budgetPanelsVisibility'
-import { useCardsStatOverlayVisible } from '../cardsStatOverlayVisibility'
 import { useModulesCatalogVisible } from '../modulesCatalogVisibility'
+import { useAssistModuleCatalogVisible } from '../assistModuleCatalogVisibility'
 import { useSubmodulesCatalogVisible } from '../submodulesCatalogVisibility'
 import { useI18n, type AppLocale } from '../i18n'
 
@@ -11,7 +11,8 @@ export function SettingsPage() {
   const [modulesCatalogVisible, setModulesCatalogVisible] = useModulesCatalogVisible()
   const [submodulesCatalogVisible, setSubmodulesCatalogVisible] =
     useSubmodulesCatalogVisible()
-  const [cardsStatOverlayVisible, setCardsStatOverlayVisible] = useCardsStatOverlayVisible()
+  const [assistModuleCatalogVisible, setAssistModuleCatalogVisible] =
+    useAssistModuleCatalogVisible()
 
   return (
     <div className="settings-page" role="region" aria-label={t('app_settings_title')}>
@@ -72,12 +73,12 @@ export function SettingsPage() {
         <label className="glow-btn glow-btn--toggle settings-page__toggle">
           <input
             type="checkbox"
-            checked={cardsStatOverlayVisible}
-            onChange={(e) => setCardsStatOverlayVisible(e.target.checked)}
+            checked={assistModuleCatalogVisible}
+            onChange={(e) => setAssistModuleCatalogVisible(e.target.checked)}
           />
-          {t('app_settings_cards_stat_overlay_label')}
+          {t('app_settings_assist_wiki_label')}
         </label>
-        <p className="settings-page__hint">{t('app_settings_cards_stat_overlay_hint')}</p>
+        <p className="settings-page__hint">{t('app_settings_assist_wiki_hint')}</p>
       </div>
 
       <div className="settings-page__meta">

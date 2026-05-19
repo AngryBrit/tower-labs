@@ -5,8 +5,10 @@ import {
 } from './labLevelOverridesCsv'
 import {
   WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  WORKSHOP_ULTIMATE_OWNED_ORDER,
   WORKSHOP_ULTIMATE_UPGRADE_ORDER,
 } from './data/workshopUltimate'
+import { WORKSHOP_ULTIMATE_PLUS_LEVEL_ORDER } from './data/workshopUltimatePlusData'
 import {
   WORKSHOP_GAME_CARD_ORDER,
   type WorkshopGameCardId,
@@ -29,6 +31,7 @@ const WS_BOOL_FIELDS = new Set<keyof WorkshopPersistedV1>([
   'simGeneratorAssistUnlocked',
   'simCoreAssistUnlocked',
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  ...WORKSHOP_ULTIMATE_OWNED_ORDER,
 ])
 
 const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
@@ -137,8 +140,18 @@ const WS_FIELDS: readonly (keyof WorkshopPersistedV1)[] = [
   'simArmorAssistStoneEfficiency',
   'simGeneratorAssistStoneEfficiency',
   'simCoreAssistStoneEfficiency',
+  'simCannonAssistMainStoneEfficiency',
+  'simArmorAssistMainStoneEfficiency',
+  'simGeneratorAssistMainStoneEfficiency',
+  'simCoreAssistMainStoneEfficiency',
+  'simCannonAssistSubStoneEfficiency',
+  'simArmorAssistSubStoneEfficiency',
+  'simGeneratorAssistSubStoneEfficiency',
+  'simCoreAssistSubStoneEfficiency',
   ...WORKSHOP_ULTIMATE_UPGRADE_ORDER,
   ...WORKSHOP_ULTIMATE_ACTIVE_ORDER,
+  ...WORKSHOP_ULTIMATE_OWNED_ORDER,
+  ...WORKSHOP_ULTIMATE_PLUS_LEVEL_ORDER,
 ]
 
 const CARD_STAR_PREFIX = 'star.'

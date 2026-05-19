@@ -10,7 +10,21 @@ import {
   computeWorkshopCoinAggregates,
   computeWorkshopStoneAggregates,
 } from './workshopBudgetAggregates'
-import { workshopUltimateNextMarginalStones } from './data/workshopUltimate'
+import {
+  WORKSHOP_ULTIMATE_WEAPON_ORDER,
+  workshopUltimateActiveKey,
+  workshopUltimateNextMarginalStones,
+  workshopUltimateOwnedKey,
+} from './data/workshopUltimate'
+
+function allUltimateOwnedFlags(active: boolean): Record<string, boolean> {
+  return Object.fromEntries(
+    WORKSHOP_ULTIMATE_WEAPON_ORDER.flatMap((id) => [
+      [workshopUltimateOwnedKey(id), true],
+      [workshopUltimateActiveKey(id), active],
+    ]),
+  )
+}
 
 describe('computeWorkshopCoinAggregates', () => {
   it('starts at zero spent with default snapshot', () => {
@@ -170,27 +184,21 @@ describe('computeWorkshopStoneAggregates', () => {
     expect(computeWorkshopStoneAggregates(ws).spentAll).toBe(stones)
   })
 
-  it('excludes inactive weapons from visible next-upgrade stone sum', () => {
-    const noneActive = computeWorkshopStoneAggregates({
+  it('excludes inactive owned weapons from visible next-upgrade stone sum', () => {
+    const base = {
       ...defaultWorkshopPersisted(),
-      mainTab: 'upgrade',
-      category: 'ultimate',
+      mainTab: 'upgrade' as const,
+      category: 'ultimate' as const,
+    }
+    const inactiveOwned = computeWorkshopStoneAggregates({
+      ...base,
+      ...allUltimateOwnedFlags(false),
     }).nextUpgradeVisibleSum
-    const allActive = computeWorkshopStoneAggregates({
-      ...defaultWorkshopPersisted(),
-      mainTab: 'upgrade',
-      category: 'ultimate',
-      goldenTowerActive: true,
-      blackHoleActive: true,
-      spotlightActive: true,
-      deathWaveActive: true,
-      chainLightningActive: true,
-      smartMissilesActive: true,
-      innerLandMinesActive: true,
-      poisonSwampActive: true,
-      chronoFieldActive: true,
+    const activeOwned = computeWorkshopStoneAggregates({
+      ...base,
+      ...allUltimateOwnedFlags(true),
     }).nextUpgradeVisibleSum
-    expect(noneActive).toBe(0)
-    expect(allActive).toBeGreaterThan(0)
+    expect(inactiveOwned).toBeLessThan(activeOwned)
+    expect(activeOwned).toBeGreaterThan(0)
   })
 })

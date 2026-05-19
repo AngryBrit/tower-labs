@@ -36,6 +36,7 @@ export const ASSIST_CHASSIS_MODULE_RARITY_KEY = {
   core: 'simCoreAssistChassisModuleRarity',
 } as const
 
+/** @deprecated Legacy single track; migrated to main/sub on read. */
 export const ASSIST_STONE_EFFICIENCY_KEY = {
   cannon: 'simCannonAssistStoneEfficiency',
   armor: 'simArmorAssistStoneEfficiency',
@@ -43,14 +44,32 @@ export const ASSIST_STONE_EFFICIENCY_KEY = {
   core: 'simCoreAssistStoneEfficiency',
 } as const
 
+export const ASSIST_MAIN_STONE_EFFICIENCY_KEY = {
+  cannon: 'simCannonAssistMainStoneEfficiency',
+  armor: 'simArmorAssistMainStoneEfficiency',
+  generator: 'simGeneratorAssistMainStoneEfficiency',
+  core: 'simCoreAssistMainStoneEfficiency',
+} as const
+
+export const ASSIST_SUB_STONE_EFFICIENCY_KEY = {
+  cannon: 'simCannonAssistSubStoneEfficiency',
+  armor: 'simArmorAssistSubStoneEfficiency',
+  generator: 'simGeneratorAssistSubStoneEfficiency',
+  core: 'simCoreAssistSubStoneEfficiency',
+} as const
+
 export type WorkshopAssistChassisPersisted = {
   [K in (typeof ASSIST_CHASSIS_UNLOCKED_KEY)[WorkshopAssistModuleSlot]]: boolean
 } & {
   [K in (typeof ASSIST_CHASSIS_MODULE_ID_KEY)[WorkshopAssistModuleSlot]]: string
 } & {
-  [K in (typeof ASSIST_CHASSIS_MODULE_RARITY_KEY)[WorkshopAssistModuleSlot]]: string
+  [K in (typeof ASSIST_CHASSIS_MODULE_RARITY_KEY)[WorkshopAssistModuleSlot]]: WorkshopChassisModuleRarity
 } & {
   [K in (typeof ASSIST_STONE_EFFICIENCY_KEY)[WorkshopAssistModuleSlot]]: number
+} & {
+  [K in (typeof ASSIST_MAIN_STONE_EFFICIENCY_KEY)[WorkshopAssistModuleSlot]]: number
+} & {
+  [K in (typeof ASSIST_SUB_STONE_EFFICIENCY_KEY)[WorkshopAssistModuleSlot]]: number
 }
 
 export function clampAssistStoneEfficiency(n: number): number {
@@ -58,16 +77,46 @@ export function clampAssistStoneEfficiency(n: number): number {
   return Math.max(0, Math.min(ASSIST_STONE_EFFICIENCY_MAX, Math.trunc(n)))
 }
 
+export function assistMainStoneEfficiencyFromPersisted(
+  ws: WorkshopAssistChassisPersisted,
+  slot: WorkshopAssistModuleSlot,
+): number {
+  const mainKey = ASSIST_MAIN_STONE_EFFICIENCY_KEY[slot]
+  const legacyKey = ASSIST_STONE_EFFICIENCY_KEY[slot]
+  const raw = (ws as Record<string, unknown>)[mainKey] ?? (ws as Record<string, unknown>)[legacyKey]
+  return clampAssistStoneEfficiency(Number(raw))
+}
+
+export function assistSubStoneEfficiencyFromPersisted(
+  ws: WorkshopAssistChassisPersisted,
+  slot: WorkshopAssistModuleSlot,
+): number {
+  const subKey = ASSIST_SUB_STONE_EFFICIENCY_KEY[slot]
+  const legacyKey = ASSIST_STONE_EFFICIENCY_KEY[slot]
+  const raw = (ws as Record<string, unknown>)[subKey] ?? (ws as Record<string, unknown>)[legacyKey]
+  return clampAssistStoneEfficiency(Number(raw))
+}
+
 export function workshopAssistChassisModuleSelection(
   ws: WorkshopAssistChassisPersisted,
   slot: WorkshopAssistModuleSlot,
-): WorkshopChassisModuleSelection & { unlocked: boolean; stoneEfficiency: number } {
+): WorkshopChassisModuleSelection & {
+  unlocked: boolean
+  mainStoneEfficiency: number
+  subStoneEfficiency: number
+  /** @deprecated Use mainStoneEfficiency */
+  stoneEfficiency: number
+} {
   const idKey = ASSIST_CHASSIS_MODULE_ID_KEY[slot]
   const rKey = ASSIST_CHASSIS_MODULE_RARITY_KEY[slot]
   const unlocked = ws[ASSIST_CHASSIS_UNLOCKED_KEY[slot]] === true
+  const mainStoneEfficiency = assistMainStoneEfficiencyFromPersisted(ws, slot)
+  const subStoneEfficiency = assistSubStoneEfficiencyFromPersisted(ws, slot)
   return {
     unlocked,
-    stoneEfficiency: clampAssistStoneEfficiency(ws[ASSIST_STONE_EFFICIENCY_KEY[slot]]),
+    mainStoneEfficiency,
+    subStoneEfficiency,
+    stoneEfficiency: mainStoneEfficiency,
     moduleId: unlocked ? sanitizeChassisModuleId(slot, ws[idKey]) : null,
     rarity: sanitizeChassisModuleRarity(ws[rKey]),
   }
@@ -100,7 +149,32 @@ export function defaultAssistChassisFields(): WorkshopAssistChassisPersisted {
     simArmorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simGeneratorAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
     simCoreAssistStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simCannonAssistMainStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simArmorAssistMainStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simGeneratorAssistMainStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simCoreAssistMainStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simCannonAssistSubStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simArmorAssistSubStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simGeneratorAssistSubStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
+    simCoreAssistSubStoneEfficiency: ASSIST_STONE_EFFICIENCY_DEFAULT,
   }
+}
+
+export function assistStoneEfficiencyPatch(
+  slot: WorkshopAssistModuleSlot,
+  track: 'main' | 'sub',
+  value: number,
+): Partial<WorkshopAssistChassisPersisted> {
+  const clamped = clampAssistStoneEfficiency(value)
+  const key =
+    track === 'main'
+      ? ASSIST_MAIN_STONE_EFFICIENCY_KEY[slot]
+      : ASSIST_SUB_STONE_EFFICIENCY_KEY[slot]
+  const legacyKey = ASSIST_STONE_EFFICIENCY_KEY[slot]
+  return {
+    [key]: clamped,
+    ...(track === 'main' ? { [legacyKey]: clamped } : {}),
+  } as Partial<WorkshopAssistChassisPersisted>
 }
 
 /** Assist unique-effect efficiency as a fraction (1% → 0.01). */

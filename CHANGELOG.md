@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-05-19
+
+### Added
+
+- **Ultimate Weapon Plus** — Nine wiki secondary abilities (Smite, Cover Fire, Death Creep, …) with ordered unlock costs and upgrade tracks on each ultimate weapon card ([`workshopUltimatePlus`](src/data/workshopUltimatePlus.ts), [`workshopUltimatePlusData.ts`](src/data/workshopUltimatePlusData.ts), `WorkshopUltimatePlusAbilityCard`). Vitest coverage for unlock order and stone totals.
+- **Assist chassis modules** — Per-slot assist unlocks, unique rarity upgrades, main/sub stone efficiency (1–70%), and equipped assist chassis modules on the **Modules** hub ([`workshopAssistChassisModule`](src/data/workshopAssistChassisModule.ts), `AssistUnlocksPanel`). Tower CSV `ws` rows round-trip assist fields.
+- **Assist module wiki reference** — Optional stone-efficiency and unique-rarity tables on the Modules tab (`AssistModuleReference`); toggle in **Tools / Settings** (`assistModuleCatalogVisibility`).
+- **Workshop stone budgets** — Ultimate tab budget panel uses power-stone rollups (basic upgrades, weapon unlocks, Plus unlocks/upgrades) via [`workshopBudgetAggregates.ts`](src/workshopBudgetAggregates.ts).
+- **Spanish UI strings** — Split to [`dictionary.es.ts`](src/i18n/dictionary.es.ts) (same pattern as German).
+
+### Changed
+
+- **Cards stat overlay** — Scaled star effect always shows on card art; removed the Settings toggle and `cardsStatOverlayVisibility` storage.
+- **Lab costs** — Additional lab name aliases; `formatPowerStoneAmount` for stone display.
+
+### Docs
+
+- README: Ultimate Plus, assist chassis, stone budgets, assist wiki toggle, `dictionary.es.ts`, tower CSV assist/Plus fields, maintenance scripts; version **2.7.0**.
+
 ## [2.6.3] - 2026-05-18
 
 ### Added

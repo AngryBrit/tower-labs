@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
-  workshopUltimateIsActive,
+  WORKSHOP_ULTIMATE_WEAPON_ORDER,
   workshopUltimateMaxLevel,
   workshopUltimateNextMarginalStones,
+  workshopUltimateOwnedCount,
+  workshopUltimateOwnedKey,
   workshopUltimateStatDisplay,
   workshopUltimateTotalStonesToMaxFrom,
+  workshopUltimateUnlockCostForWeapon,
+  workshopUltimateUnlockSpentStones,
+  workshopUltimateUnlockToMaxStones,
+  workshopUltimateWeaponIsOwned,
 } from './workshopUltimate'
 
 describe('workshop ultimate wiki spot checks', () => {
@@ -203,9 +209,30 @@ describe('workshop ultimate wiki spot checks', () => {
     ).toBe(9_723)
   })
 
-  it('treats missing active flags as off', () => {
-    expect(workshopUltimateIsActive({}, 'goldenTower')).toBe(false)
-    expect(workshopUltimateIsActive({ goldenTowerActive: true }, 'goldenTower')).toBe(true)
+  it('weapon unlock costs follow wiki order (9705 total)', () => {
+    const empty = {}
+    expect(workshopUltimateUnlockCostForWeapon(empty, 'goldenTower')).toBe(5)
+    expect(workshopUltimateOwnedCount(empty)).toBe(0)
+
+    const oneOwned = { goldenTowerOwned: true }
+    expect(workshopUltimateWeaponIsOwned(oneOwned, 'goldenTower')).toBe(true)
+    expect(workshopUltimateUnlockCostForWeapon(oneOwned, 'chainLightning')).toBe(50)
+    expect(workshopUltimateUnlockSpentStones(oneOwned)).toBe(5)
+    expect(workshopUltimateUnlockToMaxStones(oneOwned)).toBe(9700)
+
+    const allOwned = Object.fromEntries(
+      WORKSHOP_ULTIMATE_WEAPON_ORDER.map((id) => [workshopUltimateOwnedKey(id), true]),
+    )
+    expect(workshopUltimateOwnedCount(allOwned)).toBe(9)
+    expect(workshopUltimateUnlockCostForWeapon(allOwned, 'spotlight')).toBeNull()
+    expect(workshopUltimateUnlockSpentStones(allOwned)).toBe(9705)
+    expect(workshopUltimateUnlockToMaxStones(allOwned)).toBe(0)
+  })
+
+  it('treats legacy upgrade levels as owned', () => {
+    expect(workshopUltimateWeaponIsOwned({ goldenTowerBonusLevel: 1 }, 'goldenTower')).toBe(
+      true,
+    )
   })
 
   it('every ultimate row has a finite max level', () => {

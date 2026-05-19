@@ -1500,7 +1500,8 @@ const ENHANCEMENT_COIN_DISCOUNT_LABS = new Set([
 
 /**
  * Dissonant Echo — one lab per category (Attack / Defense / Utility / Ultimate Weapons).
- * In-game **Value** is echo chance: **0.50% × effective lab level** (Lv.0→0.00%, Lv.20→10.00%).
+ * In-game **Value** is echo chance: **0.50% × lab level** (Lv.0→0.00%, Lv.1→0.50%, Lv.20→10.00%).
+ * Wiki cost table rows 1–20 match toolkit marginal levels (see `scripts/gen-dissonant-echo-labs.mjs`).
  * Wiki per-tier echo boost scales as `(Dissonance Boost − 1) × lab percentage` (additive across tiers).
  */
 const DISSONANT_ECHO_LABS = new Set([
@@ -1563,7 +1564,7 @@ export function enhancementCoinDiscountValuePercentDisplay(
 }
 
 /**
- * Dissonant Echo labs — **0.50%** echo chance per level (Lv.20→10.00%).
+ * Dissonant Echo labs — **0.50%** per level from Lv.1 (Lv.20→10.00% max).
  * Marginal **Time** / **Coins** (cost **×2.25** per level from **1 q**) live in `tower-labs.json`
  * (see `scripts/gen-dissonant-echo-labs.mjs`).
  */
