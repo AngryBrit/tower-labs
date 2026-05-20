@@ -30,17 +30,20 @@ const thunderRange = [26, ...lin(28, 3, 15)]
 
 const goldenDuration = lin(20, 0.5, 31)
 const goldenCooldown = lin(120, -3, 16)
-const goldenBonus = lin(2, 0.2, 21)
-const goldenRange = lin(20, 2, 31)
+/** Bonus ×2.0–×8.0 (levels 0–30); cooldown/range cap earlier per wiki. */
+const goldenBonus = lin(2, 0.2, 31).map((v) => Math.round(v * 10) / 10)
+const goldenRange = lin(20, 2, 21)
 
 const amplifyDuration = lin(20, 0.5, 31)
 const amplifyCooldown = lin(120, -3, 16)
-const amplifyBonus = lin(3.5, 0.4, 21)
-const amplifyRange = lin(25, 2, 31)
+/** Bonus ×3.5–×15.5 (levels 0–30); range caps at level 18 (61m). */
+const amplifyBonus = lin(3.5, 0.4, 31).map((v) => Math.round(v * 10) / 10)
+const amplifyRange = lin(25, 2, 19)
 
 const botBotDuration = lin(20, 0.5, 31)
 const botBotCooldown = lin(120, -3, 16)
-const botBotBonus = lin(1.05, 0.05, 31)
+/** Bonus ×1.0–×2.5 (levels 0–30); range caps at level 18 (61m). */
+const botBotBonus = lin(1, 0.05, 31).map((v) => Math.round(v * 100) / 100)
 const botBotRange = lin(25, 2, 19)
 
 const flameDamageReduction = lin(20, 3, 26)
@@ -136,42 +139,48 @@ const SPECIAL_LEVEL = {
 const SPECIAL_TRACK_ROWS = {
   flame: {
     kind: 'mult',
-    rows: [
-      [1.5, 0], [1.6, 100], [1.7, 150], [1.8, 200], [1.9, 250], [2.0, 300], [2.1, 350], [2.2, 400],
-      [2.3, 450], [2.4, 500], [2.5, 550], [2.6, 600], [2.7, 650], [2.8, 700], [2.9, 750], [3.0, 800],
-      [3.1, 850], [3.2, 900], [3.3, 950], [3.4, 1000], [3.5, 1050],
-    ],
+    /** Burning Ground: ×1.5–×3.5, medals 100 +50/level (levels 1–20). */
+    rows: Array.from({ length: 21 }, (_, i) => {
+      const value = Math.round((1.5 + i * 0.1) * 10) / 10
+      const cost = i === 0 ? 0 : 100 + (i - 1) * 50
+      return [value, cost]
+    }),
   },
   thunder: {
     kind: 'percent',
-    rows: [
-      [5, 0], [6, 100], [7, 150], [8, 200], [9, 250], [10, 300], [11, 350], [12, 400], [13, 450],
-      [14, 500], [15, 550], [16, 600], [17, 650], [18, 700], [19, 750], [20, 800], [21, 850],
-      [22, 900], [23, 950], [24, 1000], [25, 1050],
-    ],
+    /** Titan Shock: 5%–25% attack speed, medals 100 +50/level (levels 1–20). */
+    rows: Array.from({ length: 21 }, (_, i) => {
+      const value = 5 + i
+      const cost = i === 0 ? 0 : 100 + (i - 1) * 50
+      return [value, cost]
+    }),
   },
   golden: {
     kind: 'mult',
-    rows: [
-      [1.25, 0], [1.3, 100], [1.35, 150], [1.4, 200], [1.45, 250], [1.5, 300], [1.55, 350], [1.6, 400],
-      [1.65, 450], [1.7, 500], [1.75, 550], [1.8, 600], [1.85, 650], [1.9, 700], [1.95, 750], [2.0, 800],
-      [2.05, 850], [2.1, 900], [2.15, 950], [2.2, 1000], [2.25, 1050], [2.3, 1100], [2.35, 1150],
-      [2.4, 1200], [2.45, 1250], [2.5, 1300],
-    ],
+    /** Bonus Cells: ×1.25–×2.50; medals 100 +50 (lv 1–18), then 100 +5 (lv 19–25). */
+    rows: Array.from({ length: 26 }, (_, i) => {
+      const value = Math.round((1.25 + i * 0.05) * 100) / 100
+      const cost = i === 0 ? 0 : i <= 18 ? 100 + (i - 1) * 50 : 100 + (i - 19) * 5
+      return [value, cost]
+    }),
   },
   amplify: {
     kind: 'count',
-    rows: [
-      [3, 0], [4, 100], [5, 300], [6, 500], [7, 700], [8, 900], [9, 1100], [10, 1300], [11, 1500], [12, 1700],
-    ],
+    /** Echoing Shot: 3–12 projectiles; lv1 costs 100, then +200/level (max level 9). */
+    rows: Array.from({ length: 10 }, (_, i) => {
+      const value = 3 + i
+      const cost = i === 0 ? 0 : 100 + (i - 1) * 200
+      return [value, cost]
+    }),
   },
   botBot: {
     kind: 'mult',
-    rows: [
-      [1.25, 0], [1.3, 100], [1.35, 150], [1.4, 200], [1.45, 250], [1.5, 300], [1.55, 350], [1.6, 400],
-      [1.65, 450], [1.7, 500], [1.75, 550], [1.8, 600], [1.85, 650], [1.9, 700], [1.95, 750], [2.0, 800],
-      [2.05, 850], [2.1, 900], [2.15, 950], [2.2, 1000], [2.25, 1050],
-    ],
+    /** Maximum Power: ×1.25–×2.25, medals 100 +50/level (levels 1–20). */
+    rows: Array.from({ length: 21 }, (_, i) => {
+      const value = Math.round((1.25 + i * 0.05) * 100) / 100
+      const cost = i === 0 ? 0 : 100 + (i - 1) * 50
+      return [value, cost]
+    }),
   },
 }
 

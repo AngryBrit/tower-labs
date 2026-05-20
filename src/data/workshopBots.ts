@@ -19,6 +19,7 @@ import {
   type WorkshopBotUpgradeKey,
 } from './workshopBotsData'
 import {
+  formatWorkshopUltimateCooldown,
   workshopUltimateTrackClampLevel,
   workshopUltimateTrackMaxLevel,
   workshopUltimateTrackNextMarginalStones,
@@ -92,9 +93,18 @@ export function workshopBotSpecialNextMarginalMedals(
   return workshopUltimateTrackNextMarginalStones(WORKSHOP_BOT_SPECIAL_TRACKS[key], L)
 }
 
+function formatWorkshopBotPlusMult(value: number): string {
+  return `x${(Math.round(value * 100) / 100).toFixed(2)}`
+}
+
 export function workshopBotSpecialStatDisplay(botId: WorkshopBotId, completedLevels: number): string {
   const key = workshopBotSpecialLevelKey(botId)
-  return workshopUltimateTrackStatDisplay(WORKSHOP_BOT_SPECIAL_TRACKS[key], completedLevels)
+  const track = WORKSHOP_BOT_SPECIAL_TRACKS[key]
+  if (track.valueKind === 'mult') {
+    const L = workshopUltimateTrackClampLevel(track, completedLevels)
+    return formatWorkshopBotPlusMult(track.milestones[L]!.value)
+  }
+  return workshopUltimateTrackStatDisplay(track, completedLevels)
 }
 
 export function workshopBotMaxLevel(key: WorkshopBotUpgradeKey): number {
@@ -113,7 +123,15 @@ export function workshopBotNextMarginalMedals(
 }
 
 export function workshopBotStatDisplay(key: WorkshopBotUpgradeKey, completedLevels: number): string {
-  return workshopUltimateTrackStatDisplay(WORKSHOP_BOT_TRACKS[key], completedLevels)
+  const track = WORKSHOP_BOT_TRACKS[key]
+  const L = workshopUltimateTrackClampLevel(track, completedLevels)
+  if (track.valueKind === 'seconds') {
+    return formatWorkshopUltimateCooldown(track.milestones[L]!.value)
+  }
+  if (track.valueKind === 'mult') {
+    return formatWorkshopBotPlusMult(track.milestones[L]!.value)
+  }
+  return workshopUltimateTrackStatDisplay(track, completedLevels)
 }
 
 export type WorkshopBotActiveKey =

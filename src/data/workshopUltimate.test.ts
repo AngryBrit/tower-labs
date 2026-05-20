@@ -66,7 +66,7 @@ describe('workshop ultimate wiki spot checks', () => {
     expect(workshopUltimateMaxLevel('chronoFieldCooldownLevel')).toBe(12)
     expect(workshopUltimateStatDisplay('chronoFieldDurationLevel', 35)).toBe('40s')
     expect(workshopUltimateStatDisplay('chronoFieldSlowLevel', 11)).toBe('75.00%')
-    expect(workshopUltimateStatDisplay('chronoFieldCooldownLevel', 12)).toBe('1m')
+    expect(workshopUltimateStatDisplay('chronoFieldCooldownLevel', 12)).toBe('60s')
     expect(workshopUltimateTotalStonesToMaxFrom('chronoFieldDurationLevel', 0)).toBe(5_530)
     expect(workshopUltimateTotalStonesToMaxFrom('chronoFieldSlowLevel', 0)).toBe(2_910)
     expect(workshopUltimateTotalStonesToMaxFrom('chronoFieldCooldownLevel', 0)).toBe(1_506)
@@ -100,8 +100,8 @@ describe('workshop ultimate wiki spot checks', () => {
     expect(workshopUltimateNextMarginalStones('deathWaveQuantityLevel', 2)).toBe(850)
   })
 
-  it('Death Wave cooldown L10 shows 3m 20s with next cost 168', () => {
-    expect(workshopUltimateStatDisplay('deathWaveCooldownLevel', 10)).toBe('3m 20s')
+  it('Death Wave cooldown L10 shows 200s with next cost 168', () => {
+    expect(workshopUltimateStatDisplay('deathWaveCooldownLevel', 10)).toBe('200s')
     expect(workshopUltimateNextMarginalStones('deathWaveCooldownLevel', 10)).toBe(168)
   })
 
@@ -132,7 +132,7 @@ describe('workshop ultimate wiki spot checks', () => {
     expect(workshopUltimateMaxLevel('poisonSwampCooldownLevel')).toBe(15)
     expect(workshopUltimateStatDisplay('poisonSwampDamageLevel', 30)).toBe('x3021')
     expect(workshopUltimateStatDisplay('poisonSwampDurationLevel', 0)).toBe('30s')
-    expect(workshopUltimateStatDisplay('poisonSwampDurationLevel', 14)).toBe('1m 40s')
+    expect(workshopUltimateStatDisplay('poisonSwampDurationLevel', 14)).toBe('100s')
     expect(workshopUltimateStatDisplay('poisonSwampCooldownLevel', 15)).toBe('50s')
     expect(workshopUltimateTotalStonesToMaxFrom('poisonSwampDamageLevel', 0)).toBe(13_686)
     expect(workshopUltimateTotalStonesToMaxFrom('poisonSwampDurationLevel', 0)).toBe(3_500)
@@ -150,7 +150,7 @@ describe('workshop ultimate wiki spot checks', () => {
     expect(workshopUltimateMaxLevel('goldenTowerCooldownLevel')).toBe(20)
     expect(workshopUltimateStatDisplay('goldenTowerBonusLevel', 20)).toBe('x21')
     expect(workshopUltimateStatDisplay('goldenTowerDurationLevel', 38)).toBe('53s')
-    expect(workshopUltimateStatDisplay('goldenTowerCooldownLevel', 20)).toBe('1m 40s')
+    expect(workshopUltimateStatDisplay('goldenTowerCooldownLevel', 20)).toBe('100s')
     expect(workshopUltimateTotalStonesToMaxFrom('goldenTowerBonusLevel', 0)).toBe(8_434)
     expect(workshopUltimateTotalStonesToMaxFrom('goldenTowerDurationLevel', 0)).toBe(14_052)
     expect(workshopUltimateTotalStonesToMaxFrom('goldenTowerCooldownLevel', 0)).toBe(4_700)
@@ -187,8 +187,8 @@ describe('workshop ultimate wiki spot checks', () => {
     expect(workshopUltimateNextMarginalStones('blackHoleSizeLevel', 7)).toBe(64)
   })
 
-  it('Black Hole cooldown L0 shows 3m 20s with next cost 10', () => {
-    expect(workshopUltimateStatDisplay('blackHoleCooldownLevel', 0)).toBe('3m 20s')
+  it('Black Hole cooldown L0 shows 200s with next cost 10', () => {
+    expect(workshopUltimateStatDisplay('blackHoleCooldownLevel', 0)).toBe('200s')
     expect(workshopUltimateNextMarginalStones('blackHoleCooldownLevel', 0)).toBe(10)
   })
 

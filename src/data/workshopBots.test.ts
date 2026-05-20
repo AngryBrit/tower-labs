@@ -2,18 +2,24 @@ import { describe, expect, it } from 'vitest'
 import {
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_SPECIAL_UNLOCK_STONES,
+  WORKSHOP_BOT_TRACKS,
   WORKSHOP_BOT_UNLOCK_MEDAL_TOTAL,
   workshopAllBotsOwnedForPlus,
   workshopBotIsOwned,
+  workshopBotMaxLevel,
+  workshopBotNextMarginalMedals,
   workshopBotOwnedKey,
   workshopBotSpecialIsUnlocked,
   workshopBotSpecialLevel,
   workshopBotSpecialStonePurchased,
   workshopBotSpecialMaxLevel,
   workshopBotSpecialNextMarginalMedals,
+  workshopBotSpecialStatDisplay,
   workshopBotSpecialUnlockStones,
+  workshopBotStatDisplay,
   workshopBotUnlockCostForBot,
 } from './workshopBots'
+import { workshopUltimateTrackTotalStonesToMax } from './workshopUltimateTable'
 
 describe('workshopBots unlock', () => {
   it('unlock costs follow event shop order (3100 total for 5 bots)', () => {
@@ -43,6 +49,110 @@ describe('workshopBots unlock', () => {
 
   it('treats legacy upgrade levels as owned', () => {
     expect(workshopBotIsOwned({ flameBotDamageLevel: 1 }, 'flame')).toBe(true)
+  })
+})
+
+describe('workshopBots Golden Bot basic upgrades', () => {
+  it('matches wiki table (max levels, spot values, medal totals)', () => {
+    expect(workshopBotMaxLevel('goldenBotDurationLevel')).toBe(30)
+    expect(workshopBotMaxLevel('goldenBotCooldownLevel')).toBe(15)
+    expect(workshopBotMaxLevel('goldenBotBonusLevel')).toBe(30)
+    expect(workshopBotMaxLevel('goldenBotRangeLevel')).toBe(20)
+
+    expect(workshopBotStatDisplay('goldenBotDurationLevel', 0)).toBe('20s')
+    expect(workshopBotStatDisplay('goldenBotDurationLevel', 30)).toBe('35s')
+    expect(workshopBotStatDisplay('goldenBotCooldownLevel', 15)).toBe('75s')
+    expect(workshopBotStatDisplay('goldenBotBonusLevel', 0)).toBe('x2.00')
+    expect(workshopBotStatDisplay('goldenBotBonusLevel', 30)).toBe('x8.00')
+    expect(workshopBotStatDisplay('goldenBotRangeLevel', 20)).toBe('60.00m')
+
+    expect(workshopBotNextMarginalMedals('goldenBotDurationLevel', 0)).toBe(100)
+    expect(workshopBotNextMarginalMedals('goldenBotDurationLevel', 29)).toBe(1260)
+    expect(workshopBotNextMarginalMedals('goldenBotBonusLevel', 29)).toBe(1260)
+    expect(workshopBotNextMarginalMedals('goldenBotRangeLevel', 19)).toBe(860)
+    expect(workshopBotNextMarginalMedals('goldenBotRangeLevel', 20)).toBeUndefined()
+
+    expect(
+      workshopUltimateTrackTotalStonesToMax(
+        WORKSHOP_BOT_TRACKS.goldenBotDurationLevel,
+        0,
+      ),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(
+        WORKSHOP_BOT_TRACKS.goldenBotCooldownLevel,
+        0,
+      ),
+    ).toBe(5_700)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.goldenBotBonusLevel, 0),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.goldenBotRangeLevel, 0),
+    ).toBe(9_600)
+  })
+})
+
+describe('workshopBots Amplify Bot basic upgrades', () => {
+  it('matches wiki table (max levels, spot values, medal totals)', () => {
+    expect(workshopBotMaxLevel('amplifyBotDurationLevel')).toBe(30)
+    expect(workshopBotMaxLevel('amplifyBotCooldownLevel')).toBe(15)
+    expect(workshopBotMaxLevel('amplifyBotBonusLevel')).toBe(30)
+    expect(workshopBotMaxLevel('amplifyBotRangeLevel')).toBe(18)
+
+    expect(workshopBotStatDisplay('amplifyBotDurationLevel', 30)).toBe('35s')
+    expect(workshopBotStatDisplay('amplifyBotCooldownLevel', 15)).toBe('75s')
+    expect(workshopBotStatDisplay('amplifyBotBonusLevel', 0)).toBe('x3.50')
+    expect(workshopBotStatDisplay('amplifyBotBonusLevel', 30)).toBe('x15.50')
+    expect(workshopBotStatDisplay('amplifyBotRangeLevel', 18)).toBe('61.00m')
+
+    expect(
+      workshopUltimateTrackTotalStonesToMax(
+        WORKSHOP_BOT_TRACKS.amplifyBotDurationLevel,
+        0,
+      ),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(
+        WORKSHOP_BOT_TRACKS.amplifyBotCooldownLevel,
+        0,
+      ),
+    ).toBe(5_700)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.amplifyBotBonusLevel, 0),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.amplifyBotRangeLevel, 0),
+    ).toBe(7_920)
+  })
+})
+
+describe('workshopBots Bot Bot basic upgrades', () => {
+  it('matches wiki table (max levels, spot values, medal totals)', () => {
+    expect(workshopBotMaxLevel('botBotDurationLevel')).toBe(30)
+    expect(workshopBotMaxLevel('botBotCooldownLevel')).toBe(15)
+    expect(workshopBotMaxLevel('botBotBonusLevel')).toBe(30)
+    expect(workshopBotMaxLevel('botBotRangeLevel')).toBe(18)
+
+    expect(workshopBotStatDisplay('botBotDurationLevel', 30)).toBe('35s')
+    expect(workshopBotStatDisplay('botBotCooldownLevel', 15)).toBe('75s')
+    expect(workshopBotStatDisplay('botBotBonusLevel', 0)).toBe('x1.00')
+    expect(workshopBotStatDisplay('botBotBonusLevel', 1)).toBe('x1.05')
+    expect(workshopBotStatDisplay('botBotBonusLevel', 30)).toBe('x2.50')
+    expect(workshopBotStatDisplay('botBotRangeLevel', 18)).toBe('61.00m')
+
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.botBotDurationLevel, 0),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.botBotCooldownLevel, 0),
+    ).toBe(5_700)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.botBotBonusLevel, 0),
+    ).toBe(20_400)
+    expect(
+      workshopUltimateTrackTotalStonesToMax(WORKSHOP_BOT_TRACKS.botBotRangeLevel, 0),
+    ).toBe(7_920)
   })
 })
 
@@ -77,13 +187,40 @@ describe('workshopBots Bot+', () => {
   })
 
   it('Bot+ medal upgrades follow wiki Events table', () => {
-    expect(workshopBotSpecialNextMarginalMedals('flame', 0)).toBe(100)
-    expect(workshopBotSpecialNextMarginalMedals('flame', 20)).toBeUndefined()
     expect(workshopBotSpecialMaxLevel('flame')).toBe(20)
-    expect(workshopBotSpecialNextMarginalMedals('golden', 0)).toBe(100)
+    expect(workshopBotSpecialStatDisplay('flame', 0)).toBe('x1.50')
+    expect(workshopBotSpecialStatDisplay('flame', 20)).toBe('x3.50')
+    expect(workshopBotSpecialNextMarginalMedals('flame', 0)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('flame', 18)).toBe(1000)
+    expect(workshopBotSpecialNextMarginalMedals('flame', 19)).toBe(1050)
+    expect(workshopBotSpecialNextMarginalMedals('flame', 20)).toBeUndefined()
+    expect(workshopBotSpecialMaxLevel('thunder')).toBe(20)
+    expect(workshopBotSpecialStatDisplay('thunder', 0)).toBe('5.00%')
+    expect(workshopBotSpecialStatDisplay('thunder', 20)).toBe('25.00%')
+    expect(workshopBotSpecialNextMarginalMedals('thunder', 0)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('thunder', 18)).toBe(1000)
+    expect(workshopBotSpecialNextMarginalMedals('thunder', 19)).toBe(1050)
     expect(workshopBotSpecialMaxLevel('golden')).toBe(25)
-    expect(workshopBotSpecialNextMarginalMedals('amplify', 0)).toBe(100)
-    expect(workshopBotSpecialNextMarginalMedals('amplify', 3)).toBe(700)
+    expect(workshopBotSpecialStatDisplay('golden', 0)).toBe('x1.25')
+    expect(workshopBotSpecialStatDisplay('golden', 25)).toBe('x2.50')
+    expect(workshopBotSpecialNextMarginalMedals('golden', 0)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('golden', 17)).toBe(950)
+    expect(workshopBotSpecialNextMarginalMedals('golden', 18)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('golden', 24)).toBe(130)
+    expect(workshopBotSpecialNextMarginalMedals('golden', 25)).toBeUndefined()
     expect(workshopBotSpecialMaxLevel('amplify')).toBe(9)
+    expect(workshopBotSpecialStatDisplay('amplify', 0)).toBe('3')
+    expect(workshopBotSpecialStatDisplay('amplify', 9)).toBe('12')
+    expect(workshopBotSpecialNextMarginalMedals('amplify', 0)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('amplify', 1)).toBe(300)
+    expect(workshopBotSpecialNextMarginalMedals('amplify', 8)).toBe(1700)
+    expect(workshopBotSpecialNextMarginalMedals('amplify', 9)).toBeUndefined()
+    expect(workshopBotSpecialMaxLevel('botBot')).toBe(20)
+    expect(workshopBotSpecialStatDisplay('botBot', 0)).toBe('x1.25')
+    expect(workshopBotSpecialStatDisplay('botBot', 20)).toBe('x2.25')
+    expect(workshopBotSpecialNextMarginalMedals('botBot', 0)).toBe(100)
+    expect(workshopBotSpecialNextMarginalMedals('botBot', 18)).toBe(1000)
+    expect(workshopBotSpecialNextMarginalMedals('botBot', 19)).toBe(1050)
+    expect(workshopBotSpecialNextMarginalMedals('botBot', 20)).toBeUndefined()
   })
 })

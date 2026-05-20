@@ -23,14 +23,11 @@ function logLerp(a: number, b: number, t: number): number {
   return Math.exp(Math.log(a) + u * (Math.log(b) - Math.log(a)))
 }
 
+/** Duration/cooldown always as seconds (e.g. `75s`, `20.5s`, `200s`). */
 export function formatWorkshopUltimateCooldown(seconds: number): string {
-  const s = Math.round(seconds)
-  if (s >= 60) {
-    const m = Math.floor(s / 60)
-    const r = s % 60
-    return r === 0 ? `${m}m` : `${m}m ${r}s`
-  }
-  return `${s}s`
+  const rounded = Math.round(seconds * 10) / 10
+  if (Number.isInteger(rounded)) return `${rounded}s`
+  return `${rounded.toFixed(1)}s`
 }
 
 export function formatWorkshopUltimateValue(
