@@ -2068,38 +2068,48 @@ button.workshop__uw-plus-cost--display:hover {
   min-height: 0;
 }
 
-#inpanel-panel-workshop {
-  /* Owned UW body: icon column + stat row (approx. for locked-card unlock parity) */
-  --workshop-uw-unlock-block-min-height: 150px;
+/* Uniform ultimate weapon card height (owned Golden Tower reference) */
+#inpanel-panel-workshop .workshop__grid--ultimate {
+  --workshop-uw-card-height: 338px;
 }
 
-#inpanel-panel-workshop .workshop__uw-card--unowned {
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-card {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  height: var(--workshop-uw-card-height);
+  min-height: var(--workshop-uw-card-height);
 }
 
-#inpanel-panel-workshop .workshop__uw-body--unlock {
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-head {
+  flex: 0 0 auto;
+}
+
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body,
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body--unlock {
   flex: 1 1 auto;
   display: flex;
-  flex-direction: column;
   align-self: stretch;
   width: 100%;
   min-width: 0;
   min-height: 0;
 }
 
-#inpanel-panel-workshop .workshop__uw-stats--unlock {
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body--unlock {
+  flex-direction: column;
+}
+
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-stats--unlock {
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
   min-width: 0;
   height: 100%;
-  min-height: var(--workshop-uw-unlock-block-min-height);
+  min-height: 0;
   align-items: stretch;
 }
 
-#inpanel-panel-workshop .workshop__uw-plus-bar {
+#inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-plus-bar {
   flex: 0 0 auto;
 }
 
