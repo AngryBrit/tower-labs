@@ -31,12 +31,16 @@ import {
   type WorkshopPersistedV1,
 } from '../labPresetsStorage'
 import { useI18n } from '../i18n'
+import { buildWorkshopBotLabDisplayOpts } from '../data/workshopLabDisplayOpts'
+import type { ResearchData } from '../types/research'
 
 type BotsPageProps = {
   embeddedInPanel?: boolean
   toolbarMount?: HTMLDivElement | null
   workshopPersisted: WorkshopPersistedV1
   onWorkshopPersistedChange: (next: WorkshopPersistedV1) => void
+  researchData?: ResearchData | null
+  labLevelOverrides?: Record<string, number>
 }
 
 function botsOverlayPortal(node: ReactNode) {
@@ -80,6 +84,8 @@ export function BotsPage({
   toolbarMount = null,
   workshopPersisted,
   onWorkshopPersistedChange,
+  researchData = null,
+  labLevelOverrides = {},
 }: BotsPageProps) {
   const { t } = useI18n()
   const [hideMaxed, setHideMaxed] = useState(workshopPersisted.hideMaxed)
@@ -108,6 +114,11 @@ export function BotsPage({
         (botId) => !hideMaxed || !workshopBotAllMaxed(workshopPersisted, botId),
       ),
     [hideMaxed, workshopPersisted],
+  )
+
+  const botLabDisplayOpts = useMemo(
+    () => buildWorkshopBotLabDisplayOpts(researchData, labLevelOverrides),
+    [researchData, labLevelOverrides],
   )
 
   const bumpBot = useCallback(
@@ -221,6 +232,7 @@ export function BotsPage({
               botId={botId}
               levels={workshopPersisted}
               workshop={workshopPersisted}
+              botLabDisplayOpts={botLabDisplayOpts}
               onBump={bumpBot}
               onToggleActive={toggleBotActive}
               onSpecialUnlock={unlockBotSpecial}

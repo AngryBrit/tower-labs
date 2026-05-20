@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2026-05-20
+
+### Added
+
+- **Bots + BOTS labs** — Simulated **BOTS** research levels now adjust bot stat values on the **Bots** panel (cooldown −1s/level, duration +0.5s/level, Thunder **Linger** +3% + 0.5%/level combined into one percent display). Wired via [`buildWorkshopBotLabDisplayOpts`](src/data/workshopLabDisplayOpts.ts), [`botsResearch*`](src/types/research.ts), and lab overrides from the Lab tab ([`BotsPage`](src/components/BotsPage.tsx)).
+
+### Docs
+
+- README: BOTS lab integration on the Bots panel; version **2.8.1**.
+
 ## [2.8.0] - 2026-05-19
 
 ### Added

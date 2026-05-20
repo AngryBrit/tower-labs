@@ -1,4 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { buildWorkshopBotLabDisplayOpts } from './workshopLabDisplayOpts'
+import {
+  botsResearchCooldownSecondsReduction,
+  botsResearchDurationBonusSeconds,
+  botsResearchThunderLingerLabPercentPoints,
+  parseResearchManifest,
+  parseResearchSection,
+} from '../types/research'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_SPECIAL_UNLOCK_STONES,
@@ -49,6 +60,58 @@ describe('workshopBots unlock', () => {
 
   it('treats legacy upgrade levels as owned', () => {
     expect(workshopBotIsOwned({ flameBotDamageLevel: 1 }, 'flame')).toBe(true)
+  })
+})
+
+const srcDir = dirname(fileURLToPath(import.meta.url))
+
+function loadBotsResearch() {
+  const manifestRaw: unknown = JSON.parse(
+    readFileSync(join(srcDir, '../../public/research/manifest.json'), 'utf-8'),
+  )
+  const { sectionFiles } = parseResearchManifest(manifestRaw)
+  const rel = sectionFiles.find((f) => f.endsWith('bots.json'))
+  if (!rel) throw new Error('bots.json missing')
+  const raw: unknown = JSON.parse(
+    readFileSync(join(srcDir, '../../public', rel.replace(/^\//, '')), 'utf-8'),
+  )
+  return { sections: [parseResearchSection(raw, 'bots')] }
+}
+
+describe('workshopBots BOTS lab display', () => {
+  const research = loadBotsResearch()
+  const overrides = {
+    '0-0': 5,
+    '0-6': 4,
+    '0-7': 10,
+  }
+
+  it('applies cooldown reduction, duration bonus, and linger percent', () => {
+    expect(
+      botsResearchCooldownSecondsReduction(research, overrides, 'Flame Bot - Cooldown'),
+    ).toBe(5)
+    expect(
+      botsResearchDurationBonusSeconds(research, overrides, 'Golden Bot - Duration'),
+    ).toBe(5)
+    expect(botsResearchThunderLingerLabPercentPoints(research, overrides)).toBe(5)
+
+    const opts = buildWorkshopBotLabDisplayOpts(research, overrides)!
+    expect(workshopBotStatDisplay('flameBotCooldownLevel', 0, opts)).toBe('70s')
+    expect(workshopBotStatDisplay('goldenBotDurationLevel', 0, opts)).toBe('25s')
+    expect(workshopBotStatDisplay('thunderBotLingerLevel', 0, opts)).toBe('25.00%')
+  })
+
+  it('max linger lab adds +13% to workshop linger', () => {
+    const maxLinger = { '0-6': 20 }
+    const opts = buildWorkshopBotLabDisplayOpts(research, maxLinger)!
+    expect(workshopBotStatDisplay('thunderBotLingerLevel', 0, opts)).toBe('33.00%')
+    expect(workshopBotStatDisplay('thunderBotLingerLevel', 20, opts)).toBe('93.00%')
+  })
+
+  it('without lab opts matches workshop-only values', () => {
+    expect(workshopBotStatDisplay('flameBotCooldownLevel', 0)).toBe('75s')
+    expect(workshopBotStatDisplay('goldenBotDurationLevel', 0)).toBe('20s')
+    expect(workshopBotStatDisplay('thunderBotLingerLevel', 0)).toBe('20.00%')
   })
 })
 

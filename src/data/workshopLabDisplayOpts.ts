@@ -1,5 +1,8 @@
 import type { ResearchData } from '../types/research'
 import {
+  botsResearchCooldownSecondsReduction,
+  botsResearchDurationBonusSeconds,
+  botsResearchThunderLingerLabPercentPoints,
   attackResearchDamageStyleLabMultiplier,
   attackResearchHealthStyleLabMultiplier,
   attackResearchSuperCritChanceLabPercentPoints,
@@ -17,6 +20,64 @@ import {
   utilityResearchIncludePercentLabPoints,
 } from '../types/research'
 import type { WorkshopDefenseStatDisplayOpts } from './workshopDefense'
+import type { WorkshopBotUpgradeKey } from './workshopBotsData'
+
+export type WorkshopBotLabDisplayOpts = {
+  cooldownReduction?: Partial<Record<WorkshopBotUpgradeKey, number>>
+  durationBonus?: Partial<Record<WorkshopBotUpgradeKey, number>>
+  thunderLingerLabPercentPoints?: number
+}
+
+const BOT_COOLDOWN_LAB_NAMES: Partial<Record<WorkshopBotUpgradeKey, string>> = {
+  flameBotCooldownLevel: 'Flame Bot - Cooldown',
+  thunderBotCooldownLevel: 'Thunder Bot - Cooldown',
+  goldenBotCooldownLevel: 'Golden Bot - Cooldown',
+  amplifyBotCooldownLevel: 'Amplify Bot - Cooldown',
+  botBotCooldownLevel: 'Bot Bot - Cooldown',
+}
+
+const BOT_DURATION_LAB_NAMES: Partial<Record<WorkshopBotUpgradeKey, string>> = {
+  goldenBotDurationLevel: 'Golden Bot - Duration',
+  amplifyBotDurationLevel: 'Amplify Bot - Duration',
+  botBotDurationLevel: 'Bot Bot - Duration',
+}
+
+export function buildWorkshopBotLabDisplayOpts(
+  research: ResearchData | null | undefined,
+  labOverrides: Record<string, number>,
+): WorkshopBotLabDisplayOpts | undefined {
+  if (research == null) return undefined
+
+  const cooldownReduction: Partial<Record<WorkshopBotUpgradeKey, number>> = {}
+  for (const [key, labName] of Object.entries(BOT_COOLDOWN_LAB_NAMES) as [
+    WorkshopBotUpgradeKey,
+    string,
+  ][]) {
+    const red = botsResearchCooldownSecondsReduction(research, labOverrides, labName)
+    if (red > 0) cooldownReduction[key] = red
+  }
+
+  const durationBonus: Partial<Record<WorkshopBotUpgradeKey, number>> = {}
+  for (const [key, labName] of Object.entries(BOT_DURATION_LAB_NAMES) as [
+    WorkshopBotUpgradeKey,
+    string,
+  ][]) {
+    const add = botsResearchDurationBonusSeconds(research, labOverrides, labName)
+    if (add > 0) durationBonus[key] = add
+  }
+
+  const thunderLingerLabPercentPoints = botsResearchThunderLingerLabPercentPoints(
+    research,
+    labOverrides,
+  )
+
+  return {
+    cooldownReduction,
+    durationBonus,
+    thunderLingerLabPercentPoints:
+      thunderLingerLabPercentPoints > 0 ? thunderLingerLabPercentPoints : undefined,
+  }
+}
 
 export type WorkshopAttackLabDisplayOpts = {
   criticalFactorLabMultiplier?: number

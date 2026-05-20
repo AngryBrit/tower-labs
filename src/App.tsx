@@ -341,6 +341,8 @@ export default function App() {
                     }
                     workshopPersisted={workshopPersisted}
                     onWorkshopPersistedChange={setWorkshopPersisted}
+                    researchData={data}
+                    labLevelOverrides={labLevelOverrides}
                   />
                 </div>
                 <div

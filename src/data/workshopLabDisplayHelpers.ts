@@ -1,4 +1,5 @@
 import { formatCoinAbbrev } from '../labCosts'
+import { formatWorkshopUltimateCooldown } from './workshopUltimateTable'
 
 /** Multiply workshop value by a Health-style lab; show `×m` when base is still 0. */
 export function formatWithHealthStyleLabMultiplier(
@@ -29,6 +30,11 @@ export function formatAdditivePercentPoints(workshopPct: number, labPct: number)
   return `+${(workshopPct + labPct).toFixed(2)}%`
 }
 
+/** Workshop **%** stat plus lab percent points (e.g. Thunder **Linger** `20.00%` → `33.00%`). */
+export function formatPercentAfterLabAddition(workshopPct: number, labPct: number): string {
+  return `${(workshopPct + labPct).toFixed(2)}%`
+}
+
 export function formatAdditivePlusValue(
   workshop: number,
   labAdd: number,
@@ -51,5 +57,12 @@ export function formatSecondsAfterLabReduction(
   labReductionSeconds: number,
 ): string {
   const sec = Math.max(0, workshopSeconds - labReductionSeconds)
-  return `${sec}s`
+  return formatWorkshopUltimateCooldown(sec)
+}
+
+export function formatSecondsAfterLabAddition(
+  workshopSeconds: number,
+  labAdditionSeconds: number,
+): string {
+  return formatWorkshopUltimateCooldown(workshopSeconds + labAdditionSeconds)
 }

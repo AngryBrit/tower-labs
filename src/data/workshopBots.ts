@@ -19,12 +19,21 @@ import {
   type WorkshopBotUpgradeKey,
 } from './workshopBotsData'
 import {
+  formatPercentAfterLabAddition,
+  formatSecondsAfterLabAddition,
+  formatSecondsAfterLabReduction,
+} from './workshopLabDisplayHelpers'
+import type { WorkshopBotLabDisplayOpts } from './workshopLabDisplayOpts'
+import {
   formatWorkshopUltimateCooldown,
   workshopUltimateTrackClampLevel,
   workshopUltimateTrackMaxLevel,
   workshopUltimateTrackNextMarginalStones,
   workshopUltimateTrackStatDisplay,
+  workshopUltimateTrackStatValue,
 } from './workshopUltimateTable'
+
+export type { WorkshopBotLabDisplayOpts } from './workshopLabDisplayOpts'
 
 export {
   WORKSHOP_BOT_ORDER,
@@ -123,14 +132,34 @@ export function workshopBotNextMarginalMedals(
   return workshopUltimateTrackNextMarginalStones(WORKSHOP_BOT_TRACKS[key], completedLevels)
 }
 
-export function workshopBotStatDisplay(key: WorkshopBotUpgradeKey, completedLevels: number): string {
+export function workshopBotStatDisplay(
+  key: WorkshopBotUpgradeKey,
+  completedLevels: number,
+  opts?: WorkshopBotLabDisplayOpts,
+): string {
   const track = WORKSHOP_BOT_TRACKS[key]
   const L = workshopUltimateTrackClampLevel(track, completedLevels)
   if (track.valueKind === 'seconds') {
-    return formatWorkshopUltimateCooldown(track.milestones[L]!.value)
+    const base = track.milestones[L]!.value
+    const cooldownRed = opts?.cooldownReduction?.[key]
+    if (cooldownRed != null && cooldownRed > 0) {
+      return formatSecondsAfterLabReduction(base, cooldownRed)
+    }
+    const durationBonus = opts?.durationBonus?.[key]
+    if (durationBonus != null && durationBonus > 0) {
+      return formatSecondsAfterLabAddition(base, durationBonus)
+    }
+    return formatWorkshopUltimateCooldown(base)
   }
   if (track.valueKind === 'mult') {
     return formatWorkshopBotPlusMult(track.milestones[L]!.value)
+  }
+  if (key === 'thunderBotLingerLevel') {
+    const labPct = opts?.thunderLingerLabPercentPoints
+    if (labPct != null && labPct > 0) {
+      const pct = workshopUltimateTrackStatValue(track, completedLevels)
+      return formatPercentAfterLabAddition(pct, labPct)
+    }
   }
   return workshopUltimateTrackStatDisplay(track, completedLevels)
 }

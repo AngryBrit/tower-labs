@@ -2478,6 +2478,50 @@ function utilityLabLevel(
   return findLabEffectiveLevel(data, overrides, labName, 'utility-research')
 }
 
+function botsLabLevel(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): LabEffectiveLevel | null {
+  return findLabEffectiveLevel(data, overrides, labName, 'bots')
+}
+
+/** Bot cooldown labs: **−1s × lab level** (capped). */
+export function botsResearchCooldownSecondsReduction(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  const level = botsLabLevel(data, overrides, labName)
+  if (level == null) return 0
+  return cappedLabLevel(level)
+}
+
+/** Golden / Amplify / Bot Bot duration labs: **+0.5s × lab level** (capped). */
+export function botsResearchDurationBonusSeconds(
+  data: ResearchData,
+  overrides: Record<string, number>,
+  labName: string,
+): number {
+  const level = botsLabLevel(data, overrides, labName)
+  if (level == null) return 0
+  return cappedLabLevel(level) / 2
+}
+
+/**
+ * Thunder Bot - Linger Time lab bonus for workshop **Linger** % display:
+ * **+3.00% + 0.5% × lab level** (Lv.0→3 … Lv.20→13; wiki **3.50 … 13.00** at Lv.1…20).
+ * Lab cards still show the same curve as seconds (`+3s` … `+13s`).
+ */
+export function botsResearchThunderLingerLabPercentPoints(
+  data: ResearchData,
+  overrides: Record<string, number>,
+): number {
+  const level = botsLabLevel(data, overrides, 'Thunder Bot - Linger Time')
+  if (level == null) return 0
+  return 3 + cappedLabLevel(level) / 2
+}
+
 /** **+pctPerLevel × lab level** percent points (Recovery Package, Enemy Level Skip, etc.). */
 export function labIncludePercentPoints(
   effectiveLevel: number,

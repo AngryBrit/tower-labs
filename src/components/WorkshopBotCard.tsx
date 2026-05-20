@@ -11,6 +11,7 @@ import {
   workshopBotStatDisplay,
   workshopBotUnlockCostForBot,
   type WorkshopBotId,
+  type WorkshopBotLabDisplayOpts,
   type WorkshopBotUpgradeKey,
 } from '../data/workshopBots'
 import { formatPowerStoneAmount } from '../labCosts'
@@ -63,6 +64,7 @@ export type WorkshopBotCardProps = {
   botId: WorkshopBotId
   levels: Record<WorkshopBotUpgradeKey, number>
   workshop: WorkshopPersistedV1
+  botLabDisplayOpts?: WorkshopBotLabDisplayOpts
   onBump: (key: WorkshopBotUpgradeKey, direction: -1 | 1) => void
   onToggleActive: (botId: WorkshopBotId) => void
   onSpecialUnlock: (botId: WorkshopBotId) => void
@@ -74,6 +76,7 @@ export function WorkshopBotCard({
   botId,
   levels,
   workshop,
+  botLabDisplayOpts,
   onBump,
   onToggleActive,
   onSpecialUnlock,
@@ -189,7 +192,7 @@ export function WorkshopBotCard({
                         {statName}
                       </span>
                       <span className="workshop__uw-stat-value">
-                        {workshopBotStatDisplay(key, level)}
+                        {workshopBotStatDisplay(key, level, botLabDisplayOpts)}
                       </span>
                     </div>
                     <div className="workshop__uw-col-foot">
