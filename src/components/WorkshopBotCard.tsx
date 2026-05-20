@@ -46,8 +46,8 @@ function BotIcon({ botId }: { botId: WorkshopBotId }) {
     <img
       src={BOT_ICON_SRC[botId]}
       alt=""
-      width={48}
-      height={48}
+      width={28}
+      height={28}
       className="workshop__uw-icon-svg"
       aria-hidden
     />
@@ -84,7 +84,10 @@ export function WorkshopBotCard({
           active ? 'workshop__uw-card' : 'workshop__uw-card workshop__uw-card--inactive'
         }
       >
-        <div className="workshop__uw-head">
+        <div className="workshop__uw-head workshop__uw-head--bot">
+          <div className="workshop__uw-head-icon">
+            <BotIcon botId={botId} />
+          </div>
           <span className="workshop__uw-title">{title}</span>
           <button
             type="button"
@@ -102,10 +105,7 @@ export function WorkshopBotCard({
             {active ? t('ws_bot_toggle_on') : t('ws_bot_toggle_off')}
           </button>
         </div>
-        <div className="workshop__uw-body">
-          <div className="workshop__uw-icon-wrap">
-            <BotIcon botId={botId} />
-          </div>
+        <div className="workshop__uw-body workshop__uw-body--bots">
           <div className="workshop__uw-stats workshop__uw-stats--bots" role="group">
             {stats.map(({ key, stat }) => {
               const level = levels[key] ?? 0

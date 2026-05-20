@@ -1728,6 +1728,26 @@ span.research-card__costIcon .workshop-power-stone-svg {
   color: #bae6fd;
 }
 
+.workshop__uw-plus-bar--unlocked {
+  grid-template-columns: minmax(5.5rem, auto) 1fr;
+}
+
+.workshop__uw-plus-bar--unlocked .workshop__uw-plus-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0.65rem;
+}
+
+.workshop__uw-plus-bar--unlocked .workshop__uw-plus-effect--unlocked {
+  margin-left: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .workshop__uw-plus-bar--locked {
   border-top-color: rgba(148, 163, 184, 0.35);
   background: rgba(24, 24, 32, 0.92);
@@ -1963,6 +1983,44 @@ button.workshop__uw-plus-cost--display:hover {
   filter: brightness(1.08);
 }
 
+.workshop__uw-head--bot {
+  grid-template-columns: auto 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.workshop__uw-head--bot .workshop__uw-head-icon {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.workshop__uw-head--bot .workshop__uw-head-icon .workshop__uw-icon-svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.workshop__uw-head--bot .workshop__uw-title {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  max-width: 100%;
+}
+
+.workshop__uw-head--bot .workshop__uw-active-toggle {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.workshop__uw-body--bots {
+  display: block;
+}
+
 .workshop__uw-head-unlock {
   grid-column: 2;
   grid-row: 1;
@@ -2169,7 +2227,6 @@ button.workshop__uw-plus-cost--display:hover {
 }
 
 .workshop__uw-plus-effect--unlocked {
-  margin-left: auto;
   font-size: 0.82rem;
   font-weight: 600;
   color: #86efac;

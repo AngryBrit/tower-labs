@@ -31,11 +31,13 @@ export function WorkshopBotSpecialCard({
 
   if (unlocked) {
     return (
-      <div className="workshop__uw-plus-bar">
+      <div className="workshop__uw-plus-bar workshop__uw-plus-bar--unlocked">
         <span className="workshop__uw-plus-name">{title}</span>
-        <span className="workshop__uw-plus-effect workshop__uw-plus-effect--unlocked">
-          {t('ws_bot_special_unlocked')}
-        </span>
+        <p className="workshop__uw-plus-meta">
+          <span className="workshop__uw-plus-effect workshop__uw-plus-effect--unlocked">
+            {t('ws_bot_special_unlocked')}
+          </span>
+        </p>
       </div>
     )
   }
