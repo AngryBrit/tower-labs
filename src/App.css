@@ -2040,24 +2040,48 @@ button.workshop__uw-plus-cost--display:hover {
   pointer-events: none;
 }
 
-/* Match bot stat column block (col-top + col-foot) for unlock row parity */
+/* Uniform bot card height (matches owned Flame Bot card in bots panel) */
 #inpanel-panel-bots {
-  --workshop-bot-stat-block-height: calc(
-    0.45rem + 0.4rem + 0.72rem * 1.2 + 0.2rem + 0.95rem * 1.2 + 0.28rem + 0.28rem + 1rem + 0.4rem
-  );
+  --workshop-bot-card-height: 378px;
+}
+
+#inpanel-panel-bots .workshop__uw-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: var(--workshop-bot-card-height);
+  min-height: var(--workshop-bot-card-height);
+}
+
+#inpanel-panel-bots .workshop__uw-head--bot {
+  flex: 0 0 auto;
+}
+
+#inpanel-panel-bots .workshop__uw-body--bots {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 #inpanel-panel-bots .workshop__uw-stats--bots {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
   align-items: stretch;
 }
 
 #inpanel-panel-bots .workshop__uw-stats--bots .workshop__uw-col {
-  min-height: var(--workshop-bot-stat-block-height);
+  min-height: 100%;
+  height: 100%;
+}
+
+#inpanel-panel-bots .workshop__uw-plus-bar {
+  flex: 0 0 auto;
 }
 
 .workshop__uw-stats--bots.workshop__uw-stats--unlock {
   grid-template-columns: 1fr;
-  min-height: var(--workshop-bot-stat-block-height);
   overflow: visible;
   overflow-x: visible;
 }
@@ -2071,7 +2095,7 @@ button.workshop__uw-plus-cost--display:hover {
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  min-height: var(--workshop-bot-stat-block-height);
+  min-height: 100%;
   height: 100%;
   align-self: stretch;
 }
