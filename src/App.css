@@ -2113,6 +2113,100 @@ button.workshop__uw-plus-cost--display:hover {
   flex: 0 0 auto;
 }
 
+@media (max-width: 640px) {
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-card {
+    height: auto;
+    min-height: 0;
+  }
+
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body,
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body--unlock {
+    flex: 0 0 auto;
+  }
+
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-stats,
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-stats--unlock {
+    flex: 0 0 auto;
+    height: auto;
+    align-items: start;
+  }
+
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-stats .workshop__uw-col,
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-col--uw-unlock {
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
+  }
+
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-col-top {
+    flex: 0 0 auto;
+  }
+
+  #inpanel-panel-workshop .workshop__grid--ultimate .workshop__uw-body-unlock {
+    min-height: 5rem;
+  }
+
+  #inpanel-panel-bots .workshop__uw-card {
+    height: auto;
+    min-height: 0;
+  }
+
+  #inpanel-panel-bots .workshop__uw-body--bots,
+  #inpanel-panel-bots .workshop__uw-body--unlock {
+    flex: 0 0 auto;
+  }
+
+  #inpanel-panel-bots .workshop__uw-stats--bots:not(.workshop__uw-stats--unlock) {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  #inpanel-panel-bots .workshop__uw-stats--bots.workshop__uw-stats--unlock {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 5rem;
+    align-items: stretch;
+  }
+
+  #inpanel-panel-bots .workshop__uw-stats--bots .workshop__uw-col:not(.workshop__uw-col--uw-unlock) {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  #inpanel-panel-bots .workshop__uw-stats--bots .workshop__uw-col-top {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  #inpanel-panel-bots .workshop__uw-stats--bots .workshop__uw-stat-label {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: calc(0.72rem * 1.2 * 2);
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  #inpanel-panel-bots .workshop__uw-col--uw-unlock {
+    width: 100%;
+    height: auto;
+    min-height: 5rem;
+    align-self: stretch;
+  }
+
+  #inpanel-panel-bots .workshop__uw-body-unlock {
+    width: 100%;
+    min-height: 5rem;
+    height: 100%;
+  }
+
+}
+
 #inpanel-panel-bots .workshop__uw-stats--bots {
   flex: 1 1 auto;
   align-self: stretch;
