@@ -35,6 +35,9 @@ import {
 import {
   WORKSHOP_BOT_ACTIVE_ORDER,
   WORKSHOP_BOT_SPECIAL_BY_BOT,
+  WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED,
+  WORKSHOP_BOT_SPECIAL_LEVEL_ORDER,
+  workshopBotSpecialStonePurchased,
   WORKSHOP_BOT_UPGRADE_ORDER,
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_OWNED_ORDER,
@@ -42,9 +45,12 @@ import {
   workshopBotClampLevel,
   workshopBotIsOwned,
   workshopBotOwnedKey,
+  workshopBotSpecialClampLevel,
+  workshopBotSpecialLevelKey,
   type WorkshopBotActiveKey,
   type WorkshopBotOwnedKey,
   type WorkshopBotSpecialKey,
+  type WorkshopBotSpecialLevelKey,
   type WorkshopBotUpgradeKey,
 } from './data/workshopBots'
 import {
@@ -162,6 +168,35 @@ function defaultBotSpecial(): WorkshopBotSpecialFlags {
   return Object.fromEntries(
     WORKSHOP_BOT_ORDER.map((id) => [WORKSHOP_BOT_SPECIAL_BY_BOT[id], false]),
   ) as WorkshopBotSpecialFlags
+}
+
+type WorkshopBotSpecialLevels = { [K in WorkshopBotSpecialLevelKey]: number }
+
+function defaultBotSpecialLevels(): WorkshopBotSpecialLevels {
+  return Object.fromEntries(
+    WORKSHOP_BOT_SPECIAL_LEVEL_ORDER.map((key) => [key, WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED]),
+  ) as WorkshopBotSpecialLevels
+}
+
+function workshopBotSpecialLevelsFromPersisted(
+  o: Record<string, unknown>,
+): WorkshopBotSpecialLevels {
+  return Object.fromEntries(
+    WORKSHOP_BOT_ORDER.map((id) => {
+      const key = workshopBotSpecialLevelKey(id)
+      const raw = Number(o[key])
+      const stonePurchased = workshopBotSpecialStonePurchased(
+        o as Partial<Record<WorkshopBotSpecialKey, boolean>>,
+        id,
+      )
+      let level = Number.isFinite(raw)
+        ? workshopBotSpecialClampLevel(id, raw)
+        : WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED
+      if (!stonePurchased) level = WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED
+      else if (level < 0) level = 0
+      return [key, level]
+    }),
+  ) as WorkshopBotSpecialLevels
 }
 
 type WorkshopBotOwnedFlags = { [K in WorkshopBotOwnedKey]: boolean }
@@ -353,6 +388,7 @@ export type WorkshopPersistedV1 = {
   WorkshopBotLevels &
   WorkshopBotActiveFlags &
   WorkshopBotSpecialFlags &
+  WorkshopBotSpecialLevels &
   WorkshopBotOwnedFlags
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
@@ -426,6 +462,7 @@ export function resetWorkshopBots(current: WorkshopPersistedV1): WorkshopPersist
     ...defaultBotLevels(),
     ...defaultBotActive(),
     ...defaultBotSpecial(),
+    ...defaultBotSpecialLevels(),
     ...defaultBotOwned(),
   }
 }
@@ -589,6 +626,7 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     ...defaultBotLevels(),
     ...defaultBotActive(),
     ...defaultBotSpecial(),
+    ...defaultBotSpecialLevels(),
     ...defaultBotOwned(),
   }
 }
@@ -837,6 +875,7 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         (o as Record<string, unknown>)[WORKSHOP_BOT_SPECIAL_BY_BOT[id]] === true,
       ]),
     ),
+    ...workshopBotSpecialLevelsFromPersisted(o as Record<string, unknown>),
     ...Object.fromEntries(
       WORKSHOP_BOT_OWNED_ORDER.map((key) => [
         key,

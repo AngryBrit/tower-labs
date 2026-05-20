@@ -38,7 +38,7 @@ const ULTIMATE_STAT_LABEL: Record<string, StringId> = {
   angle: 'ws_uw_stat_angle',
 }
 
-function plusAbilityBarTitle(fullTitle: string): string {
+export function plusAbilityBarTitle(fullTitle: string): string {
   const sep = fullTitle.includes(' — ') ? ' — ' : ' - '
   const idx = fullTitle.lastIndexOf(sep)
   return idx >= 0 ? fullTitle.slice(idx + sep.length) : fullTitle
@@ -80,6 +80,7 @@ export function WorkshopUltimatePlusAbilityCard({
     'workshop__uw-plus-bar',
     prereqLocked ? 'workshop__uw-plus-bar--locked' : '',
     !abilityUnlocked && !prereqLocked ? 'workshop__uw-plus-bar--pending' : '',
+    abilityUnlocked ? 'workshop__uw-plus-bar--unlocked' : '',
   ]
     .filter(Boolean)
     .join(' ')

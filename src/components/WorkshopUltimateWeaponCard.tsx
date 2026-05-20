@@ -17,7 +17,11 @@ import {
   type WorkshopUltimatePlusAbilityId,
 } from '../data/workshopUltimatePlus'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
-import { WORKSHOP_ULTIMATE_PLUS_TITLE, WorkshopUltimatePlusAbilityCard } from './WorkshopUltimatePlusAbilityCard'
+import {
+  plusAbilityBarTitle,
+  WORKSHOP_ULTIMATE_PLUS_TITLE,
+  WorkshopUltimatePlusAbilityCard,
+} from './WorkshopUltimatePlusAbilityCard'
 
 const ULTIMATE_WEAPON_TITLE: Record<WorkshopUltimateWeaponId, StringId> = {
   chainLightning: 'ws_uw_chainLightning',
@@ -134,19 +138,19 @@ export function WorkshopUltimateWeaponCard({
               aria-pressed={runActive}
               aria-label={
                 runActive
-                  ? `${title} — ${t('ws_uw_deactivate')}`
-                  : `${title} — ${t('ws_uw_activate')}`
+                  ? `${title} — ${t('ws_bot_toggle_off')}`
+                  : `${title} — ${t('ws_bot_toggle_on')}`
               }
               onClick={() => onToggleActive(weaponId)}
             >
-              {runActive ? t('ws_uw_deactivate') : t('ws_uw_activate')}
+              {runActive ? t('ws_bot_toggle_on') : t('ws_bot_toggle_off')}
             </button>
           ) : (
             <span
               className="workshop__uw-active-toggle workshop__uw-active-toggle--placeholder"
               aria-hidden
             >
-              {t('ws_uw_activate')}
+              {t('ws_bot_toggle_on')}
             </span>
           )}
         </div>
@@ -268,7 +272,9 @@ export function WorkshopUltimateWeaponCard({
               className="workshop__uw-plus-bar workshop__uw-plus-bar--pending workshop__uw-plus-bar--uw-spacer"
               aria-hidden
             >
-              <span className="workshop__uw-plus-name">{t(WORKSHOP_ULTIMATE_PLUS_TITLE[plusAbilityId])}</span>
+              <span className="workshop__uw-plus-name">
+                {plusAbilityBarTitle(t(WORKSHOP_ULTIMATE_PLUS_TITLE[plusAbilityId]))}
+              </span>
               <button type="button" className="workshop__uw-plus-unlock" tabIndex={-1} disabled>
                 {t('ws_uwp_unlock')}
               </button>

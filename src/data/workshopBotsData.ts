@@ -33,13 +33,27 @@ export type WorkshopBotSpecialKey =
   | 'amplifyBotEchoingShotUnlocked'
   | 'botBotMaximumPowerUnlocked'
 
+export type WorkshopBotSpecialLevelKey =
+  | 'flameBotBurningGroundLevel'
+  | 'thunderBotTitanShockLevel'
+  | 'goldenBotBonusCellsLevel'
+  | 'amplifyBotEchoingShotLevel'
+  | 'botBotMaximumPowerLevel'
+
 export const WORKSHOP_BOT_ORDER: readonly WorkshopBotId[] = ["flame","thunder","golden","amplify","botBot"]
 
 export const WORKSHOP_BOT_UPGRADE_ORDER: readonly WorkshopBotUpgradeKey[] = ["flameBotDamageReductionLevel","flameBotCooldownLevel","flameBotDamageLevel","flameBotRangeLevel","thunderBotDurationLevel","thunderBotCooldownLevel","thunderBotLingerLevel","thunderBotRangeLevel","goldenBotDurationLevel","goldenBotCooldownLevel","goldenBotBonusLevel","goldenBotRangeLevel","amplifyBotDurationLevel","amplifyBotCooldownLevel","amplifyBotBonusLevel","amplifyBotRangeLevel","botBotDurationLevel","botBotCooldownLevel","botBotBonusLevel","botBotRangeLevel"]
 
-export const WORKSHOP_BOT_SPECIAL_UNLOCK_CELLS = 1250 as const
+export const WORKSHOP_BOT_SPECIAL_LEVEL_ORDER: readonly WorkshopBotSpecialLevelKey[] = ["flameBotBurningGroundLevel","thunderBotTitanShockLevel","goldenBotBonusCellsLevel","amplifyBotEchoingShotLevel","botBotMaximumPowerLevel"]
+
+/** Level before stone unlock (wiki: ability not purchased). */
+export const WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED = -1 as const
+
+export const WORKSHOP_BOT_SPECIAL_UNLOCK_STONES = 1250 as const
 
 export const WORKSHOP_BOT_SPECIAL_BY_BOT: Record<WorkshopBotId, WorkshopBotSpecialKey> = {"flame":"flameBotBurningGroundUnlocked","thunder":"thunderBotTitanShockUnlocked","golden":"goldenBotBonusCellsUnlocked","amplify":"amplifyBotEchoingShotUnlocked","botBot":"botBotMaximumPowerUnlocked"}
+
+export const WORKSHOP_BOT_SPECIAL_LEVEL_BY_BOT: Record<WorkshopBotId, WorkshopBotSpecialLevelKey> = {"flame":"flameBotBurningGroundLevel","thunder":"thunderBotTitanShockLevel","golden":"goldenBotBonusCellsLevel","amplify":"amplifyBotEchoingShotLevel","botBot":"botBotMaximumPowerLevel"}
 
 export const WORKSHOP_BOT_WEAPON_STATS: Record<
   WorkshopBotId,
@@ -168,4 +182,12 @@ export const WORKSHOP_BOT_TRACKS: Record<WorkshopBotUpgradeKey, WorkshopUltimate
   botBotCooldownLevel: track('seconds', [[120, 0], [117, 100], [114, 140], [111, 180], [108, 220], [105, 260], [102, 300], [99, 340], [96, 380], [93, 420], [90, 460], [87, 500], [84, 540], [81, 580], [78, 620], [75, 660]]),
   botBotBonusLevel: track('mult', [[1.05, 0], [1.1, 100], [1.1500000000000001, 140], [1.2000000000000002, 180], [1.25, 220], [1.3, 260], [1.35, 300], [1.4000000000000001, 340], [1.4500000000000002, 380], [1.5, 420], [1.55, 460], [1.6, 500], [1.6500000000000001, 540], [1.7000000000000002, 580], [1.75, 620], [1.8, 660], [1.85, 700], [1.9000000000000001, 740], [1.9500000000000002, 780], [2, 820], [2.05, 860], [2.1, 900], [2.1500000000000004, 940], [2.2, 980], [2.25, 1020], [2.3, 1060], [2.35, 1100], [2.4000000000000004, 1140], [2.45, 1180], [2.5, 1220], [2.55, 1260]]),
   botBotRangeLevel: track('meters', [[25, 0], [27, 100], [29, 140], [31, 180], [33, 220], [35, 260], [37, 300], [39, 340], [41, 380], [43, 420], [45, 460], [47, 500], [49, 540], [51, 580], [53, 620], [55, 660], [57, 700], [59, 740], [61, 780]]),
+}
+
+export const WORKSHOP_BOT_SPECIAL_TRACKS: Record<WorkshopBotSpecialLevelKey, WorkshopUltimateTrack> = {
+  flameBotBurningGroundLevel: track('mult', [[1.5, 0], [1.6, 100], [1.7, 150], [1.8, 200], [1.9, 250], [2, 300], [2.1, 350], [2.2, 400], [2.3, 450], [2.4, 500], [2.5, 550], [2.6, 600], [2.7, 650], [2.8, 700], [2.9, 750], [3, 800], [3.1, 850], [3.2, 900], [3.3, 950], [3.4, 1000], [3.5, 1050]]),
+  thunderBotTitanShockLevel: track('percent', [[5, 0], [6, 100], [7, 150], [8, 200], [9, 250], [10, 300], [11, 350], [12, 400], [13, 450], [14, 500], [15, 550], [16, 600], [17, 650], [18, 700], [19, 750], [20, 800], [21, 850], [22, 900], [23, 950], [24, 1000], [25, 1050]]),
+  goldenBotBonusCellsLevel: track('mult', [[1.25, 0], [1.3, 100], [1.35, 150], [1.4, 200], [1.45, 250], [1.5, 300], [1.55, 350], [1.6, 400], [1.65, 450], [1.7, 500], [1.75, 550], [1.8, 600], [1.85, 650], [1.9, 700], [1.95, 750], [2, 800], [2.05, 850], [2.1, 900], [2.15, 950], [2.2, 1000], [2.25, 1050], [2.3, 1100], [2.35, 1150], [2.4, 1200], [2.45, 1250], [2.5, 1300]]),
+  amplifyBotEchoingShotLevel: track('count', [[3, 0], [4, 100], [5, 300], [6, 500], [7, 700], [8, 900], [9, 1100], [10, 1300], [11, 1500], [12, 1700]]),
+  botBotMaximumPowerLevel: track('mult', [[1.25, 0], [1.3, 100], [1.35, 150], [1.4, 200], [1.45, 250], [1.5, 300], [1.55, 350], [1.6, 400], [1.65, 450], [1.7, 500], [1.75, 550], [1.8, 600], [1.85, 650], [1.9, 700], [1.95, 750], [2, 800], [2.05, 850], [2.1, 900], [2.15, 950], [2.2, 1000], [2.25, 1050]]),
 }

@@ -7,7 +7,7 @@ import {
   workshopBotIsOwned,
   workshopBotMaxLevel,
   workshopBotNextMarginalMedals,
-  workshopBotSpecialIsUnlocked,
+  workshopAllBotsOwnedForPlus,
   workshopBotStatDisplay,
   workshopBotUnlockCostForBot,
   type WorkshopBotId,
@@ -66,6 +66,7 @@ export type WorkshopBotCardProps = {
   onBump: (key: WorkshopBotUpgradeKey, direction: -1 | 1) => void
   onToggleActive: (botId: WorkshopBotId) => void
   onSpecialUnlock: (botId: WorkshopBotId) => void
+  onSpecialBump: (botId: WorkshopBotId, direction: -1 | 1) => void
   onUnlockBot?: (botId: WorkshopBotId) => void
 }
 
@@ -76,6 +77,7 @@ export function WorkshopBotCard({
   onBump,
   onToggleActive,
   onSpecialUnlock,
+  onSpecialBump,
   onUnlockBot,
 }: WorkshopBotCardProps) {
   const { t } = useI18n()
@@ -83,7 +85,6 @@ export function WorkshopBotCard({
   const title = t(BOT_TITLE[botId])
   const owned = workshopBotIsOwned(workshop, botId)
   const runActive = owned && workshopBotIsActive(workshop, botId)
-  const specialUnlocked = workshopBotSpecialIsUnlocked(workshop, botId)
   const unlockMedals = workshopBotUnlockCostForBot(workshop, botId)
 
   const handleUnlockBot = () => {
@@ -240,9 +241,11 @@ export function WorkshopBotCard({
         {owned ? (
           <WorkshopBotSpecialCard
             botId={botId}
-            unlocked={specialUnlocked}
+            workshop={workshop}
+            plusEnabled={workshopAllBotsOwnedForPlus(workshop)}
             active={runActive}
             onUnlock={onSpecialUnlock}
+            onBump={onSpecialBump}
           />
         ) : (
           <div
@@ -251,7 +254,7 @@ export function WorkshopBotCard({
           >
             <span className="workshop__uw-plus-name">{t(WORKSHOP_BOT_SPECIAL_TITLE[botId])}</span>
             <button type="button" className="workshop__uw-plus-unlock" tabIndex={-1} disabled>
-              {t('ws_bot_special_unlock_btn')}
+              {t('ws_bot_special_purchase_btn')}
             </button>
             <button type="button" className="workshop__uw-plus-cost" tabIndex={-1} disabled>
               <span>0</span>

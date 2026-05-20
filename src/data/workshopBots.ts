@@ -5,12 +5,17 @@
 import {
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_SPECIAL_BY_BOT,
-  WORKSHOP_BOT_SPECIAL_UNLOCK_CELLS,
+  WORKSHOP_BOT_SPECIAL_LEVEL_BY_BOT,
+  WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED,
+  WORKSHOP_BOT_SPECIAL_LEVEL_ORDER,
+  WORKSHOP_BOT_SPECIAL_TRACKS,
+  WORKSHOP_BOT_SPECIAL_UNLOCK_STONES,
   WORKSHOP_BOT_TRACKS,
   WORKSHOP_BOT_UPGRADE_ORDER,
   WORKSHOP_BOT_WEAPON_STATS,
   type WorkshopBotId,
   type WorkshopBotSpecialKey,
+  type WorkshopBotSpecialLevelKey,
   type WorkshopBotUpgradeKey,
 } from './workshopBotsData'
 import {
@@ -23,13 +28,73 @@ import {
 export {
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_SPECIAL_BY_BOT,
-  WORKSHOP_BOT_SPECIAL_UNLOCK_CELLS,
+  WORKSHOP_BOT_SPECIAL_LEVEL_BY_BOT,
+  WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED,
+  WORKSHOP_BOT_SPECIAL_LEVEL_ORDER,
+  WORKSHOP_BOT_SPECIAL_TRACKS,
+  WORKSHOP_BOT_SPECIAL_UNLOCK_STONES,
   WORKSHOP_BOT_TRACKS,
   WORKSHOP_BOT_UPGRADE_ORDER,
   WORKSHOP_BOT_WEAPON_STATS,
   type WorkshopBotId,
   type WorkshopBotSpecialKey,
+  type WorkshopBotSpecialLevelKey,
   type WorkshopBotUpgradeKey,
+}
+
+export function workshopBotSpecialLevelKey(botId: WorkshopBotId): WorkshopBotSpecialLevelKey {
+  return WORKSHOP_BOT_SPECIAL_LEVEL_BY_BOT[botId]
+}
+
+export function workshopBotSpecialMaxLevel(botId: WorkshopBotId): number {
+  const key = workshopBotSpecialLevelKey(botId)
+  return workshopUltimateTrackMaxLevel(WORKSHOP_BOT_SPECIAL_TRACKS[key])
+}
+
+export function workshopBotSpecialClampLevel(botId: WorkshopBotId, level: number): number {
+  const key = workshopBotSpecialLevelKey(botId)
+  if (!Number.isFinite(level)) return WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED
+  const n = Math.trunc(level)
+  if (n < WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED) return WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED
+  return workshopUltimateTrackClampLevel(WORKSHOP_BOT_SPECIAL_TRACKS[key], n)
+}
+
+/** One-time stone purchase in the event shop (separate from medal upgrade level). */
+export function workshopBotSpecialStonePurchased(
+  ws: Partial<Record<WorkshopBotSpecialKey, boolean>>,
+  botId: WorkshopBotId,
+): boolean {
+  return ws[WORKSHOP_BOT_SPECIAL_BY_BOT[botId]] === true
+}
+
+export function workshopBotSpecialLevel(
+  ws: Partial<Record<WorkshopBotSpecialLevelKey, number>> &
+    Partial<Record<WorkshopBotSpecialKey, boolean>>,
+  botId: WorkshopBotId,
+): number {
+  if (!workshopBotSpecialStonePurchased(ws, botId)) return WORKSHOP_BOT_SPECIAL_LEVEL_LOCKED
+  const key = workshopBotSpecialLevelKey(botId)
+  const raw = Number(ws[key])
+  if (!Number.isFinite(raw)) return 0
+  return workshopBotSpecialClampLevel(botId, raw)
+}
+
+export function workshopBotSpecialNextMarginalMedals(
+  botId: WorkshopBotId,
+  completedLevels: number,
+): number | undefined {
+  const key = workshopBotSpecialLevelKey(botId)
+  const L = workshopUltimateTrackClampLevel(
+    WORKSHOP_BOT_SPECIAL_TRACKS[key],
+    completedLevels,
+  )
+  if (L >= workshopBotSpecialMaxLevel(botId)) return undefined
+  return workshopUltimateTrackNextMarginalStones(WORKSHOP_BOT_SPECIAL_TRACKS[key], L)
+}
+
+export function workshopBotSpecialStatDisplay(botId: WorkshopBotId, completedLevels: number): string {
+  const key = workshopBotSpecialLevelKey(botId)
+  return workshopUltimateTrackStatDisplay(WORKSHOP_BOT_SPECIAL_TRACKS[key], completedLevels)
 }
 
 export function workshopBotMaxLevel(key: WorkshopBotUpgradeKey): number {
@@ -157,5 +222,17 @@ export function workshopBotSpecialIsUnlocked(
   ws: Partial<Record<WorkshopBotSpecialKey, boolean>>,
   botId: WorkshopBotId,
 ): boolean {
-  return ws[WORKSHOP_BOT_SPECIAL_BY_BOT[botId]] === true
+  return workshopBotSpecialStonePurchased(ws, botId)
+}
+
+/** All five base bots bought in the event shop (required before any Bot+ unlock). */
+export function workshopAllBotsOwnedForPlus(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+): boolean {
+  return WORKSHOP_BOT_ORDER.every((id) => workshopBotIsOwned(ws, id))
+}
+
+export function workshopBotSpecialUnlockStones(): number {
+  return WORKSHOP_BOT_SPECIAL_UNLOCK_STONES
 }

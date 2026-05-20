@@ -12,6 +12,11 @@ import {
   WORKSHOP_BOT_ORDER,
   WORKSHOP_BOT_SPECIAL_BY_BOT,
   workshopBotActiveKey,
+  workshopBotSpecialClampLevel,
+  workshopBotSpecialLevel,
+  workshopBotSpecialLevelKey,
+  workshopBotSpecialStonePurchased,
+  workshopAllBotsOwnedForPlus,
   workshopBotAllMaxed,
   workshopBotClampLevel,
   workshopBotIsActive,
@@ -144,10 +149,30 @@ export function BotsPage({
   const unlockBotSpecial = useCallback(
     (botId: WorkshopBotId) => {
       const ws = workshopPersistedRef.current
-      const key = WORKSHOP_BOT_SPECIAL_BY_BOT[botId]
-      if (ws[key] === true) return
+      if (!workshopAllBotsOwnedForPlus(ws)) return
+      if (workshopBotSpecialStonePurchased(ws, botId)) return
       if (!workshopBotIsActive(ws, botId)) return
-      onWorkshopPersistedChange({ ...ws, [key]: true })
+      const levelKey = workshopBotSpecialLevelKey(botId)
+      const unlockKey = WORKSHOP_BOT_SPECIAL_BY_BOT[botId]
+      onWorkshopPersistedChange({
+        ...ws,
+        [levelKey]: 0,
+        [unlockKey]: true,
+      })
+    },
+    [onWorkshopPersistedChange],
+  )
+
+  const bumpBotSpecial = useCallback(
+    (botId: WorkshopBotId, direction: -1 | 1) => {
+      const ws = workshopPersistedRef.current
+      if (!workshopBotIsActive(ws, botId)) return
+      const levelKey = workshopBotSpecialLevelKey(botId)
+      const cur = workshopBotSpecialLevel(ws, botId)
+      if (cur < 0) return
+      const nv = workshopBotSpecialClampLevel(botId, cur + direction)
+      if (nv === cur) return
+      onWorkshopPersistedChange({ ...ws, [levelKey]: nv })
     },
     [onWorkshopPersistedChange],
   )
@@ -199,6 +224,7 @@ export function BotsPage({
               onBump={bumpBot}
               onToggleActive={toggleBotActive}
               onSpecialUnlock={unlockBotSpecial}
+              onSpecialBump={bumpBotSpecial}
               onUnlockBot={unlockBot}
             />
           ))}
