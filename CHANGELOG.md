@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-05-19
+
+### Added
+
+- **Bots panel** — Top-level **Bots** navigation with five event-shop bots (Flame, Thunder, Golden, Amplify, Bot Bot): medal unlock costs, per-stat upgrade tracks, ON/OFF toggles, and wiki-aligned **Bot+** abilities after a **1,250** power-stone purchase when all five bots are owned ([`BotsPage`](src/components/BotsPage.tsx), [`WorkshopBotCard`](src/components/WorkshopBotCard.tsx), [`WorkshopBotSpecialCard`](src/components/WorkshopBotSpecialCard.tsx), [`workshopBots`](src/data/workshopBots.ts), [`workshopBotsData.ts`](src/data/workshopBotsData.ts); generator [`scripts/gen-workshop-bots-data.mjs`](scripts/gen-workshop-bots-data.mjs)).
+- **Bot+ medal upgrades** — Per-ability level tracks and marginal medal costs from wiki Events tables (Burning Ground, Titan Shock, Bonus Cells tier-2 curve, Echoing Shot, Maximum Power flat curve); stone purchase vs medal level persisted separately (`workshopBotSpecialStonePurchased`, `*Level` keys, legacy `*Unlocked` migration).
+- **Bot CSV backup** — Tower CSV `ws` rows round-trip bot stat levels, owned/active flags, Bot+ purchase flags, and Bot+ levels ([`towerUnifiedCsv.ts`](src/towerUnifiedCsv.ts)).
+
+### Changed
+
+- **Golden / Amplify / Bot Bot basic upgrades** — Wiki level caps and medal totals (e.g. bonus to level 30, range caps at 18 or 20); Bot Bot bonus curve ×1.0–×2.5.
+- **Duration and cooldown display** — Workshop **Bots** and **Ultimate Weapons** show times in seconds only (e.g. `75s`, `200s`, `20.5s`), not `1m 15s` ([`formatWorkshopUltimateCooldown`](src/data/workshopUltimateTable.ts), [`workshopBotStatDisplay`](src/data/workshopBots.ts)).
+- **Bot bonus display** — Bot stat **Bonus** multipliers use two decimal places (e.g. `x1.05`, `x15.50`).
+
+### Docs
+
+- README: Bots panel, Bot+ persistence, tower CSV bot `ws` fields, `gen-workshop-bots-data.mjs`; version **2.8.0**.
+
 ## [2.7.3] - 2026-05-19
 
 ### Fixed
