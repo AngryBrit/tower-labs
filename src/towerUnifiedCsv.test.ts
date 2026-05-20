@@ -89,6 +89,36 @@ describe('towerUnifiedCsv', () => {
     }
   })
 
+  it('roundtrips bot workshop fields', () => {
+    const ws = {
+      ...defaultWorkshopPersisted(),
+      flameOwned: true,
+      goldenBotBonusLevel: 12,
+      botBotActive: false,
+      amplifyBotEchoingShotUnlocked: true,
+      goldenBotBonusCellsUnlocked: true,
+      goldenBotBonusCellsLevel: 18,
+      botBotMaximumPowerLevel: -1,
+    }
+    const csv = serializeTowerUnifiedCsv({}, ws)
+    expect(csv).toContain('ws,flameOwned,true')
+    expect(csv).toContain('ws,goldenBotBonusLevel,12')
+    expect(csv).toContain('ws,botBotActive,false')
+    expect(csv).toContain('ws,amplifyBotEchoingShotUnlocked,true')
+    expect(csv).toContain('ws,goldenBotBonusCellsLevel,18')
+    const parsed = parseTowerUnifiedCsv(csv)
+    expect(parsed.tag).toBe('ok')
+    if (parsed.tag === 'ok') {
+      const w = towerUnifiedPrimaryBuild(parsed).workshop
+      expect(w.flameOwned).toBe(true)
+      expect(w.goldenBotBonusLevel).toBe(12)
+      expect(w.botBotActive).toBe(false)
+      expect(w.amplifyBotEchoingShotUnlocked).toBe(true)
+      expect(w.goldenBotBonusCellsLevel).toBe(18)
+      expect(w.botBotMaximumPowerLevel).toBe(-1)
+    }
+  })
+
   it('rejects non-ownedIds theme rows', () => {
     const lines = [
       TOWER_UNIFIED_CSV_MAGIC,
