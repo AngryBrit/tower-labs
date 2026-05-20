@@ -132,14 +132,20 @@ export function WorkshopBotCard({
             </span>
           )}
         </div>
-        <div className="workshop__uw-body workshop__uw-body--bots">
+        <div
+          className={
+            !owned
+              ? 'workshop__uw-body workshop__uw-body--bots workshop__uw-body--unlock'
+              : 'workshop__uw-body workshop__uw-body--bots'
+          }
+        >
           {!owned ? (
             <div
               className="workshop__uw-stats workshop__uw-stats--bots workshop__uw-stats--unlock"
               role="group"
             >
-              <div className="workshop__uw-col workshop__uw-col--bot-unlock">
-                <div className="workshop__uw-bot-unlock">
+              <div className="workshop__uw-col workshop__uw-col--uw-unlock">
+                <div className="workshop__uw-body-unlock">
                   <button
                     type="button"
                     className="workshop__uw-head-unlock-label"
@@ -240,7 +246,7 @@ export function WorkshopBotCard({
           />
         ) : (
           <div
-            className="workshop__uw-plus-bar workshop__uw-plus-bar--pending workshop__uw-plus-bar--bot-spacer"
+            className="workshop__uw-plus-bar workshop__uw-plus-bar--pending workshop__uw-plus-bar--uw-spacer"
             aria-hidden
           >
             <span className="workshop__uw-plus-name">{t(WORKSHOP_BOT_SPECIAL_TITLE[botId])}</span>

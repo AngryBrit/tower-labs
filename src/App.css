@@ -2057,15 +2057,57 @@ button.workshop__uw-plus-cost--display:hover {
   flex: 0 0 auto;
 }
 
-#inpanel-panel-bots .workshop__uw-body--bots {
+#inpanel-panel-bots .workshop__uw-body--bots,
+#inpanel-panel-bots .workshop__uw-body--unlock {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
+}
+
+#inpanel-panel-workshop {
+  /* Owned UW body: icon column + stat row (approx. for locked-card unlock parity) */
+  --workshop-uw-unlock-block-min-height: 150px;
+}
+
+#inpanel-panel-workshop .workshop__uw-card--unowned {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+#inpanel-panel-workshop .workshop__uw-body--unlock {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+#inpanel-panel-workshop .workshop__uw-stats--unlock {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: var(--workshop-uw-unlock-block-min-height);
+  align-items: stretch;
+}
+
+#inpanel-panel-workshop .workshop__uw-plus-bar {
+  flex: 0 0 auto;
 }
 
 #inpanel-panel-bots .workshop__uw-stats--bots {
   flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
   align-items: stretch;
@@ -2080,27 +2122,38 @@ button.workshop__uw-plus-cost--display:hover {
   flex: 0 0 auto;
 }
 
-.workshop__uw-stats--bots.workshop__uw-stats--unlock {
-  grid-template-columns: 1fr;
+.workshop__uw-body--unlock {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.workshop__uw-stats--unlock {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+  grid-template-columns: minmax(0, 1fr);
   overflow: visible;
   overflow-x: visible;
 }
 
-.workshop__uw-col.workshop__uw-col--bot-unlock {
+.workshop__uw-col.workshop__uw-col--uw-unlock {
   overflow: hidden;
 }
 
-.workshop__uw-col--bot-unlock {
+.workshop__uw-col--uw-unlock {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 100%;
   height: 100%;
   align-self: stretch;
 }
 
-.workshop__uw-bot-unlock {
+.workshop__uw-body-unlock {
   box-sizing: border-box;
   display: flex;
   flex: 1 1 auto;
@@ -2119,7 +2172,7 @@ button.workshop__uw-plus-cost--display:hover {
   box-shadow: none;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-label {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-label {
   display: flex;
   flex: 1 1 auto;
   flex-shrink: 0;
@@ -2146,11 +2199,11 @@ button.workshop__uw-plus-cost--display:hover {
   cursor: pointer;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-label:hover {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-label:hover {
   color: #bae6fd;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-cost {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost {
   display: flex;
   flex: 0 0 auto;
   flex-shrink: 0;
@@ -2175,35 +2228,39 @@ button.workshop__uw-plus-cost--display:hover {
   cursor: pointer;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-cost:hover {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost:hover {
   filter: brightness(1.08);
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-cost > span:first-child {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost > span:first-child {
   display: inline-flex;
   align-items: center;
+  align-self: center;
   line-height: 1;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-cost .workshop__uw-medal {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost .workshop__uw-medal,
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost .workshop__uw-stone {
   display: inline-flex;
-  flex: 0 0 14px;
+  flex: 0 0 1em;
   align-items: center;
+  align-self: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  font-size: 14px;
+  width: 1em;
+  height: 1em;
+  font-size: inherit;
   line-height: 0;
 }
 
-.workshop__uw-col--bot-unlock .workshop__uw-head-unlock-cost .workshop__uw-medal .workshop-medal-img {
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost .workshop__uw-medal .workshop-medal-img,
+.workshop__uw-col--uw-unlock .workshop__uw-head-unlock-cost .workshop__uw-stone .workshop-power-stone-svg {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-.workshop__uw-plus-bar--bot-spacer {
+.workshop__uw-plus-bar--uw-spacer {
   opacity: 0;
   pointer-events: none;
   user-select: none;
@@ -2331,10 +2388,34 @@ button.workshop__uw-plus-cost--display:hover {
   min-width: 0;
 }
 
+/* After .workshop__uw-stats so unlock row is one full-width column, not 1/3 grid */
+.workshop__uw-stats.workshop__uw-stats--unlock {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.workshop__uw-body.workshop__uw-body--unlock {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .workshop__uw-stats--bots {
   grid-template-columns: repeat(4, minmax(4.75rem, 1fr));
   overflow-x: auto;
   overscroll-behavior-x: contain;
+}
+
+.workshop__uw-stats--bots.workshop__uw-stats--unlock {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  overflow: visible;
+  overflow-x: visible;
 }
 
 .workshop__uw-stats--bots .workshop__uw-col-foot {

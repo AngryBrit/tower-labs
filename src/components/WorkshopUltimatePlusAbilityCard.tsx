@@ -14,7 +14,7 @@ import {
 import { formatPowerStoneAmount } from '../labCosts'
 import type { WorkshopPersistedV1 } from '../labPresetsStorage'
 
-const ABILITY_TITLE: Record<WorkshopUltimatePlusAbilityId, StringId> = {
+export const WORKSHOP_ULTIMATE_PLUS_TITLE: Record<WorkshopUltimatePlusAbilityId, StringId> = {
   chainLightningSmite: 'ws_uwp_chainLightningSmite',
   smartMissilesCoverFire: 'ws_uwp_smartMissilesCoverFire',
   poisonSwampDeathCreep: 'ws_uwp_poisonSwampDeathCreep',
@@ -63,7 +63,7 @@ export function WorkshopUltimatePlusAbilityCard({
   const levelKey = workshopUltimatePlusLevelKey(abilityId)
   const level = workshop[levelKey] ?? -1
   const abilityUnlocked = workshopUltimatePlusIsUnlocked(level)
-  const fullTitle = t(ABILITY_TITLE[abilityId])
+  const fullTitle = t(WORKSHOP_ULTIMATE_PLUS_TITLE[abilityId])
   const barTitle = plusAbilityBarTitle(fullTitle)
   const prereqLocked = !plusEnabled
   const maxed = abilityUnlocked && level >= ULTIMATE_PLUS_MAX_LEVEL
