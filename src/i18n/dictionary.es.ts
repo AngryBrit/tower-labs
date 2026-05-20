@@ -626,6 +626,10 @@ export const STRINGS_ES = {
   ws_bot_special_burningGround: 'Suelo ardiente',
   ws_bot_toggle_on: 'ON',
   ws_bot_toggle_off: 'OFF',
+  ws_bot_unlock: 'Desbloquear',
+  ws_bot_unlock_bot: 'Desbloquear bot',
+  ws_bot_unlock_cost_title:
+    'Medallas para comprar este bot en la tienda del evento (el coste sube con cada bot poseído)',
   ws_bot_medal_cost_title: 'Medallas para el siguiente nivel',
   ws_bot_special_titanShock: 'Choque titán',
   ws_bot_special_bonusCells: 'Células extra',
@@ -637,7 +641,7 @@ export const STRINGS_ES = {
   ws_reset_bots_demo: 'Restablecer bots',
   ws_reset_bots_confirm_title: '¿Restablecer mejoras de bots?',
   ws_reset_bots_confirm_body:
-    'Restablece niveles de bots, interruptores ON/OFF y desbloqueos especiales de este build.',
+    'Restablece posesión de bots, niveles, interruptores ON/OFF y desbloqueos especiales de este build.',
   ws_multiplier_group_aria: 'Multiplicador de compra',
   ws_multiplier_toggle_expand:
     'Mostrar opciones de multiplicador (×1, ×5, ×10, ×100)',

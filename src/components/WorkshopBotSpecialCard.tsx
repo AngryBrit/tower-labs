@@ -4,7 +4,7 @@ import type { StringId } from '../i18n/dictionary'
 import { WORKSHOP_BOT_SPECIAL_UNLOCK_CELLS, type WorkshopBotId } from '../data/workshopBots'
 import { formatPowerStoneAmount } from '../labCosts'
 
-const SPECIAL_TITLE: Record<WorkshopBotId, StringId> = {
+export const WORKSHOP_BOT_SPECIAL_TITLE: Record<WorkshopBotId, StringId> = {
   flame: 'ws_bot_special_burningGround',
   thunder: 'ws_bot_special_titanShock',
   golden: 'ws_bot_special_bonusCells',
@@ -26,7 +26,7 @@ export function WorkshopBotSpecialCard({
   onUnlock,
 }: WorkshopBotSpecialCardProps) {
   const { t } = useI18n()
-  const title = t(SPECIAL_TITLE[botId])
+  const title = t(WORKSHOP_BOT_SPECIAL_TITLE[botId])
   const cells = WORKSHOP_BOT_SPECIAL_UNLOCK_CELLS
 
   if (unlocked) {

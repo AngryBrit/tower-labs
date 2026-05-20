@@ -15,6 +15,9 @@ import {
   workshopBotAllMaxed,
   workshopBotClampLevel,
   workshopBotIsActive,
+  workshopBotIsOwned,
+  workshopBotOwnedKey,
+  workshopBotUnlockCostForBot,
   type WorkshopBotId,
   type WorkshopBotUpgradeKey,
 } from '../data/workshopBots'
@@ -125,6 +128,19 @@ export function BotsPage({
     [onWorkshopPersistedChange],
   )
 
+  const unlockBot = useCallback(
+    (botId: WorkshopBotId) => {
+      const ws = workshopPersistedRef.current
+      if (workshopBotIsOwned(ws, botId)) return
+      if (workshopBotUnlockCostForBot(ws, botId) == null) return
+      onWorkshopPersistedChange({
+        ...ws,
+        [workshopBotOwnedKey(botId)]: true,
+      })
+    },
+    [onWorkshopPersistedChange],
+  )
+
   const unlockBotSpecial = useCallback(
     (botId: WorkshopBotId) => {
       const ws = workshopPersistedRef.current
@@ -183,6 +199,7 @@ export function BotsPage({
               onBump={bumpBot}
               onToggleActive={toggleBotActive}
               onSpecialUnlock={unlockBotSpecial}
+              onUnlockBot={unlockBot}
             />
           ))}
         </ul>

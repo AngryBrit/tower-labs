@@ -64,10 +64,81 @@ export function workshopBotActiveKey(botId: WorkshopBotId): WorkshopBotActiveKey
   return `${botId}BotActive`
 }
 
-export function workshopBotIsActive(
-  ws: Partial<Record<WorkshopBotActiveKey, boolean>>,
+/** Event shop medal cost by number of bots already owned (wiki Basic Upgrades). */
+export const WORKSHOP_BOT_UNLOCK_MEDAL_COSTS = [100, 300, 600, 900, 1200] as const
+
+export const WORKSHOP_BOT_UNLOCK_MEDAL_TOTAL = WORKSHOP_BOT_UNLOCK_MEDAL_COSTS.reduce(
+  (sum, cost) => sum + cost,
+  0,
+)
+
+export type WorkshopBotOwnedKey = `${WorkshopBotId}Owned`
+
+export const WORKSHOP_BOT_OWNED_ORDER: readonly WorkshopBotOwnedKey[] = WORKSHOP_BOT_ORDER.map(
+  (id) => workshopBotOwnedKey(id),
+)
+
+export function workshopBotOwnedKey(botId: WorkshopBotId): WorkshopBotOwnedKey {
+  return `${botId}Owned`
+}
+
+function workshopBotHasLegacyPurchase(
+  ws: Partial<Record<WorkshopBotUpgradeKey, number>>,
   botId: WorkshopBotId,
 ): boolean {
+  return workshopBotUpgradeKeys(botId).some((key) => Number(ws[key] ?? 0) > 0)
+}
+
+/** Whether this bot has been bought with medals in the event shop. */
+export function workshopBotIsOwned(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+  botId: WorkshopBotId,
+): boolean {
+  if (ws[workshopBotOwnedKey(botId)] === true) return true
+  return workshopBotHasLegacyPurchase(ws, botId)
+}
+
+export function workshopBotOwnedCount(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+): number {
+  return WORKSHOP_BOT_ORDER.filter((id) => workshopBotIsOwned(ws, id)).length
+}
+
+export function workshopBotExplicitOwnedCount(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>>,
+): number {
+  return WORKSHOP_BOT_ORDER.filter((id) => ws[workshopBotOwnedKey(id)] === true).length
+}
+
+/** Medal cost to unlock the next bot (null when all five are owned). */
+export function workshopBotNextUnlockCost(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+): number | null {
+  const count = workshopBotOwnedCount(ws)
+  if (count >= WORKSHOP_BOT_UNLOCK_MEDAL_COSTS.length) return null
+  return WORKSHOP_BOT_UNLOCK_MEDAL_COSTS[count]!
+}
+
+/** Medal cost to unlock this bot (null if already owned). */
+export function workshopBotUnlockCostForBot(
+  ws: Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+  botId: WorkshopBotId,
+): number | null {
+  if (workshopBotIsOwned(ws, botId)) return null
+  return workshopBotNextUnlockCost(ws)
+}
+
+export function workshopBotIsActive(
+  ws: Partial<Record<WorkshopBotActiveKey, boolean>> &
+    Partial<Record<WorkshopBotOwnedKey, boolean>> &
+    Partial<Record<WorkshopBotUpgradeKey, number>>,
+  botId: WorkshopBotId,
+): boolean {
+  if (!workshopBotIsOwned(ws, botId)) return false
   return ws[workshopBotActiveKey(botId)] !== false
 }
 

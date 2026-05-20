@@ -586,6 +586,10 @@ export const STRINGS_DE = {
   ws_bot_special_burningGround: 'Brennender Boden',
   ws_bot_toggle_on: 'AN',
   ws_bot_toggle_off: 'AUS',
+  ws_bot_unlock: 'Freischalten',
+  ws_bot_unlock_bot: 'Bot freischalten',
+  ws_bot_unlock_cost_title:
+    'Medaillen für diesen Bot im Event-Shop (Kosten steigen mit jedem besessenen Bot)',
   ws_bot_medal_cost_title: 'Medaillen für die nächste Stufe',
   ws_bot_special_titanShock: 'Titan-Schock',
   ws_bot_special_bonusCells: 'Bonus-Zellen',
@@ -597,7 +601,7 @@ export const STRINGS_DE = {
   ws_reset_bots_demo: 'Bots zurücksetzen',
   ws_reset_bots_confirm_title: 'Bot-Upgrades zurücksetzen?',
   ws_reset_bots_confirm_body:
-    'Setzt alle Bot-Stufen, AN/AUS-Schalter und Spezial-Freischaltungen für diesen Build zurück.',
+    'Setzt Bot-Besitz, Stufen, AN/AUS-Schalter und Spezial-Freischaltungen für diesen Build zurück.',
   ws_multiplier_group_aria: 'Kauf-Multiplikator',
   ws_multiplier_toggle_expand: 'Multiplikator-Optionen anzeigen (×1, ×5, ×10, ×100)',
   ws_multiplier_toggle_collapse: 'Multiplikator-Optionen ausblenden',

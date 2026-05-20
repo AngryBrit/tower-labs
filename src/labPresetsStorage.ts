@@ -37,9 +37,13 @@ import {
   WORKSHOP_BOT_SPECIAL_BY_BOT,
   WORKSHOP_BOT_UPGRADE_ORDER,
   WORKSHOP_BOT_ORDER,
+  WORKSHOP_BOT_OWNED_ORDER,
   workshopBotActiveKey,
   workshopBotClampLevel,
+  workshopBotIsOwned,
+  workshopBotOwnedKey,
   type WorkshopBotActiveKey,
+  type WorkshopBotOwnedKey,
   type WorkshopBotSpecialKey,
   type WorkshopBotUpgradeKey,
 } from './data/workshopBots'
@@ -158,6 +162,25 @@ function defaultBotSpecial(): WorkshopBotSpecialFlags {
   return Object.fromEntries(
     WORKSHOP_BOT_ORDER.map((id) => [WORKSHOP_BOT_SPECIAL_BY_BOT[id], false]),
   ) as WorkshopBotSpecialFlags
+}
+
+type WorkshopBotOwnedFlags = { [K in WorkshopBotOwnedKey]: boolean }
+
+function defaultBotOwned(): WorkshopBotOwnedFlags {
+  return Object.fromEntries(
+    WORKSHOP_BOT_ORDER.map((id) => [workshopBotOwnedKey(id), false]),
+  ) as WorkshopBotOwnedFlags
+}
+
+function applyLegacyBotOwned(ws: WorkshopPersistedV1): WorkshopPersistedV1 {
+  const patch: Partial<WorkshopBotOwnedFlags> = {}
+  for (const id of WORKSHOP_BOT_ORDER) {
+    const key = workshopBotOwnedKey(id)
+    if (ws[key] !== true && workshopBotIsOwned(ws, id)) {
+      patch[key] = true
+    }
+  }
+  return Object.keys(patch).length > 0 ? { ...ws, ...patch } : ws
 }
 
 function applyLegacyUltimateOwned(ws: WorkshopPersistedV1): WorkshopPersistedV1 {
@@ -329,7 +352,8 @@ export type WorkshopPersistedV1 = {
   { [K in WorkshopUltimatePlusLevelKey]: number } &
   WorkshopBotLevels &
   WorkshopBotActiveFlags &
-  WorkshopBotSpecialFlags
+  WorkshopBotSpecialFlags &
+  WorkshopBotOwnedFlags
 
 const WORKSHOP_MULTIPLIERS = new Set<number>([1, 5, 10, 100])
 
@@ -402,6 +426,7 @@ export function resetWorkshopBots(current: WorkshopPersistedV1): WorkshopPersist
     ...defaultBotLevels(),
     ...defaultBotActive(),
     ...defaultBotSpecial(),
+    ...defaultBotOwned(),
   }
 }
 
@@ -564,6 +589,7 @@ export function defaultWorkshopPersisted(): WorkshopPersistedV1 {
     ...defaultBotLevels(),
     ...defaultBotActive(),
     ...defaultBotSpecial(),
+    ...defaultBotOwned(),
   }
 }
 
@@ -811,6 +837,12 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
         (o as Record<string, unknown>)[WORKSHOP_BOT_SPECIAL_BY_BOT[id]] === true,
       ]),
     ),
+    ...Object.fromEntries(
+      WORKSHOP_BOT_OWNED_ORDER.map((key) => [
+        key,
+        (o as Record<string, unknown>)[key] === true ? true : false,
+      ]),
+    ),
     ...(() => {
       const cardStars = workshopCardStarsFromLegacy(o)
       const cardPresetLoadouts = sanitizeCardPresetLoadouts(o.cardPresetLoadouts)
@@ -953,22 +985,26 @@ export function sanitizeWorkshopPersisted(raw: unknown): WorkshopPersistedV1 {
   )
 
   if (o.modulePresetSnapshots != null) {
-    return applyLegacyUltimateOwned(
-      workshopPersistedWithModulePresets(
-        base,
-        sanitizeModulePresetSnapshots(o.modulePresetSnapshots, base),
-        moduleActivePresetIndex,
+    return applyLegacyBotOwned(
+      applyLegacyUltimateOwned(
+        workshopPersistedWithModulePresets(
+          base,
+          sanitizeModulePresetSnapshots(o.modulePresetSnapshots, base),
+          moduleActivePresetIndex,
+        ),
       ),
     )
   }
 
   const modulePresetSnapshots = defaultModulePresetSnapshots()
   modulePresetSnapshots[0] = extractWorkshopModulePresetSnapshot(base)
-  return applyLegacyUltimateOwned({
-    ...base,
-    moduleActivePresetIndex,
-    modulePresetSnapshots,
-  })
+  return applyLegacyBotOwned(
+    applyLegacyUltimateOwned({
+      ...base,
+      moduleActivePresetIndex,
+      modulePresetSnapshots,
+    }),
+  )
 }
 
 export type LabPreset = {

@@ -630,6 +630,9 @@ export const STRINGS_EN = {
   ws_bot_special_burningGround: 'Burning Ground',
   ws_bot_toggle_on: 'ON',
   ws_bot_toggle_off: 'OFF',
+  ws_bot_unlock: 'Unlock',
+  ws_bot_unlock_bot: 'Unlock bot',
+  ws_bot_unlock_cost_title: 'Medals to buy this bot in the event shop (cost rises with each bot owned)',
   ws_bot_medal_cost_title: 'Medals to purchase the next level',
   ws_bot_special_titanShock: 'Titan Shock',
   ws_bot_special_bonusCells: 'Bonus Cells',
@@ -641,7 +644,7 @@ export const STRINGS_EN = {
   ws_reset_bots_demo: 'Reset bots',
   ws_reset_bots_confirm_title: 'Reset bot upgrades?',
   ws_reset_bots_confirm_body:
-    'This resets all bot stat levels, ON/OFF toggles, and special unlocks for this build.',
+    'This resets all bot ownership, stat levels, ON/OFF toggles, and special unlocks for this build.',
   ws_reset_demo: 'Reset Workshop',
   ws_reset_ultimate_demo: 'Reset Ultimate Weapons',
   ws_reset_confirm_title: 'Reset workshop upgrade levels?',
