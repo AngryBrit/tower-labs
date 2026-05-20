@@ -62,7 +62,8 @@ export function workshopBotSpecialClampLevel(botId: WorkshopBotId, level: number
 
 /** One-time stone purchase in the event shop (separate from medal upgrade level). */
 export function workshopBotSpecialStonePurchased(
-  ws: Partial<Record<WorkshopBotSpecialKey, boolean>>,
+  ws: Partial<Record<WorkshopBotSpecialKey, boolean>> &
+    Partial<Record<WorkshopBotSpecialLevelKey, number>>,
   botId: WorkshopBotId,
 ): boolean {
   return ws[WORKSHOP_BOT_SPECIAL_BY_BOT[botId]] === true
@@ -237,7 +238,8 @@ export function workshopBotAllMaxed(
 }
 
 export function workshopBotSpecialIsUnlocked(
-  ws: Partial<Record<WorkshopBotSpecialKey, boolean>>,
+  ws: Partial<Record<WorkshopBotSpecialKey, boolean>> &
+    Partial<Record<WorkshopBotSpecialLevelKey, number>>,
   botId: WorkshopBotId,
 ): boolean {
   return workshopBotSpecialStonePurchased(ws, botId)
